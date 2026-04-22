@@ -85,5 +85,11 @@ export const config = {
     "/api/subscriptions/:path*",
     "/api/premium/:path*",
     "/api/videos/:path*",
+    "/api/forum/report",
+    "/api/forum/threads/:path*/replies",
+    "/api/events/:path*/rsvp",
+    "/api/schools",
+    "/api/schools/:path*/invite-teacher",
+    "/api/schools/invite-student",
   ],
 };

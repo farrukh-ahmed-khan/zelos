@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/http";
 import { type UserDocument } from "@/models/User";
 import Video, { type VideoDocument } from "@/models/Video";
 import VideoProgress from "@/models/VideoProgress";
+import { getAssignedSchoolVideoIds } from "@/lib/schools/service";
 
 const REQUIRED_COMPLETION_PERCENTAGE = 95;
 
@@ -24,8 +25,17 @@ export async function getCompletedVideoIds(userId: string) {
 }
 
 export async function buildVideoAvailability(user: UserDocument) {
-  const videos = await getAgeTrackVideos(user.ageTrack);
+  let videos = await getAgeTrackVideos(user.ageTrack);
   const completedVideoIds = await getCompletedVideoIds(user._id.toString());
+
+  if (user.role === "student") {
+    if (!user.schoolId) {
+      return [];
+    }
+
+    const assignedVideoIds = await getAssignedSchoolVideoIds(user.schoolId);
+    videos = videos.filter((video) => assignedVideoIds.has(video._id.toString()));
+  }
 
   let unlocked = true;
 
@@ -64,7 +74,22 @@ export async function resolveCompletableVideo(params: {
     throw new ApiError(404, "Video not found for this user.");
   }
 
-  const videos = await getAgeTrackVideos(user.ageTrack);
+  let videos = await getAgeTrackVideos(user.ageTrack);
+
+  if (user.role === "student") {
+    if (!user.schoolId) {
+      throw new ApiError(404, "Video not found for this user.");
+    }
+
+    const assignedVideoIds = await getAssignedSchoolVideoIds(user.schoolId);
+
+    if (!assignedVideoIds.has(video._id.toString())) {
+      throw new ApiError(404, "Video not found for this user.");
+    }
+
+    videos = videos.filter((entry) => assignedVideoIds.has(entry._id.toString()));
+  }
+
   const targetIndex = videos.findIndex(
     (entry) => entry._id.toString() === video._id.toString(),
   );
