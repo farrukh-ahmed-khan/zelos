@@ -1,0 +1,1 @@
+export const SUBSCRIPTION_GRACE_PERIOD_HOURS = 48;
