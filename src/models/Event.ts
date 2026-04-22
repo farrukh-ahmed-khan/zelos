@@ -14,6 +14,12 @@ const EventSchema = new Schema(
       trim: true,
       maxlength: 5000,
     },
+    coverImageUrl: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
+    },
     date: {
       type: Date,
       required: true,
@@ -29,6 +35,20 @@ const EventSchema = new Schema(
       type: String,
       enum: ["online", "physical"],
       required: true,
+      index: true,
+    },
+    meetingLink: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
+      select: false,
+    },
+    status: {
+      type: String,
+      enum: ["scheduled", "updated", "cancelled"],
+      required: true,
+      default: "scheduled",
       index: true,
     },
   },

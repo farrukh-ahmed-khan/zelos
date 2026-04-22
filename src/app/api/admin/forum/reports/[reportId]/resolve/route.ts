@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
-import { requireUser } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { resolveForumReportSchema } from "@/lib/validation/admin";
 import { resolveForumReport } from "@/lib/admin/service";
@@ -15,7 +14,7 @@ type RouteContext = {
 
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const actor = await requireUser(request, ADMIN_ROLES);
+    const actor = await requireAdminPermission(request, "forum.moderate");
     const { reportId } = await context.params;
     const body = resolveForumReportSchema.parse(await request.json());
 

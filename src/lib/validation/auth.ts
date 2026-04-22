@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { SELF_REGISTER_ROLES } from "@/lib/auth/roles";
 
-const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId.");
-
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.email().trim().toLowerCase(),
@@ -17,6 +15,7 @@ export const registerSchema = z.object({
   role: z.enum(SELF_REGISTER_ROLES),
   age: z.number().int().min(1).max(120),
   ageTrack: z.string().trim().min(2).max(60).optional(),
+  interests: z.array(z.string().trim().min(1).max(80)).max(10).optional(),
 });
 
 export const loginSchema = z.object({
@@ -48,8 +47,9 @@ export const createUserSchema = z
     role: z.string(),
     age: z.number().int().min(1).max(120),
     ageTrack: z.string().trim().min(2).max(60).optional(),
-    parentId: objectIdSchema.optional(),
-    schoolId: objectIdSchema.optional(),
+    interests: z.array(z.string().trim().min(1).max(80)).max(10).optional(),
+    parentId: z.string().trim().min(1).optional(),
+    schoolId: z.string().trim().min(1).optional(),
     isBanned: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
@@ -69,3 +69,9 @@ export const createUserSchema = z
       });
     }
   });
+
+export const createChildSubscriberSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  age: z.number().int().min(1).max(120),
+  ageTrack: z.string().trim().min(2).max(60).optional(),
+});

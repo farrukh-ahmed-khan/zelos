@@ -80,6 +80,38 @@ const UserSchema = new Schema(
         message: "Teacher and student accounts require a schoolId.",
       },
     },
+    interests: {
+      type: [String],
+      default: [],
+    },
+    mentorProfileId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    forumPostingRevoked: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    status: {
+      type: String,
+      enum: ["active", "suspended", "banned"],
+      default: "active",
+      index: true,
+    },
+    adminPermissions: {
+      type: [String],
+      default: [],
+    },
+    emailVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
     isBanned: {
       type: Boolean,
       default: false,

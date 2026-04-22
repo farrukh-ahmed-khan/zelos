@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
           await connectToDatabase();
           const user = await User.findById(payload.sub);
 
-          if (user && !user.isBanned) {
+          if (user && !user.isBanned && user.status !== "banned") {
             userId = user._id.toString();
           }
         }
@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       date: new Date(body.date),
       location: body.location,
       type: body.type,
+      coverImageUrl: body.coverImageUrl,
+      meetingLink: body.meetingLink,
     });
 
     return successResponse(
@@ -63,9 +65,11 @@ export async function POST(request: NextRequest) {
           id: event._id.toString(),
           title: event.title,
           description: event.description,
+          coverImageUrl: event.coverImageUrl,
           date: event.date,
           location: event.location,
           type: event.type,
+          status: event.status,
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
           hasRsvped: false,

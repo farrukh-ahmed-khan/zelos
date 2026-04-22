@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
-import { requireUser } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { createBroadcastSchema } from "@/lib/validation/admin";
 import { createBroadcastMessage } from "@/lib/admin/service";
@@ -9,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const admin = await requireUser(request, ADMIN_ROLES);
+    const admin = await requireAdminPermission(request, "content.manage");
     const body = createBroadcastSchema.parse(await request.json());
 
     const broadcast = await createBroadcastMessage({

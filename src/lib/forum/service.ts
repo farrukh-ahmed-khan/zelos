@@ -9,6 +9,10 @@ export async function requireForumPostingEligibility(user: UserDocument) {
   if (user.age < 16) {
     throw new ApiError(403, "Users under 16 cannot create forum posts.");
   }
+
+  if (user.forumPostingRevoked) {
+    throw new ApiError(403, "Your forum posting access has been revoked.");
+  }
 }
 
 export async function getForumThreads() {

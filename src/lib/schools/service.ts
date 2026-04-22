@@ -95,6 +95,10 @@ export async function createSchool(params: {
   name: string;
   teacherLimit: number;
   studentLimit: number;
+  licenseStatus?: "active" | "expired" | "suspended";
+  licenseStartsAt?: string;
+  licenseExpiresAt?: string;
+  assignedTracks?: string[];
   assignedVideoIds?: string[];
 }) {
   await connectToDatabase();
@@ -111,6 +115,14 @@ export async function createSchool(params: {
     studentLimit: params.studentLimit,
     teachersCount: 0,
     studentsCount: 0,
+    licenseStatus: params.licenseStatus ?? "active",
+    licenseStartsAt: params.licenseStartsAt
+      ? new Date(params.licenseStartsAt)
+      : new Date(),
+    licenseExpiresAt: params.licenseExpiresAt
+      ? new Date(params.licenseExpiresAt)
+      : null,
+    assignedTracks: params.assignedTracks ?? [],
   });
 
   if (params.assignedVideoIds?.length) {

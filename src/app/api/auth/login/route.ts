@@ -21,8 +21,12 @@ export async function POST(request: NextRequest) {
       throw new ApiError(401, "Invalid email or password.");
     }
 
-    if (user.isBanned) {
+    if (user.isBanned || user.status === "banned") {
       throw new ApiError(403, "This account has been banned.");
+    }
+
+    if (user.status === "suspended") {
+      throw new ApiError(403, "This account is currently suspended.");
     }
 
     const passwordMatches = await user.comparePassword(body.password);
@@ -30,6 +34,9 @@ export async function POST(request: NextRequest) {
     if (!passwordMatches) {
       throw new ApiError(401, "Invalid email or password.");
     }
+
+    user.lastLoginAt = new Date();
+    await user.save();
 
     const token = await signAuthToken({
       id: user._id.toString(),

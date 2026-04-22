@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
-import { requireUser } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { createVideoSchema } from "@/lib/validation/admin";
 import { createVideoByAdmin } from "@/lib/admin/service";
@@ -9,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    await requireUser(request, ADMIN_ROLES);
+    await requireAdminPermission(request, "content.manage");
     const body = createVideoSchema.parse(await request.json());
 
     const video = await createVideoByAdmin(body);

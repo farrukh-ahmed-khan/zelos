@@ -39,6 +39,28 @@ const SubscriptionSchema = new Schema(
       default: "active",
       index: true,
     },
+    billingStatus: {
+      type: String,
+      enum: ["active", "grace-period", "suspended", "expired"],
+      required: true,
+      default: "active",
+      index: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["paid", "failed"],
+      required: true,
+      default: "paid",
+      index: true,
+    },
+    graceEndsAt: {
+      type: Date,
+      default: null,
+    },
+    renewalEligibleAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

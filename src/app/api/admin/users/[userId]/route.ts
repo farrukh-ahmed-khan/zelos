@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
-import { requireUser } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { deleteUserWithRelations } from "@/lib/admin/service";
 import { serializeUser } from "@/lib/users/serialize-user";
@@ -15,7 +14,7 @@ type RouteContext = {
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const actor = await requireUser(request, ADMIN_ROLES);
+    const actor = await requireAdminPermission(request, "users.manage-limited");
     const { userId } = await context.params;
 
     const deletedUser = await deleteUserWithRelations({ actor, userId });

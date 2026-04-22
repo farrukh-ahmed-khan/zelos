@@ -31,6 +31,26 @@ const SchoolSchema = new Schema(
       min: 0,
       default: 0,
     },
+    licenseStatus: {
+      type: String,
+      enum: ["active", "expired", "suspended"],
+      required: true,
+      default: "active",
+      index: true,
+    },
+    licenseStartsAt: {
+      type: Date,
+      default: () => new Date(),
+    },
+    licenseExpiresAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    assignedTracks: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

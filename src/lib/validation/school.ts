@@ -6,6 +6,10 @@ export const createSchoolSchema = z.object({
   name: z.string().trim().min(2).max(180),
   teacherLimit: z.number().int().min(1),
   studentLimit: z.number().int().min(1),
+  licenseStatus: z.enum(["active", "expired", "suspended"]).optional(),
+  licenseStartsAt: z.iso.datetime().optional(),
+  licenseExpiresAt: z.iso.datetime().optional(),
+  assignedTracks: z.array(z.string().trim().min(2).max(60)).optional(),
   assignedVideoIds: z.array(objectIdLikeSchema).optional(),
 });
 

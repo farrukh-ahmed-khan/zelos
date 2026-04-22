@@ -1,20 +1,19 @@
 import { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { handleApiError, successResponse } from "@/lib/http";
-import { requireUser } from "@/lib/auth/session";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
+import { requireAdminPermission } from "@/lib/auth/session";
 import User from "@/models/User";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireUser(request, ADMIN_ROLES);
+    await requireAdminPermission(request, "users.manage-limited");
     await connectToDatabase();
 
     const users = await User.find()
       .sort({ createdAt: -1 })
-      .select("name email role age ageTrack parentId schoolId isBanned createdAt updatedAt")
+      .select("name email role age ageTrack parentId schoolId isBanned status forumPostingRevoked adminPermissions createdAt updatedAt")
       .lean();
 
     return successResponse({
@@ -29,6 +28,9 @@ export async function GET(request: NextRequest) {
         parentId: user.parentId ?? null,
         schoolId: user.schoolId ?? null,
         isBanned: user.isBanned,
+        status: user.status ?? (user.isBanned ? "banned" : "active"),
+        forumPostingRevoked: user.forumPostingRevoked ?? false,
+        adminPermissions: user.adminPermissions ?? [],
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       })),

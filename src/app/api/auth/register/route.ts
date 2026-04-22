@@ -8,6 +8,7 @@ import { serializeUser } from "@/lib/users/serialize-user";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { setAuthCookie } from "@/lib/auth/cookies";
 import { hashPassword } from "@/lib/auth/password";
+import { queueEmail } from "@/lib/notifications/service";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,18 @@ export async function POST(request: NextRequest) {
       role: body.role,
       age: body.age,
       ageTrack: body.ageTrack ?? deriveAgeTrack(body.age),
+      interests: body.interests ?? [],
+      emailVerifiedAt: new Date(),
+      status: "active",
+    });
+
+    await queueEmail({
+      template: body.role === "subscriber" ? "subscriber-welcome" : "mentee-welcome",
+      recipient: user.email,
+      payload: {
+        name: user.name,
+        role: user.role,
+      },
     });
 
     const token = await signAuthToken({

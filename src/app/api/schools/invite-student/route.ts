@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { inviteStudentSchema } from "@/lib/validation/school";
 import { inviteStudentToSchool } from "@/lib/schools/service";
+import { queueEmail } from "@/lib/notifications/service";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,16 @@ export async function POST(request: NextRequest) {
     const result = await inviteStudentToSchool({
       inviter: teacher,
       email: body.email,
+    });
+
+    await queueEmail({
+      template: "school-student-invite",
+      recipient: result.invite.email,
+      payload: {
+        inviteUrl: result.inviteUrl,
+        schoolId: result.invite.schoolId,
+        expiresAt: result.invite.expiresAt,
+      },
     });
 
     return successResponse(

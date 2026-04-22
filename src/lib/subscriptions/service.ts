@@ -40,9 +40,9 @@ export function resolveSubscriptionAccessFromDocument(
   }
 
   const now = new Date();
-  const graceExpiresAt = addGracePeriod(subscription.expiryDate);
+  const graceExpiresAt = subscription.graceEndsAt ?? addGracePeriod(subscription.expiryDate);
 
-  if (subscription.status === "suspended") {
+  if (subscription.billingStatus === "suspended" || subscription.status === "suspended") {
     return {
       hasPremiumAccess: false,
       inGracePeriod: false,
@@ -174,6 +174,7 @@ export async function createSubscriptionForUser(params: {
 
   const startDate = new Date();
   const expiryDate = calculateExpiryDate(startDate, planType);
+  const graceEndsAt = addGracePeriod(expiryDate);
 
   return Subscription.create({
     userId: user._id.toString(),
@@ -181,5 +182,9 @@ export async function createSubscriptionForUser(params: {
     startDate,
     expiryDate,
     status,
+    billingStatus: status === "suspended" ? "suspended" : "active",
+    paymentStatus: status === "suspended" ? "failed" : "paid",
+    graceEndsAt,
+    renewalEligibleAt: expiryDate,
   });
 }

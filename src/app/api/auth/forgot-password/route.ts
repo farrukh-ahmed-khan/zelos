@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { forgotPasswordSchema } from "@/lib/validation/auth";
 import { handleApiError, successResponse } from "@/lib/http";
 import User from "@/models/User";
+import { queueEmail } from "@/lib/notifications/service";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,16 @@ export async function POST(request: NextRequest) {
     user.resetPasswordToken = hashedResetToken;
     user.resetPasswordExpiresAt = new Date(Date.now() + 1000 * 60 * 30);
     await user.save();
+
+    await queueEmail({
+      template: "password-reset",
+      recipient: user.email,
+      payload: {
+        name: user.name,
+        resetUrl: buildResetUrl(resetToken),
+        expiresAt: user.resetPasswordExpiresAt,
+      },
+    });
 
     return successResponse({
       message:

@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
-import { requireUser } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { updateUserBanSchema } from "@/lib/validation/admin";
 import { updateUserBanStatus } from "@/lib/admin/service";
@@ -16,7 +15,7 @@ type RouteContext = {
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const actor = await requireUser(request, ADMIN_ROLES);
+    const actor = await requireAdminPermission(request, "users.manage-limited");
     const { userId } = await context.params;
     const body = updateUserBanSchema.parse(await request.json());
 

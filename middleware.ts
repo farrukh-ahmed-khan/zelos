@@ -5,6 +5,7 @@ import { ADMIN_ROLES, hasRequiredRole } from "@/lib/auth/roles";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
 import { resolveSubscriptionAccessForUser } from "@/lib/subscriptions/service";
+import { syncSchoolLicenseStatus } from "@/lib/schools/license";
 
 function unauthorizedResponse(message: string, status = 401) {
   return NextResponse.json(
@@ -50,8 +51,23 @@ export async function middleware(request: NextRequest) {
         return unauthorizedResponse("Authenticated user no longer exists.");
       }
 
-      if (user.isBanned) {
+      if (user.isBanned || user.status === "banned") {
         return unauthorizedResponse("This account has been banned.", 403);
+      }
+
+      if (user.status === "suspended") {
+        return unauthorizedResponse("This account is currently suspended.", 403);
+      }
+
+      if (["teacher", "student"].includes(user.role) && user.schoolId) {
+        const school = await syncSchoolLicenseStatus(user.schoolId);
+
+        if (!school || school.licenseStatus !== "active") {
+          return unauthorizedResponse(
+            "This school license is inactive. Access is suspended until renewal.",
+            403,
+          );
+        }
       }
 
       if (pathname.startsWith("/api/subscriptions") && user.role === "child") {
@@ -91,5 +107,6 @@ export const config = {
     "/api/schools",
     "/api/schools/:path*/invite-teacher",
     "/api/schools/invite-student",
+    "/api/subscribers/:path*",
   ],
 };

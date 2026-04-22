@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import { ADMIN_ROLES } from "@/lib/auth/roles";
-import { requireUser } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { inviteTeacherSchema } from "@/lib/validation/school";
 import { inviteTeacherToSchool } from "@/lib/schools/service";
+import { queueEmail } from "@/lib/notifications/service";
 
 export const runtime = "nodejs";
 
@@ -15,7 +15,7 @@ type RouteContext = {
 
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const admin = await requireUser(request, ADMIN_ROLES);
+    const admin = await requireAdminPermission(request, "schools.manage");
     const { schoolId } = await context.params;
     const body = inviteTeacherSchema.parse(await request.json());
 
@@ -23,6 +23,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       inviter: admin,
       schoolId,
       email: body.email,
+    });
+
+    await queueEmail({
+      template: "school-teacher-invite",
+      recipient: result.invite.email,
+      payload: {
+        inviteUrl: result.inviteUrl,
+        schoolId: result.invite.schoolId,
+        expiresAt: result.invite.expiresAt,
+      },
     });
 
     return successResponse(

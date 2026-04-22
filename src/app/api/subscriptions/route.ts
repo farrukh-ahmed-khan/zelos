@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import { createSubscriptionSchema } from "@/lib/validation/subscription";
 import { createSubscriptionForUser } from "@/lib/subscriptions/service";
 import { serializeSubscription } from "@/lib/subscriptions/serialize-subscription";
+import { createNotification, queueEmail } from "@/lib/notifications/service";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,24 @@ export async function POST(request: NextRequest) {
       user,
       planType: body.planType,
       status: body.status,
+    });
+
+    await createNotification({
+      userId: user._id.toString(),
+      type: "subscription.paid",
+      title: "Subscription confirmed",
+      body: `Your ${subscription.planType} subscription is now active.`,
+      link: "/dashboard",
+    });
+
+    await queueEmail({
+      template: "subscription-payment-confirmed",
+      recipient: user.email,
+      payload: {
+        name: user.name,
+        planType: subscription.planType,
+        expiryDate: subscription.expiryDate,
+      },
     });
 
     return successResponse(

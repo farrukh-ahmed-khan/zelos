@@ -13,6 +13,10 @@ export function serializeSubscription(subscription: SubscriptionDocument | null)
     startDate: subscription.startDate,
     expiryDate: subscription.expiryDate,
     status: subscription.status,
+    billingStatus: subscription.billingStatus,
+    paymentStatus: subscription.paymentStatus,
+    graceEndsAt: subscription.graceEndsAt,
+    renewalEligibleAt: subscription.renewalEligibleAt,
     createdAt: subscription.createdAt,
     updatedAt: subscription.updatedAt,
   };

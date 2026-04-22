@@ -12,6 +12,7 @@ import Subscription from "@/models/Subscription";
 import VideoProgress from "@/models/VideoProgress";
 import EventRsvp from "@/models/EventRsvp";
 import SchoolInvite from "@/models/SchoolInvite";
+import { notifyUsers, queueEmailsForUserIds } from "@/lib/notifications/service";
 
 function canManageUser(actor: UserDocument, target: UserDocument) {
   if (actor._id.toString() === target._id.toString()) {
@@ -47,6 +48,7 @@ export async function updateUserBanStatus(params: {
   }
 
   target.isBanned = params.isBanned;
+  target.status = params.isBanned ? "banned" : "active";
   await target.save();
 
   return target;
@@ -69,9 +71,20 @@ export async function deleteUserWithRelations(params: {
   }
 
   const targetId = target._id.toString();
+  const childUsers =
+    target.role === "subscriber"
+      ? await User.find({ parentId: targetId, role: "child" }).select("_id")
+      : [];
+  const childIds = childUsers.map((child) => child._id.toString());
 
   await Promise.all([
     User.deleteOne({ _id: target._id }),
+    ...(childIds.length
+      ? [
+          User.deleteMany({ _id: { $in: childIds } }),
+          VideoProgress.deleteMany({ userId: { $in: childIds } }),
+        ]
+      : []),
     Subscription.deleteMany({ userId: targetId }),
     VideoProgress.deleteMany({ userId: targetId }),
     EventRsvp.deleteMany({ userId: targetId }),
@@ -104,7 +117,36 @@ export async function createBroadcastMessage(params: {
   sentBy: string;
 }) {
   await connectToDatabase();
-  return BroadcastMessage.create(params);
+  const broadcast = await BroadcastMessage.create(params);
+
+  const recipients = await User.find({
+    status: { $ne: "banned" },
+    isBanned: false,
+  })
+    .select("_id")
+    .lean();
+
+  const userIds = recipients.map((user) => user._id.toString());
+
+  await notifyUsers({
+    userIds,
+    type: "admin.broadcast",
+    title: params.title,
+    body: params.content,
+    link: "/dashboard",
+  });
+
+  await queueEmailsForUserIds({
+    userIds,
+    template: "admin-broadcast",
+    payloadBuilder: (user) => ({
+      userName: user.name,
+      title: params.title,
+      content: params.content,
+    }),
+  });
+
+  return broadcast;
 }
 
 export async function createAdminEvent(params: {
@@ -113,6 +155,8 @@ export async function createAdminEvent(params: {
   date: Date;
   location: string;
   type: "online" | "physical";
+  coverImageUrl?: string;
+  meetingLink?: string;
 }) {
   return createEvent(params);
 }
@@ -155,7 +199,7 @@ export async function resolveForumReport(params: {
     const author = await User.findById(target.authorId);
 
     if (author) {
-      author.isBanned = true;
+      author.forumPostingRevoked = true;
       await author.save();
     }
   }
