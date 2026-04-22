@@ -84,5 +84,6 @@ export const config = {
     "/api/admin/:path*",
     "/api/subscriptions/:path*",
     "/api/premium/:path*",
+    "/api/videos/:path*",
   ],
 };
