@@ -31,6 +31,11 @@ const VideoSchema = new Schema(
       required: true,
       min: 1,
     },
+    s3Key: {
+      type: String,
+      default: null,
+      sparse: true,
+    },
   },
   {
     timestamps: true,

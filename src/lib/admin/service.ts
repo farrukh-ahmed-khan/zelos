@@ -13,6 +13,7 @@ import VideoProgress from "@/models/VideoProgress";
 import EventRsvp from "@/models/EventRsvp";
 import SchoolInvite from "@/models/SchoolInvite";
 import { notifyUsers, queueEmailsForUserIds } from "@/lib/notifications/service";
+import { uploadToS3, deleteFromS3 } from "@/lib/aws/s3";
 
 function canManageUser(actor: UserDocument, target: UserDocument) {
   if (actor._id.toString() === target._id.toString()) {
@@ -109,6 +110,37 @@ export async function createVideoByAdmin(params: {
 }) {
   await connectToDatabase();
   return Video.create(params);
+}
+
+export async function createVideoByAdminWithUpload(params: {
+  title: string;
+  description: string;
+  ageTrack: string;
+  order: number;
+  file: Buffer;
+  fileName: string;
+  mimeType: string;
+}) {
+  await connectToDatabase();
+
+  // Upload file to S3
+  const { url, key } = await uploadToS3({
+    file: params.file,
+    fileName: params.fileName,
+    mimeType: params.mimeType,
+  });
+
+  // Create video record with S3 URL
+  const video = await Video.create({
+    title: params.title,
+    description: params.description,
+    url,
+    ageTrack: params.ageTrack,
+    order: params.order,
+    s3Key: key, // Store the S3 key for future deletion if needed
+  });
+
+  return video;
 }
 
 export async function createBroadcastMessage(params: {

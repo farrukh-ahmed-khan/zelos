@@ -7,7 +7,6 @@ export const updateUserBanSchema = z.object({
 export const createVideoSchema = z.object({
   title: z.string().trim().min(2).max(160),
   description: z.string().trim().min(10).max(2000),
-  url: z.url().trim(),
   ageTrack: z.string().trim().min(2).max(60),
   order: z.number().int().min(1),
 });
