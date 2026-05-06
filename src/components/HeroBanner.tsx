@@ -12,7 +12,7 @@ export function HeroBanner() {
         playsInline
         aria-hidden="true"
       >
-        <source src="/assets/bg-video.mov" type="video/quicktime" />
+        <source src="/assets/bg-video.mp4" type="video/quicktime" />
       </video>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_35%,rgba(194,0,0,0.7),rgba(70,0,0,0.96)_72%)]" />
 
