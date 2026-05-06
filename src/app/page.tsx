@@ -1,7 +1,9 @@
 import { ActiveScholarships } from "@/components/ActiveScholarships";
 import { CommunityForumPreview } from "@/components/CommunityForumPreview";
 import { HeroBanner } from "@/components/HeroBanner";
+import { MiddleBanner } from "@/components/MiddleBanner";
 import { ProgramsOverview } from "@/components/ProgramsOverview";
+import { SwagStoreHighlight } from "@/components/SwagStoreHighlight";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 
 export default function Home() {
@@ -14,6 +16,8 @@ export default function Home() {
       <ActiveScholarships />
       <UpcomingEvents />
       <CommunityForumPreview />
+      <MiddleBanner />
+      <SwagStoreHighlight />
     </main>
   );
 }
