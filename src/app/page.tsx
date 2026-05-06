@@ -1,5 +1,6 @@
 import { ActiveScholarships } from "@/components/ActiveScholarships";
 import { CommunityForumPreview } from "@/components/CommunityForumPreview";
+import { Footer } from "@/components/Footer";
 import { HeroBanner } from "@/components/HeroBanner";
 import { MiddleBanner } from "@/components/MiddleBanner";
 import { NonprofitSupport } from "@/components/NonprofitSupport";
@@ -20,6 +21,7 @@ export default function Home() {
       <MiddleBanner />
       <SwagStoreHighlight />
       <NonprofitSupport />
+      <Footer />
     </main>
   );
 }
