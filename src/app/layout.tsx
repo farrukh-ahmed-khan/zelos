@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bebas_Neue, Inter } from "next/font/google";
+import "bootstrap/dist/css/bootstrap-grid.min.css";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const bebasNeue = Bebas_Neue({
+  variable: "--font-bebas-neue",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -26,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${bebasNeue.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <AntdRegistry>{children}</AntdRegistry>

@@ -1,0 +1,78 @@
+import Image from "next/image";
+import { Header } from "@/components/Header";
+
+export function HeroBanner() {
+  return (
+    <section className="relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[2rem] bg-[#7a0505] px-5 py-5 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:min-h-[calc(100vh-3rem)] sm:px-9 lg:px-24">
+      <video
+        className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-multiply"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-hidden="true"
+      >
+        <source src="/assets/bg-video.mov" type="video/quicktime" />
+      </video>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_35%,rgba(194,0,0,0.7),rgba(70,0,0,0.96)_72%)]" />
+
+      <Header />
+
+      <div className="container relative z-10 pt-10 lg:pt-2">
+        <div className="row min-h-[calc(100vh-8rem)] items-center">
+          <div className="col-12 col-lg-7">
+            <div className="py-10 lg:py-0">
+              <p className="mb-3 font-bebas text-[13px] uppercase leading-none tracking-wide text-white/80 sm:text-base">
+                Welcome to Zelos
+              </p>
+              <h1 className="font-bebas text-[clamp(3.1rem,7vw,5.6rem)] uppercase leading-[0.88] text-white">
+                Empowering the
+                <br />
+                Next <span className="text-transparent [-webkit-text-stroke:1.5px_white]">Generation</span>
+              </h1>
+              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[17px] uppercase leading-tight text-[#B22222] sm:text-xl">
+                With financial literacy, mentorship, scholarship, and opportunity.
+              </p>
+              <p className="mt-2 text-lg leading-snug text-white sm:text-xl">
+                Giving young people the tools, guidance, and real-world exposure they
+                need to build strong futures - wherever they&apos;re starting from.
+              </p>
+
+              <div className="mt-9 flex flex-wrap gap-3">
+                <a
+                  href="#"
+                  className="rounded-md bg-[#FAFF8D] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] border-2
+                   border-[#212121] transition hover:bg-[#fff176] focus:outline-none focus:ring-2 focus:ring-[#fff176]/50 active:bg-[#fff176] 
+                   active:shadow-[0_2px_0_#111]"
+                >
+                  Watch a Free Video
+                </a>
+                <a
+                  href="#"
+                  className="rounded-md bg-[#f4f1e9] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] border-2
+                   border-[#212121] transition hover:bg-[#fff176] focus:outline-none focus:ring-2 focus:ring-[#fff176]/50 active:bg-[#fff176] 
+                   active:shadow-[0_2px_0_#111]"
+                >
+                  Subscribe Now
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-12 col-lg-5">
+            <div className="pointer-events-none relative min-h-[410px] lg:min-h-[610px]">
+              <Image
+                src="/assets/hero-gif.gif"
+                alt="Animated superhero standing on a cliff"
+                width={760}
+                height={711}
+                unoptimized
+                className="absolute bottom-[-26px] right-[-120px] w-[min(820px,118vw)] max-w-none object-contain sm:right-[-80px] lg:bottom-[-48px] lg:right-[-190px] xl:right-[-280px]"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
