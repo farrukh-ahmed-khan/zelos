@@ -2,6 +2,7 @@ import { ActiveScholarships } from "@/components/ActiveScholarships";
 import { CommunityForumPreview } from "@/components/CommunityForumPreview";
 import { HeroBanner } from "@/components/HeroBanner";
 import { MiddleBanner } from "@/components/MiddleBanner";
+import { NonprofitSupport } from "@/components/NonprofitSupport";
 import { ProgramsOverview } from "@/components/ProgramsOverview";
 import { SwagStoreHighlight } from "@/components/SwagStoreHighlight";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
@@ -18,6 +19,7 @@ export default function Home() {
       <CommunityForumPreview />
       <MiddleBanner />
       <SwagStoreHighlight />
+      <NonprofitSupport />
     </main>
   );
 }
