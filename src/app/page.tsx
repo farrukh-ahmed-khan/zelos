@@ -1,6 +1,8 @@
 import { ActiveScholarships } from "@/components/ActiveScholarships";
+import { CommunityForumPreview } from "@/components/CommunityForumPreview";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ProgramsOverview } from "@/components/ProgramsOverview";
+import { UpcomingEvents } from "@/components/UpcomingEvents";
 
 export default function Home() {
   return (
@@ -10,6 +12,8 @@ export default function Home() {
         <ProgramsOverview />
       </div>
       <ActiveScholarships />
+      <UpcomingEvents />
+      <CommunityForumPreview />
     </main>
   );
 }

@@ -37,7 +37,7 @@ export function ProgramsOverview() {
           <p className="mb-1 font-bebas text-sm uppercase leading-none text-[#b22222]">
             Our Programs
           </p>
-          <h2 className="font-bebas text-[clamp(2.8rem,5vw,4.4rem)] uppercase leading-[0.85] text-[#202020]">
+          <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text text-center font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-[-1px] text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[90px] sm:leading-[76px] sm:tracking-[-2px]">
             Zelos Programs
             <br />
             Overview
