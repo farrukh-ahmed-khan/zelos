@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { handleApiError, successResponse } from "@/lib/http";
 import { queueEmail } from "@/lib/notifications/service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { donationSchema } from "@/lib/validation/commerce";
 import Donation from "@/models/Donation";
 
@@ -9,6 +10,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    enforceRateLimit(`donation:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = donationSchema.parse(await request.json());
     await connectToDatabase();
     const donation = await Donation.create(body);

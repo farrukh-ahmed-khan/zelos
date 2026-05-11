@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/http";
 import { type UserDocument } from "@/models/User";
 import User from "@/models/User";
 import Video from "@/models/Video";
+import ContentCategory from "@/models/ContentCategory";
 import BroadcastMessage from "@/models/BroadcastMessage";
 import { createEvent } from "@/lib/events/service";
 import ForumReply from "@/models/ForumReply";
@@ -116,6 +117,78 @@ export async function createVideoByAdmin(params: {
 }) {
   await connectToDatabase();
   return Video.create(params);
+}
+
+export async function updateVideoByAdmin(params: {
+  videoId: string;
+  updates: Partial<{
+    title: string;
+    description: string;
+    url: string;
+    ageTrack: string;
+    audience: "subscriber" | "teacher" | "student" | "public-preview";
+    category: string;
+    order: number;
+    releaseDate: Date | null;
+    dripEnabled: boolean;
+    isFreePreview: boolean;
+    isMissionVideo: boolean;
+    s3Key: string | null;
+  }>;
+}) {
+  await connectToDatabase();
+
+  if (params.updates.isMissionVideo) {
+    await Video.updateMany(
+      { _id: { $ne: params.videoId }, isMissionVideo: true },
+      { $set: { isMissionVideo: false } },
+    );
+  }
+
+  const video = await Video.findByIdAndUpdate(params.videoId, params.updates, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!video) {
+    throw new ApiError(404, "Video not found.");
+  }
+
+  return video;
+}
+
+export async function deleteVideoByAdmin(videoId: string) {
+  await connectToDatabase();
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found.");
+  }
+
+  if (video.s3Key) {
+    await deleteFromS3(video.s3Key);
+  }
+
+  await Video.deleteOne({ _id: video._id });
+
+  return video;
+}
+
+export async function createContentCategoryByAdmin(params: {
+  name: string;
+  ageTrack: string;
+  audience: "subscriber" | "teacher" | "student" | "public-preview";
+  order?: number;
+  isActive?: boolean;
+}) {
+  await connectToDatabase();
+
+  return ContentCategory.create({
+    ...params,
+    order: params.order ?? 1,
+    isActive: params.isActive ?? true,
+  });
 }
 
 export async function createVideoByAdminWithUpload(params: {

@@ -42,7 +42,14 @@ export function JsonPostForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-3 rounded-md border-2 border-[#212121] bg-white p-4 shadow-[0_4px_0_#111]">
       {fields.map((field) =>
-        field.textarea ? (
+        field.type === "hidden" ? (
+          <input
+            key={field.name}
+            name={field.name}
+            type="hidden"
+            defaultValue={field.value}
+          />
+        ) : field.textarea ? (
           <textarea key={field.name} name={field.name} placeholder={field.label} defaultValue={field.value} rows={5} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         ) : (
           <input key={field.name} name={field.name} type={field.type ?? "text"} placeholder={field.label} defaultValue={field.value} className="rounded-md border border-[#d8d2c5] px-3 py-3" />

@@ -278,6 +278,12 @@ export function DashboardShell({
 
             {isAdmin ? (
               <SectionCard title="Admin Control Room">
+                <Link
+                  href="/admin"
+                  className="mb-4 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                >
+                  Open Admin Panel
+                </Link>
                 <div className="grid gap-3 md:grid-cols-3">
                   <StatCard
                     label="Users"

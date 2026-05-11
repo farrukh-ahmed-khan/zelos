@@ -19,6 +19,23 @@ export const createVideoSchema = z.object({
   isMissionVideo: z.boolean().optional(),
 });
 
+export const updateVideoSchema = createVideoSchema
+  .partial()
+  .extend({
+    url: z.string().url().max(2048).optional(),
+    s3Key: z.string().trim().max(512).nullable().optional(),
+  });
+
+export const createContentCategorySchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  ageTrack: z.string().trim().min(2).max(60),
+  audience: z.enum(["subscriber", "teacher", "student", "public-preview"]),
+  order: z.number().int().min(1).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updateContentCategorySchema = createContentCategorySchema.partial();
+
 export const createSubscriptionPlanSchema = z.object({
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().min(5).max(1000),

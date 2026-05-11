@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { handleApiError, successResponse } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { checkoutSchema } from "@/lib/validation/commerce";
 import { createOrder } from "@/lib/store/service";
 
@@ -9,6 +10,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    enforceRateLimit(`checkout:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = checkoutSchema.parse(await request.json());
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
     let userId: string | null = null;

@@ -3,6 +3,7 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { Bebas_Neue, Inter } from "next/font/google";
 import "bootstrap/dist/css/bootstrap-grid.min.css";
 import "./globals.css";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,7 +32,10 @@ export default function RootLayout({
       className={`${inter.variable} ${bebasNeue.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <AntdRegistry>{children}</AntdRegistry>
+        <AntdRegistry>
+          {children}
+          <CookieConsentBanner />
+        </AntdRegistry>
       </body>
     </html>
   );

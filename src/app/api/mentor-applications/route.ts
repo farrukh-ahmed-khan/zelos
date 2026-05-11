@@ -6,11 +6,13 @@ import {
   serializeMentorApplication,
 } from "@/lib/mentor-applications/service";
 import { queueEmail } from "@/lib/notifications/service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    enforceRateLimit(`mentor:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = mentorApplicationSchema.parse(await request.json());
 
     const application = await createMentorApplication({
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
     });
 
     await queueEmail({
-      template: "mentor-application-received",
+      template: "mentor-application-acknowledgment",
       recipient: application.email,
       payload: {
         name: application.name,

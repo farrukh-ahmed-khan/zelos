@@ -10,11 +10,13 @@ import { setAuthCookie } from "@/lib/auth/cookies";
 import { hashPassword } from "@/lib/auth/password";
 import { queueEmail } from "@/lib/notifications/service";
 import { issueEmailVerification } from "@/lib/auth/email-verification";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    enforceRateLimit(`register:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = registerSchema.parse(await request.json());
 
     await connectToDatabase();
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
     const verification = await issueEmailVerification(user);
 
     await queueEmail({
-      template: body.role === "subscriber" ? "subscriber-welcome" : "mentee-welcome",
+      template: body.role === "subscriber" ? "welcome-subscriber" : "welcome-mentee",
       recipient: user.email,
       payload: {
         name: user.name,

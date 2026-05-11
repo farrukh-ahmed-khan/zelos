@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   CreditCardOutlined,
   FacebookFilled,
@@ -10,15 +11,30 @@ import {
 const footerGroups = [
   {
     title: "Program",
-    links: ["Financial Literacy", "School Curriculum", "Mentoring", "Scholarship"],
+    links: [
+      { label: "Financial Literacy", href: "/financial-literacy" },
+      { label: "School Curriculum", href: "/school-curriculum" },
+      { label: "Mentoring", href: "/mentoring" },
+      { label: "Scholarship", href: "/scholarship-incubator" },
+    ],
   },
   {
     title: "Community",
-    links: ["Events", "Community Forum", "Mentee Signup", "Swag Store"],
+    links: [
+      { label: "Events", href: "/events" },
+      { label: "Community Forum", href: "/forum" },
+      { label: "Mentee Signup", href: "/signup" },
+      { label: "Swag Store", href: "/store" },
+    ],
   },
   {
     title: "Support",
-    links: ["Contact Us", "About", "Donate", "Mission"],
+    links: [
+      { label: "Contact Us", href: "/contact" },
+      { label: "About", href: "/about" },
+      { label: "Donate", href: "/donate" },
+      { label: "Mission", href: "/mission-video" },
+    ],
   },
 ];
 
@@ -35,13 +51,13 @@ export function Footer() {
                 </h2>
                 <nav className="mt-6 flex flex-col gap-4">
                   {group.links.map((link) => (
-                    <a
-                      href="#"
+                    <Link
+                      href={link.href}
                       className="font-bebas text-lg uppercase leading-none !text-[#969696] transition hover:!text-[#b22222]"
-                      key={link}
+                      key={link.href}
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   ))}
                 </nav>
               </div>
@@ -71,32 +87,16 @@ export function Footer() {
               </p>
 
               <div className="mt-7 flex gap-2">
-                <a
-                  href="#"
-                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#b22222] !text-white"
-                  aria-label="Facebook"
-                >
+                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#b22222] !text-white" aria-label="Facebook">
                   <FacebookFilled />
                 </a>
-                <a
-                  href="#"
-                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]"
-                  aria-label="Instagram"
-                >
+                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]" aria-label="Instagram">
                   <InstagramOutlined />
                 </a>
-                <a
-                  href="#"
-                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]"
-                  aria-label="X"
-                >
+                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]" aria-label="X">
                   <XOutlined />
                 </a>
-                <a
-                  href="#"
-                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]"
-                  aria-label="YouTube"
-                >
+                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]" aria-label="YouTube">
                   <YoutubeFilled />
                 </a>
               </div>
@@ -105,40 +105,17 @@ export function Footer() {
         </div>
 
         <div className="relative mt-8 h-[180px] overflow-hidden border-b border-[#e9e9e9] bg-white sm:h-[260px] lg:h-[300px]">
-          <svg
-            className="absolute inset-0 h-full w-full"
-            viewBox="0 0 1600 600"
-            preserveAspectRatio="none"
-            aria-label="Zelos"
-          >
+          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1600 600" preserveAspectRatio="none" aria-label="Zelos">
             <defs>
               <mask id="zelos-video-text-mask">
                 <rect width="1600" height="600" fill="black" />
-                <text
-                  x="800"
-                  y="300"
-                  fill="white"
-                  fontFamily="Bebas Neue, sans-serif"
-                  fontSize="546.689"
-                  fontStyle="normal"
-                  fontWeight="400"
-                  letterSpacing="108"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                >
+                <text x="800" y="300" fill="white" fontFamily="Bebas Neue, sans-serif" fontSize="546.689" fontStyle="normal" fontWeight="400" letterSpacing="108" textAnchor="middle" dominantBaseline="middle">
                   ZELOS
                 </text>
               </mask>
             </defs>
             <foreignObject width="1600" height="600" mask="url(#zelos-video-text-mask)">
-              <video
-                className="h-full w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-                aria-hidden="true"
-              >
+              <video className="h-full w-full object-cover" autoPlay loop muted playsInline aria-hidden="true">
                 <source src="/assets/zelos-bg-gradient.mp4" type="video/mp4" />
               </video>
             </foreignObject>
@@ -147,16 +124,16 @@ export function Footer() {
 
         <div className="flex flex-col gap-5 py-8 font-bebas text-sm uppercase text-[#9a9a9a] md:flex-row md:items-center md:justify-between">
           <p>
-            Copyright © 2025 <span className="text-[#1d1d1d]">Zelos</span>. All Rights Reserved
+            Copyright © 2026 <span className="text-[#1d1d1d]">Zelos</span>. All Rights Reserved
           </p>
 
           <div className="flex flex-wrap gap-8">
-            <a href="#" className="!text-[#9a9a9a] transition hover:!text-[#b22222]">
+            <Link href="/terms" className="!text-[#9a9a9a] transition hover:!text-[#b22222]">
               Terms & Conditions
-            </a>
-            <a href="#" className="!text-[#9a9a9a] transition hover:!text-[#b22222]">
+            </Link>
+            <Link href="/privacy" className="!text-[#9a9a9a] transition hover:!text-[#b22222]">
               Privacy Policy
-            </a>
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">

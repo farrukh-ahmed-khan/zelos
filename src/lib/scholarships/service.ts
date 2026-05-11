@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/db";
 import { ApiError } from "@/lib/http";
 import { queueEmail } from "@/lib/notifications/service";
+import mongoose from "mongoose";
 import Scholarship, { type ScholarshipDocument } from "@/models/Scholarship";
 import ScholarshipApplication from "@/models/ScholarshipApplication";
 import ScholarshipDonation from "@/models/ScholarshipDonation";
@@ -43,6 +44,24 @@ export async function getActiveScholarships(featuredOnly = false) {
 export async function getScholarshipBySlug(slug: string) {
   await connectToDatabase();
   return Scholarship.findOne({ slug, status: { $ne: "archived" } });
+}
+
+export async function getScholarshipByIdOrSlug(idOrSlug: string) {
+  await connectToDatabase();
+  const bySlug = await Scholarship.findOne({
+    slug: idOrSlug,
+    status: { $ne: "archived" },
+  });
+
+  if (bySlug) {
+    return bySlug;
+  }
+
+  if (!mongoose.isValidObjectId(idOrSlug)) {
+    return null;
+  }
+
+  return Scholarship.findOne({ _id: idOrSlug, status: { $ne: "archived" } });
 }
 
 export async function createScholarship(params: Record<string, unknown>) {
