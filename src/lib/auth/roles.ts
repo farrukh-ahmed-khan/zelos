@@ -4,7 +4,6 @@ export const USER_ROLES = [
   "child",
   "teacher",
   "student",
-  "mentor",
   "sub-admin",
   "super-admin",
 ] as const;

@@ -5,6 +5,7 @@ const programs = [
     description:
       "Age-appropriate video lessons for children, teens, and young adults. Monthly content, drip-unlocked, with a downloadable Money Toolkit. Learn at home, at your own pace.",
     action: "Subscribe Now",
+    href: "#",
   },
   {
     title: "School Curriculum",
@@ -12,13 +13,15 @@ const programs = [
     description:
       "Structured classroom programs for schools and districts. Educator portal, lesson plans, teacher guides, and student worksheets - ready to use from day one.",
     action: "Book a Demo",
+    href: "#",
   },
   {
     title: "Mentoring",
     video: "/assets/mentoring.mp4",
     description:
       "Connect with real professionals across every field - finance, medicine, engineering, law, technology, and more. Free forum access. No subscription needed.",
-    action: "Join Free",
+    action: "Become a Mentor",
+    href: "/become-a-mentor",
   },
   {
     title: "Scholarship Incubator",
@@ -26,6 +29,7 @@ const programs = [
     description:
       "Zelos manages scholarships end-to-end - from fund setup to recipient selection. Create one, donate to one, or apply for one.",
     action: "Explore Scholarships",
+    href: "#",
   },
 ];
 
@@ -70,7 +74,7 @@ export function ProgramsOverview() {
                 </p>
 
                 <a
-                  href="#"
+                  href={program.href}
                   className="mt-5 text-sm font-medium !text-[#b22222] transition hover:!text-[#7a0505]"
                 >
                   {program.action} -&gt;
