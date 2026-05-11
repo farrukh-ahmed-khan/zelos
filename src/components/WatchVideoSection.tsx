@@ -13,9 +13,8 @@ export function WatchVideoSection() {
               <p className="mb-1 font-bebas text-xs uppercase leading-none text-[#b22222]">
                 Watch Video
               </p>
-              <h2 className="font-bebas text-[clamp(3rem,5vw,4.9rem)] uppercase leading-[0.84] text-[#24282c]">
-                See What <span className="text-[#7f2020]">Zelos</span>
-                <span className="block">Is All About</span>
+              <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-[-1px] text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[70px] sm:leading-[62px] sm:tracking-[-2px]">
+                Swag Store Highlight
               </h2>
             </div>
 
