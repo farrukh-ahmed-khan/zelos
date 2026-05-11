@@ -72,6 +72,25 @@ const MentorApplicationSchema = new Schema(
       minlength: 3,
       maxlength: 160,
     },
+    bio: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 20,
+      maxlength: 1200,
+    },
+    communicationPreferences: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 300,
+    },
+    howHeard: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 300,
+    },
     whyMentor: {
       type: String,
       required: true,

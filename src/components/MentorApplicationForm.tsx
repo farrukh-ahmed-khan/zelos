@@ -45,6 +45,11 @@ export function MentorApplicationForm() {
       experienceYears: Number(formData.get("experienceYears") ?? 0),
       linkedInUrl: String(formData.get("linkedInUrl") ?? ""),
       availability: String(formData.get("availability") ?? ""),
+      bio: String(formData.get("bio") ?? ""),
+      communicationPreferences: String(
+        formData.get("communicationPreferences") ?? "",
+      ),
+      howHeard: String(formData.get("howHeard") ?? ""),
       whyMentor: String(formData.get("whyMentor") ?? ""),
     };
 
@@ -196,6 +201,40 @@ export function MentorApplicationForm() {
           className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
         />
       </label>
+
+      <label className="grid gap-2 text-sm font-bold">
+        Bio
+        <textarea
+          name="bio"
+          required
+          minLength={20}
+          maxLength={1200}
+          rows={5}
+          className="resize-y rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
+        />
+      </label>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm font-bold">
+          Communication preference
+          <input
+            name="communicationPreferences"
+            required
+            maxLength={300}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
+          />
+        </label>
+
+        <label className="grid gap-2 text-sm font-bold">
+          How did you hear about Zelos?
+          <input
+            name="howHeard"
+            required
+            maxLength={300}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
+          />
+        </label>
+      </div>
 
       <label className="grid gap-2 text-sm font-bold">
         Why do you want to mentor?

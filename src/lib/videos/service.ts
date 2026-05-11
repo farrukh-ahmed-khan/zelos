@@ -10,7 +10,22 @@ const REQUIRED_COMPLETION_PERCENTAGE = 95;
 export async function getAgeTrackVideos(ageTrack: string) {
   await connectToDatabase();
 
-  return Video.find({ ageTrack }).sort({ order: 1, createdAt: 1 });
+  return Video.find({
+    ageTrack,
+    releaseDate: { $not: { $gt: new Date() } },
+  }).sort({ order: 1, createdAt: 1 });
+}
+
+function resolveVideoAudienceForUser(user: UserDocument) {
+  if (user.role === "teacher") {
+    return "teacher";
+  }
+
+  if (user.role === "student") {
+    return "student";
+  }
+
+  return "subscriber";
 }
 
 export async function getCompletedVideoIds(userId: string) {
@@ -25,7 +40,10 @@ export async function getCompletedVideoIds(userId: string) {
 }
 
 export async function buildVideoAvailability(user: UserDocument) {
-  let videos = await getAgeTrackVideos(user.ageTrack);
+  const audience = resolveVideoAudienceForUser(user);
+  let videos = (await getAgeTrackVideos(user.ageTrack)).filter(
+    (video) => video.audience === audience,
+  );
   const completedVideoIds = await getCompletedVideoIds(user._id.toString());
 
   if (user.role === "student") {
@@ -41,9 +59,9 @@ export async function buildVideoAvailability(user: UserDocument) {
 
   return videos.map((video) => {
     const completed = completedVideoIds.has(video._id.toString());
-    const isLocked = !unlocked;
+    const isLocked = video.dripEnabled ? !unlocked : false;
 
-    if (!completed) {
+    if (video.dripEnabled && !completed) {
       unlocked = false;
     }
 
@@ -53,7 +71,13 @@ export async function buildVideoAvailability(user: UserDocument) {
       description: video.description,
       url: isLocked ? null : video.url,
       ageTrack: video.ageTrack,
+      audience: video.audience,
+      category: video.category,
       order: video.order,
+      releaseDate: video.releaseDate,
+      dripEnabled: video.dripEnabled,
+      isFreePreview: video.isFreePreview,
+      isMissionVideo: video.isMissionVideo,
       completed,
       locked: isLocked,
     };
@@ -70,11 +94,15 @@ export async function resolveCompletableVideo(params: {
 
   const video = await Video.findById(videoId);
 
-  if (!video || video.ageTrack !== user.ageTrack) {
+  const audience = resolveVideoAudienceForUser(user);
+
+  if (!video || video.ageTrack !== user.ageTrack || video.audience !== audience) {
     throw new ApiError(404, "Video not found for this user.");
   }
 
-  let videos = await getAgeTrackVideos(user.ageTrack);
+  let videos = (await getAgeTrackVideos(user.ageTrack)).filter(
+    (entry) => entry.audience === audience,
+  );
 
   if (user.role === "student") {
     if (!user.schoolId) {
@@ -98,7 +126,7 @@ export async function resolveCompletableVideo(params: {
     throw new ApiError(404, "Video not found for this user.");
   }
 
-  if (targetIndex === 0) {
+  if (targetIndex === 0 || !video.dripEnabled) {
     return video;
   }
 

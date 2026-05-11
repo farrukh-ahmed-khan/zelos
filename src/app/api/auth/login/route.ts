@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
       throw new ApiError(403, "This account is currently suspended.");
     }
 
+    if (user.status === "deactivated") {
+      throw new ApiError(403, "This account is deactivated.");
+    }
+
     const passwordMatches = await user.comparePassword(body.password);
 
     if (!passwordMatches) {

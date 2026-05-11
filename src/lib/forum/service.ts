@@ -4,6 +4,8 @@ import { type UserDocument } from "@/models/User";
 import ForumReply from "@/models/ForumReply";
 import ForumReport from "@/models/ForumReport";
 import ForumThread from "@/models/ForumThread";
+import User from "@/models/User";
+import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 
 export async function requireForumPostingEligibility(user: UserDocument) {
   if (user.age < 16) {
@@ -39,7 +41,7 @@ export async function getForumThreads() {
     repliesByThreadId.set(reply.threadId, list);
   }
 
-  return threads.map((thread) => ({
+  const serializedThreads = threads.map((thread) => ({
     id: thread._id.toString(),
     title: thread.title,
     content: thread.content,
@@ -50,6 +52,19 @@ export async function getForumThreads() {
     updatedAt: thread.updatedAt,
     replies: repliesByThreadId.get(thread._id.toString()) ?? [],
   }));
+
+  return Promise.all(serializedThreads.map(async (thread) => {
+    const author = await User.findById(thread.authorId).select("name role").lean();
+    return {
+      ...thread,
+      author: author
+        ? {
+            name: author.name,
+            role: author.role,
+          }
+        : null,
+    };
+  }));
 }
 
 export async function createForumThread(params: {
@@ -59,7 +74,18 @@ export async function createForumThread(params: {
   authorId: string;
 }) {
   await connectToDatabase();
+
+  if (!FORUM_CATEGORIES.includes(params.category as (typeof FORUM_CATEGORIES)[number])) {
+    throw new ApiError(422, "Invalid forum category.");
+  }
+
   return ForumThread.create(params);
+}
+
+export async function getForumThreadById(threadId: string) {
+  await connectToDatabase();
+  const threads = await getForumThreads();
+  return threads.find((thread) => thread.id === threadId) ?? null;
 }
 
 export async function createForumReply(params: {

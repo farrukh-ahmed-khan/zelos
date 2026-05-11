@@ -56,6 +56,10 @@ export async function requireUser(
     throw new ApiError(403, "This account has been banned.");
   }
 
+  if (effectiveStatus === "deactivated") {
+    throw new ApiError(403, "This account is deactivated.");
+  }
+
   if (effectiveStatus === "suspended") {
     throw new ApiError(403, "This account is currently suspended.");
   }

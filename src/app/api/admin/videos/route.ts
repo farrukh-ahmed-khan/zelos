@@ -19,7 +19,13 @@ export async function POST(request: NextRequest) {
       title: fields.title,
       description: fields.description,
       ageTrack: fields.ageTrack,
+      audience: fields.audience,
+      category: fields.category,
       order: fields.order ? parseInt(fields.order, 10) : undefined,
+      releaseDate: fields.releaseDate || undefined,
+      dripEnabled: fields.dripEnabled ? fields.dripEnabled === "true" : undefined,
+      isFreePreview: fields.isFreePreview ? fields.isFreePreview === "true" : undefined,
+      isMissionVideo: fields.isMissionVideo ? fields.isMissionVideo === "true" : undefined,
     });
 
     // Get the video file
@@ -55,7 +61,15 @@ export async function POST(request: NextRequest) {
       title: parsedFields.title,
       description: parsedFields.description,
       ageTrack: parsedFields.ageTrack,
+      audience: parsedFields.audience,
+      category: parsedFields.category,
       order: parsedFields.order,
+      releaseDate: parsedFields.releaseDate
+        ? new Date(parsedFields.releaseDate)
+        : null,
+      dripEnabled: parsedFields.dripEnabled,
+      isFreePreview: parsedFields.isFreePreview,
+      isMissionVideo: parsedFields.isMissionVideo,
       file: videoFile.buffer,
       fileName: videoFile.filename,
       mimeType: videoFile.mimetype,
@@ -70,7 +84,13 @@ export async function POST(request: NextRequest) {
           description: video.description,
           url: video.url,
           ageTrack: video.ageTrack,
+          audience: video.audience,
+          category: video.category,
           order: video.order,
+          releaseDate: video.releaseDate,
+          dripEnabled: video.dripEnabled,
+          isFreePreview: video.isFreePreview,
+          isMissionVideo: video.isMissionVideo,
           createdAt: video.createdAt,
           updatedAt: video.updatedAt,
         },

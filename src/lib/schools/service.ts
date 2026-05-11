@@ -10,6 +10,7 @@ import School from "@/models/School";
 import SchoolInvite from "@/models/SchoolInvite";
 import SchoolAssignedVideo from "@/models/SchoolAssignedVideo";
 import Video from "@/models/Video";
+import VideoProgress from "@/models/VideoProgress";
 
 const SCHOOL_INVITE_EXPIRY_HOURS = 48;
 
@@ -320,4 +321,60 @@ export async function getAssignedSchoolVideoIds(schoolId: string) {
 
   const assignments = await SchoolAssignedVideo.find({ schoolId }).select("videoId");
   return new Set(assignments.map((assignment) => assignment.videoId));
+}
+
+export async function getSchoolStudents(schoolId: string) {
+  await connectToDatabase();
+
+  return User.find({ schoolId, role: "student" })
+    .select("name email age ageTrack status createdAt updatedAt")
+    .sort({ name: 1 });
+}
+
+export async function getSchoolProgress(schoolId: string) {
+  await connectToDatabase();
+
+  const [students, assignedVideoIds] = await Promise.all([
+    getSchoolStudents(schoolId),
+    getAssignedSchoolVideoIds(schoolId),
+  ]);
+  const videoIds = Array.from(assignedVideoIds);
+  const videos = await Video.find({ _id: { $in: videoIds } }).sort({
+    ageTrack: 1,
+    order: 1,
+  });
+  const progress = await VideoProgress.find({
+    userId: { $in: students.map((student) => student._id.toString()) },
+    videoId: { $in: videoIds },
+    completed: true,
+  }).lean();
+  const completedByUser = new Map<string, Set<string>>();
+
+  for (const entry of progress) {
+    const completed = completedByUser.get(entry.userId) ?? new Set<string>();
+    completed.add(entry.videoId);
+    completedByUser.set(entry.userId, completed);
+  }
+
+  return {
+    videos: videos.map((video) => ({
+      id: video._id.toString(),
+      title: video.title,
+      ageTrack: video.ageTrack,
+      order: video.order,
+    })),
+    students: students.map((student) => {
+      const completed = completedByUser.get(student._id.toString()) ?? new Set();
+      return {
+        id: student._id.toString(),
+        name: student.name,
+        email: student.email,
+        ageTrack: student.ageTrack,
+        completedVideoIds: Array.from(completed),
+        completionPercent: videos.length
+          ? Math.round((completed.size / videos.length) * 100)
+          : 0,
+      };
+    }),
+  };
 }

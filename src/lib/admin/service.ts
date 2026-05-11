@@ -106,7 +106,13 @@ export async function createVideoByAdmin(params: {
   description: string;
   url: string;
   ageTrack: string;
+  audience?: "subscriber" | "teacher" | "student" | "public-preview";
+  category?: string;
   order: number;
+  releaseDate?: Date | null;
+  dripEnabled?: boolean;
+  isFreePreview?: boolean;
+  isMissionVideo?: boolean;
 }) {
   await connectToDatabase();
   return Video.create(params);
@@ -116,7 +122,13 @@ export async function createVideoByAdminWithUpload(params: {
   title: string;
   description: string;
   ageTrack: string;
+  audience?: "subscriber" | "teacher" | "student" | "public-preview";
+  category?: string;
   order: number;
+  releaseDate?: Date | null;
+  dripEnabled?: boolean;
+  isFreePreview?: boolean;
+  isMissionVideo?: boolean;
   file: Buffer;
   fileName: string;
   mimeType: string;
@@ -136,7 +148,13 @@ export async function createVideoByAdminWithUpload(params: {
     description: params.description,
     url,
     ageTrack: params.ageTrack,
+    audience: params.audience ?? "subscriber",
+    category: params.category ?? "General",
     order: params.order,
+    releaseDate: params.releaseDate ?? null,
+    dripEnabled: params.dripEnabled ?? true,
+    isFreePreview: params.isFreePreview ?? false,
+    isMissionVideo: params.isMissionVideo ?? false,
     s3Key: key, // Store the S3 key for future deletion if needed
   });
 

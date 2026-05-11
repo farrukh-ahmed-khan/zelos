@@ -16,6 +16,8 @@ export const registerSchema = z.object({
   age: z.number().int().min(1).max(120),
   ageTrack: z.string().trim().min(2).max(60).optional(),
   interests: z.array(z.string().trim().min(1).max(80)).max(10).optional(),
+  termsAccepted: z.literal(true),
+  termsVersion: z.string().trim().min(1).max(40).optional(),
 });
 
 export const loginSchema = z.object({
@@ -29,6 +31,33 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().trim().min(32),
+  password: z
+    .string()
+    .min(8)
+    .max(72)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+      "Password must include uppercase, lowercase, and a number.",
+    ),
+});
+
+export const verifyEmailSchema = z.object({
+  token: z.string().trim().min(32),
+});
+
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(2).max(120).optional(),
+  age: z.number().int().min(1).max(120).optional(),
+  ageTrack: z.string().trim().min(2).max(60).optional(),
+  interests: z.array(z.string().trim().min(1).max(80)).max(10).optional(),
+});
+
+export const updateEmailSchema = z.object({
+  email: z.email().trim().toLowerCase(),
+});
+
+export const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
   password: z
     .string()
     .min(8)

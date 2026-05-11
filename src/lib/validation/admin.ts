@@ -8,8 +8,32 @@ export const createVideoSchema = z.object({
   title: z.string().trim().min(2).max(160),
   description: z.string().trim().min(10).max(2000),
   ageTrack: z.string().trim().min(2).max(60),
+  audience: z
+    .enum(["subscriber", "teacher", "student", "public-preview"])
+    .optional(),
+  category: z.string().trim().min(2).max(120).optional(),
   order: z.number().int().min(1),
+  releaseDate: z.string().datetime().optional(),
+  dripEnabled: z.boolean().optional(),
+  isFreePreview: z.boolean().optional(),
+  isMissionVideo: z.boolean().optional(),
 });
+
+export const createSubscriptionPlanSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  description: z.string().trim().min(5).max(1000),
+  interval: z.enum(["monthly", "annual"]),
+  accountType: z.enum(["individual", "family"]),
+  priceCents: z.number().int().min(0),
+  currency: z.string().trim().length(3).default("usd"),
+  ageTrack: z.string().trim().max(60).optional(),
+  stripePriceId: z.string().trim().max(180).optional(),
+  discountBadge: z.string().trim().max(80).optional(),
+  isPromotional: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updateSubscriptionPlanSchema = createSubscriptionPlanSchema.partial();
 
 export const createBroadcastSchema = z.object({
   title: z.string().trim().min(3).max(180),

@@ -11,7 +11,28 @@ export async function GET(request: NextRequest) {
     await requireAdminPermission(request, "users.manage-limited");
     await connectToDatabase();
 
-    const users = await User.find()
+    const role = request.nextUrl.searchParams.get("role");
+    const status = request.nextUrl.searchParams.get("status");
+    const search = request.nextUrl.searchParams.get("search");
+
+    const query: Record<string, unknown> = {};
+
+    if (role) {
+      query.role = role;
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const users = await User.find(query)
       .sort({ createdAt: -1 })
       .select("name email role age ageTrack parentId schoolId isBanned status forumPostingRevoked adminPermissions createdAt updatedAt")
       .lean();

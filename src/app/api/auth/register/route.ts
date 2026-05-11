@@ -9,6 +9,7 @@ import { signAuthToken } from "@/lib/auth/jwt";
 import { setAuthCookie } from "@/lib/auth/cookies";
 import { hashPassword } from "@/lib/auth/password";
 import { queueEmail } from "@/lib/notifications/service";
+import { issueEmailVerification } from "@/lib/auth/email-verification";
 
 export const runtime = "nodejs";
 
@@ -32,9 +33,13 @@ export async function POST(request: NextRequest) {
       age: body.age,
       ageTrack: body.ageTrack ?? deriveAgeTrack(body.age),
       interests: body.interests ?? [],
-      emailVerifiedAt: new Date(),
+      emailVerifiedAt: null,
+      termsAcceptedAt: new Date(),
+      termsVersion: body.termsVersion ?? "v1",
       status: "active",
     });
+
+    const verification = await issueEmailVerification(user);
 
     await queueEmail({
       template: body.role === "subscriber" ? "subscriber-welcome" : "mentee-welcome",
@@ -56,6 +61,7 @@ export async function POST(request: NextRequest) {
       {
         message: "Registration successful.",
         user: serializeUser(user),
+        ...(process.env.NODE_ENV !== "production" ? verification : {}),
       },
       { status: 201 },
     );

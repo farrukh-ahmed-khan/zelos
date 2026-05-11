@@ -30,6 +30,49 @@ export async function getEventsWithRsvpStatus(userId?: string) {
   }));
 }
 
+export async function getEventWithRsvpStatus(eventId: string, userId?: string) {
+  await connectToDatabase();
+  const [event, rsvpCount, userRsvp] = await Promise.all([
+    Event.findById(eventId).lean(),
+    EventRsvp.countDocuments({ eventId }),
+    userId ? EventRsvp.findOne({ eventId, userId }).lean() : Promise.resolve(null),
+  ]);
+
+  if (!event) {
+    return null;
+  }
+
+  return {
+    id: event._id.toString(),
+    title: event.title,
+    description: event.description,
+    coverImageUrl: event.coverImageUrl,
+    date: event.date,
+    location: event.location,
+    type: event.type,
+    status: event.status,
+    createdAt: event.createdAt,
+    updatedAt: event.updatedAt,
+    rsvpCount,
+    hasRsvped: Boolean(userRsvp),
+  };
+}
+
+export async function getEventAttendees(eventId: string) {
+  await connectToDatabase();
+  const rsvps = await EventRsvp.find({ eventId }).sort({ createdAt: -1 }).lean();
+  const users = await User.find({ _id: { $in: rsvps.map((rsvp) => rsvp.userId) } })
+    .select("name email role")
+    .lean();
+  const userById = new Map(users.map((user) => [user._id.toString(), user]));
+
+  return rsvps.map((rsvp) => ({
+    id: rsvp._id.toString(),
+    createdAt: rsvp.createdAt,
+    user: userById.get(rsvp.userId) ?? null,
+  }));
+}
+
 export async function createEvent(params: {
   title: string;
   description: string;

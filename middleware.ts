@@ -59,6 +59,10 @@ export async function middleware(request: NextRequest) {
         return unauthorizedResponse("This account is currently suspended.", 403);
       }
 
+      if (user.status === "deactivated") {
+        return unauthorizedResponse("This account is deactivated.", 403);
+      }
+
       if (["teacher", "student"].includes(user.role) && user.schoolId) {
         const school = await syncSchoolLicenseStatus(user.schoolId);
 
@@ -106,6 +110,8 @@ export const config = {
     "/api/events/:path*/rsvp",
     "/api/schools",
     "/api/schools/:path*/invite-teacher",
+    "/api/schools/:path*/students",
+    "/api/schools/:path*/progress",
     "/api/schools/invite-student",
     "/api/subscribers/:path*",
   ],

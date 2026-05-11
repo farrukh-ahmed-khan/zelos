@@ -20,9 +20,15 @@ const UserSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      immutable: true,
       lowercase: true,
       trim: true,
+    },
+    pendingEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: null,
+      index: true,
     },
     password: {
       type: String,
@@ -96,7 +102,7 @@ const UserSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "suspended", "banned"],
+      enum: ["active", "suspended", "banned", "deactivated"],
       default: "active",
       index: true,
     },
@@ -106,6 +112,24 @@ const UserSchema = new Schema(
     },
     emailVerifiedAt: {
       type: Date,
+      default: null,
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false,
+      default: null,
+    },
+    emailVerificationExpiresAt: {
+      type: Date,
+      select: false,
+      default: null,
+    },
+    termsAcceptedAt: {
+      type: Date,
+      default: null,
+    },
+    termsVersion: {
+      type: String,
       default: null,
     },
     lastLoginAt: {

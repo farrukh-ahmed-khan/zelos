@@ -16,6 +16,9 @@ export function serializeMentorApplication(application: MentorApplicationDocumen
     experienceYears: application.experienceYears,
     linkedInUrl: application.linkedInUrl ?? null,
     availability: application.availability,
+    bio: application.bio,
+    communicationPreferences: application.communicationPreferences,
+    howHeard: application.howHeard,
     whyMentor: application.whyMentor,
     status: application.status,
     reviewNote: application.reviewNote ?? null,
@@ -36,6 +39,9 @@ export async function createMentorApplication(params: {
   experienceYears: number;
   linkedInUrl?: string;
   availability: string;
+  bio: string;
+  communicationPreferences: string;
+  howHeard: string;
   whyMentor: string;
 }) {
   await connectToDatabase();

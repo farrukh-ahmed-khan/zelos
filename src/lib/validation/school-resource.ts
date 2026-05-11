@@ -1,0 +1,22 @@
+import { z } from "zod";
+
+export const createSchoolResourceSchema = z.object({
+  title: z.string().trim().min(2).max(160),
+  description: z.string().trim().max(1000).optional(),
+  resourceType: z.enum([
+    "teacher-training-video",
+    "lesson-plan",
+    "teacher-guide",
+    "student-worksheet",
+  ]),
+  url: z.url().trim().max(2048),
+  audience: z.enum(["teacher", "student"]),
+  ageTrack: z.string().trim().min(2).max(60),
+  schoolScope: z
+    .enum(["all-schools", "specific-schools", "district"])
+    .default("all-schools"),
+  schoolIds: z.array(z.string().trim().min(1)).max(100).optional(),
+  district: z.string().trim().max(120).optional(),
+  releaseDate: z.string().datetime().optional(),
+  order: z.number().int().min(1).optional(),
+});

@@ -26,10 +26,44 @@ const VideoSchema = new Schema(
       trim: true,
       index: true,
     },
+    audience: {
+      type: String,
+      enum: ["subscriber", "teacher", "student", "public-preview"],
+      required: true,
+      default: "subscriber",
+      index: true,
+    },
+    category: {
+      type: String,
+      required: true,
+      default: "General",
+      trim: true,
+      maxlength: 120,
+      index: true,
+    },
     order: {
       type: Number,
       required: true,
       min: 1,
+    },
+    releaseDate: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    dripEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    isFreePreview: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isMissionVideo: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     s3Key: {
       type: String,
@@ -43,7 +77,7 @@ const VideoSchema = new Schema(
   },
 );
 
-VideoSchema.index({ ageTrack: 1, order: 1 }, { unique: true });
+VideoSchema.index({ audience: 1, ageTrack: 1, order: 1 }, { unique: true });
 
 type Video = InferSchemaType<typeof VideoSchema>;
 export type VideoDocument = HydratedDocument<Video>;

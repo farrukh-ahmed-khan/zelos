@@ -52,6 +52,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           role,
           age: Number(formData.get("age") ?? 0),
           interests,
+          termsAccepted: formData.get("termsAccepted") === "on",
+          termsVersion: "v1",
         }
       : {
           email: String(formData.get("email") ?? ""),
@@ -178,6 +180,19 @@ export function AuthForm({ mode }: AuthFormProps) {
               ))}
             </div>
           </fieldset>
+
+          <label className="flex items-start gap-3 rounded-md border border-[#d8d2c5] bg-[#f7f2e8] px-3 py-3 text-sm font-semibold">
+            <input
+              name="termsAccepted"
+              type="checkbox"
+              required
+              className="mt-1 accent-[#b22222]"
+            />
+            <span>
+              I agree to the Zelos terms and understand that age information is
+              used to provide age-appropriate access.
+            </span>
+          </label>
         </>
       ) : null}
 

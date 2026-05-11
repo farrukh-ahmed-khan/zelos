@@ -13,6 +13,9 @@ export const mentorApplicationSchema = z.object({
   experienceYears: z.number().int().min(0).max(80),
   linkedInUrl: z.url().trim().max(300).optional().or(z.literal("")),
   availability: z.string().trim().min(3).max(160),
+  bio: z.string().trim().min(20).max(1200),
+  communicationPreferences: z.string().trim().min(2).max(300),
+  howHeard: z.string().trim().min(2).max(300),
   whyMentor: z.string().trim().min(20).max(2000),
 });
 
