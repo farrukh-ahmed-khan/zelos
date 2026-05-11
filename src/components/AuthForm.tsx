@@ -72,7 +72,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         throw new Error(result?.error?.message ?? "Something went wrong.");
       }
 
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch (error) {
       setSubmitState("error");

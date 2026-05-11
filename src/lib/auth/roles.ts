@@ -4,6 +4,7 @@ export const USER_ROLES = [
   "child",
   "teacher",
   "student",
+  "forum-moderator",
   "sub-admin",
   "super-admin",
 ] as const;
@@ -12,7 +13,11 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 export const SELF_REGISTER_ROLES = ["mentee", "subscriber"] as const;
 
-export const ADMIN_ROLES: UserRole[] = ["sub-admin", "super-admin"];
+export const ADMIN_ROLES: UserRole[] = [
+  "forum-moderator",
+  "sub-admin",
+  "super-admin",
+];
 
 export const ADMIN_PERMISSION_KEYS = [
   "content.manage",
@@ -37,6 +42,10 @@ export function hasAdminPermission(
 ) {
   if (role === "super-admin") {
     return true;
+  }
+
+  if (role === "forum-moderator") {
+    return requiredPermission === "forum.moderate";
   }
 
   if (role !== "sub-admin") {
