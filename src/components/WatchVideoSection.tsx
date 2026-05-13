@@ -13,7 +13,7 @@ export function WatchVideoSection() {
               <p className="eyebrow-red mb-1">
                 Watch Video
               </p>
-              <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-[-1px] text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[70px] sm:leading-[62px] sm:tracking-[-2px]">
+              <h2 className="home-section-heading bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
                 Swag Store Highlight
               </h2>
             </div>

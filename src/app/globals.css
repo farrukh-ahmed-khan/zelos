@@ -51,3 +51,15 @@ a {
 .eyebrow-red {
   color: #b22222;
 }
+
+@layer components {
+  .home-section-heading {
+    font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif !important;
+    font-size: 90px !important;
+    font-style: normal !important;
+    font-weight: 400 !important;
+    line-height: 76px !important;
+    letter-spacing: -2px !important;
+    text-transform: uppercase !important;
+  }
+}

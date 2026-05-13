@@ -36,7 +36,7 @@ export function CommunityForumPreview() {
           <p className="eyebrow-red mb-1">
             Forum
           </p>
-          <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-normal text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[90px] sm:leading-[76px]">
+          <h2 className="home-section-heading bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
             Community Forum Preview
           </h2>
 
