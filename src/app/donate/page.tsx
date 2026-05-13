@@ -1,9 +1,11 @@
 import { JsonPostForm } from "@/components/JsonPostForm";
+import { Header } from "@/components/Header";
 
 export default function DonatePage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
-      <section className="container max-w-[920px]">
+      <Header />
+      <section className="container mt-12 max-w-[920px]">
         <p className="eyebrow-red">Zelos Mission</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">Donate</h1>
         <div className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">

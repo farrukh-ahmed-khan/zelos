@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Header } from "@/components/Header";
 import { getActiveScholarships, serializeScholarship } from "@/lib/scholarships/service";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,8 @@ export default async function ScholarshipsPage() {
 
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
-      <section className="container">
+      <Header />
+      <section className="container mt-12">
         <p className="eyebrow-red">Scholarships</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">Active Scholarships</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

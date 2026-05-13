@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { PlayCircleFilled } from "@ant-design/icons";
 import { AccountSettingsForm } from "@/components/AccountSettingsForm";
+import { Header } from "@/components/Header";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db";
@@ -33,19 +32,8 @@ export default async function AccountPage() {
 
   return (
     <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
-      <section className="container">
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <Link href="/" className="flex h-12 items-center gap-3 rounded-sm bg-white px-4 text-2xl font-bold !text-[#343434] shadow-[0_3px_0_rgba(0,0,0,0.18)]">
-            <span className="grid h-8 w-8 place-items-center text-[#ff3038]">
-              <PlayCircleFilled className="text-[22px]" />
-            </span>
-            Zelos
-          </Link>
-          <Link href="/dashboard" className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
-            Dashboard
-          </Link>
-        </header>
-
+      <Header />
+      <section className="container mt-12">
         <div className="mx-auto max-w-[860px]">
           <p className="eyebrow-red">Account</p>
           <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">

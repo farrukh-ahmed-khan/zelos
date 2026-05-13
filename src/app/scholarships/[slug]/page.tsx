@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
 import { getScholarshipBySlug, serializeScholarship } from "@/lib/scholarships/service";
 
@@ -12,7 +13,8 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
 
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
-      <section className="container max-w-[1040px]">
+      <Header />
+      <section className="container mt-12 max-w-[1040px]">
         <p className="eyebrow-red">{scholarship.field}</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">{scholarship.name}</h1>
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.8fr]">

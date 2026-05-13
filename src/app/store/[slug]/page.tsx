@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Header } from "@/components/Header";
 import { ProductCheckoutForm } from "@/components/ProductCheckoutForm";
 import { getProductBySlug, serializeProduct } from "@/lib/store/service";
 
@@ -12,7 +13,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
-      <section className="container max-w-[1040px]">
+      <Header />
+      <section className="container mt-12 max-w-[1040px]">
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="aspect-square rounded-md border-2 border-[#212121] bg-[#f4f1e9] shadow-[0_4px_0_#111]" />
           <div>

@@ -1,9 +1,11 @@
 import { MentorApplicationForm } from "@/components/MentorApplicationForm";
+import { Header } from "@/components/Header";
 
 export default function BecomeAMentorPage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-10 text-[#202020] sm:px-6 lg:py-16">
-      <section className="container">
+      <Header />
+      <section className="container mt-12">
         <div className="mx-auto grid max-w-[1080px] gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div className="rounded-lg bg-[#8c0504] p-7 text-white shadow-[0_5px_0_#111] lg:sticky lg:top-8">
             <p className="eyebrow-white mb-2">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 import { getForumThreads } from "@/lib/forum/service";
 import { ForumThreadForm } from "@/components/ForumThreadForm";
+import { Header } from "@/components/Header";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,8 @@ export default async function ForumPage() {
 
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
-      <section className="container">
+      <Header />
+      <section className="container mt-12">
         <div className="sticky top-0 z-20 mb-6 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black shadow-[0_4px_0_#111]">
           Visitors can read. Sign up free or subscribe to post and reply.
         </div>
