@@ -7,21 +7,21 @@ export function WatchVideoSection() {
       className="overflow-hidden bg-white px-4 py-16 text-[#1f252b] sm:px-6 lg:py-20"
     >
       <div className="container">
-        <div className="mx-auto max-w-[960px]">
+        <div className="">
           <div className="mb-8 grid gap-7 md:grid-cols-[1fr_0.9fr] md:items-center">
             <div>
               <p className="eyebrow-red mb-1">
                 Watch Video
               </p>
               <h2 className="home-section-heading bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-                Swag Store Highlight
+                See what Zelos
+                is all about
               </h2>
             </div>
 
-            <p className="max-w-[460px] text-sm leading-relaxed text-[#111] md:justify-self-end">
-              David walks you through the mission, the programs, and why
-              financial literacy changes lives. Straightforward, honest, and
-              worth your three minutes.
+            <p className="max-w-[460px] font-sans text-[18px] font-normal leading-[26px] text-black md:justify-self-end">
+              David walks you through the mission, the programs, and why financial literacy changes lives.
+              Straightforward, honest, and worth your three minutes.
             </p>
           </div>
 

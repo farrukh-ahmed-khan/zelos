@@ -25,15 +25,15 @@ export function HeroBanner() {
               <p className="eyebrow-white mb-3">
                 Welcome to Zelos
               </p>
-              <h1 className="font-bebas text-[clamp(3.1rem,7vw,5.6rem)] uppercase leading-[0.88] text-white">
+              <h1 className="font-bebas text-[120px] font-bold uppercase leading-[100px] text-white">
                 Empowering the
                 <br />
-                Next <span className="text-transparent [-webkit-text-stroke:1.5px_white]">Generation</span>
+                Next <span className="text-transparent [-webkit-text-stroke:2px_#EEDEC5]">Generation</span>
               </h1>
-              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[17px] uppercase leading-tight text-[#B22222] sm:text-xl">
+              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[28px] font-bold uppercase leading-[30px] text-[#B22222]">
                 With financial literacy, mentorship, scholarship, and opportunity.
               </p>
-              <p className="mt-2 text-lg leading-snug text-white sm:text-xl">
+              <p className="mt-2 font-sans text-[24px] font-normal leading-[32px] text-white">
                 Giving young people the tools, guidance, and real-world exposure they
                 need to build strong futures - wherever they&apos;re starting from.
               </p>
