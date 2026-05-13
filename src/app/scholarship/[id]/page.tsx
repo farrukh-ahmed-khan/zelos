@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
 import { getScholarshipByIdOrSlug, serializeScholarship } from "@/lib/scholarships/service";
@@ -72,6 +73,7 @@ export default async function ScholarshipAliasPage({
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

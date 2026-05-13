@@ -1,4 +1,5 @@
 import { AuthForm } from "@/components/AuthForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 type AuthPageShellProps = {
@@ -65,6 +66,7 @@ export function AuthPageShell({ mode }: AuthPageShellProps) {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

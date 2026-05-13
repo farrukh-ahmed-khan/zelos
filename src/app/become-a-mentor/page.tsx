@@ -1,4 +1,5 @@
 import { MentorApplicationForm } from "@/components/MentorApplicationForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export default function BecomeAMentorPage() {
@@ -24,6 +25,7 @@ export default function BecomeAMentorPage() {
           <MentorApplicationForm />
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { TokenActionForm } from "@/components/TokenActionForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export default async function ResetPasswordPage({
@@ -20,6 +21,7 @@ export default async function ResetPasswordPage({
           <TokenActionForm endpoint="/api/auth/reset-password" mode="reset-password" token={token} />
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

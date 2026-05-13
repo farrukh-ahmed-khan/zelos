@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { EventRsvpButton } from "@/components/EventRsvpButton";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getEventWithRsvpStatus, getEventsWithRsvpStatus } from "@/lib/events/service";
 
@@ -37,6 +38,7 @@ export default async function EventDetailPage({
           ))}
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

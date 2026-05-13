@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 import { getForumThreads } from "@/lib/forum/service";
+import { Footer } from "@/components/Footer";
 import { ForumThreadForm } from "@/components/ForumThreadForm";
 import { Header } from "@/components/Header";
 
@@ -40,6 +41,7 @@ export default async function ForumPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

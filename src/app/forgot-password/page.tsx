@@ -1,4 +1,5 @@
 import { TokenActionForm } from "@/components/TokenActionForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export default function ForgotPasswordPage() {
@@ -14,6 +15,7 @@ export default function ForgotPasswordPage() {
           <TokenActionForm endpoint="/api/auth/forgot-password" mode="forgot-password" />
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

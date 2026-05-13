@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AccountSettingsForm } from "@/components/AccountSettingsForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
@@ -44,6 +45,7 @@ export default async function AccountPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { JsonPostForm } from "@/components/JsonPostForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export default function DonatePage() {
@@ -26,6 +27,7 @@ export default function DonatePage() {
           />
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

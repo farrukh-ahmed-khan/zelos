@@ -1,4 +1,5 @@
 import { TokenActionForm } from "@/components/TokenActionForm";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export default async function VerifyEmailPage({
@@ -20,6 +21,7 @@ export default async function VerifyEmailPage({
           <TokenActionForm endpoint="/api/auth/verify-email" mode="verify-email" token={token} />
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

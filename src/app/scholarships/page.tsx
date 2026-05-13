@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getActiveScholarships, serializeScholarship } from "@/lib/scholarships/service";
 
@@ -24,6 +25,7 @@ export default async function ScholarshipsPage() {
           ))}
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ProductCheckoutForm } from "@/components/ProductCheckoutForm";
 import { getProductBySlug, serializeProduct } from "@/lib/store/service";
@@ -28,6 +29,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

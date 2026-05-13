@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getEventsWithRsvpStatus } from "@/lib/events/service";
 
@@ -25,6 +26,7 @@ export default async function EventsPage() {
           ))}
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

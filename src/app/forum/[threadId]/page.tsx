@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Footer } from "@/components/Footer";
 import { ForumReplyForm } from "@/components/ForumReplyForm";
 import { Header } from "@/components/Header";
 import { getForumThreadById } from "@/lib/forum/service";
@@ -38,6 +39,7 @@ export default async function ForumThreadPage({
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

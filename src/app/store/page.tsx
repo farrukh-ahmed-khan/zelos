@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getProducts, serializeProduct } from "@/lib/store/service";
 
@@ -27,6 +28,7 @@ export default async function StorePage() {
           Every purchase supports the Zelos mission.
         </div>
       </section>
+      <Footer />
     </main>
   );
 }
