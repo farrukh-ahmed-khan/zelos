@@ -66,7 +66,7 @@ export function ActiveScholarships() {
                 </div>
 
                 <div className="pt-3">
-                  <h3 className="font-bebas text-[36px] font-normal uppercase leading-[57.2px] text-[#1E1E1E]">
+                  <h3 className="font-bebas text-[34px] font-normal uppercase leading-[57.2px] text-[#1E1E1E]">
                     {scholarship.title}
                   </h3>
                   <p className="mt-1 font-sans text-[16px] font-normal leading-normal text-[#B22222]">
