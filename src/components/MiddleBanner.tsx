@@ -14,7 +14,7 @@ export function MiddleBanner() {
         />
 
         <div className="relative z-10 flex min-h-[444px] flex-col justify-end gap-8 sm:min-h-[534px] lg:flex-row lg:items-end lg:justify-between">
-          <h2 className="font-bebas text-[clamp(3rem,5vw,4.2rem)] uppercase leading-[0.82] text-white">
+          <h2 className="font-bebas text-[90px] font-bold uppercase leading-[76px] tracking-[-2px] text-white">
             <span className="block sm:whitespace-nowrap">Start Your Journey</span>
             <span className="block">With Us</span>
           </h2>
