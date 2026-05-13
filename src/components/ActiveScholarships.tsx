@@ -33,12 +33,12 @@ export function ActiveScholarships() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(202,27,18,0.8),rgba(63,0,0,0.92)_78%)]" />
 
       <div className="container relative z-20">
-        <div className="mx-auto mb-7 flex max-w-[960px] flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="mb-7 flex flex-col gap-5 md:flex-row md:items-end justify-between w-full">
           <div>
             <p className="eyebrow-white mb-1">
               Our Scholarship
             </p>
-            <h2 className="font-bebas text-[clamp(2.5rem,4vw,3.6rem)] uppercase leading-[0.85] text-white">
+            <h2 className="text-center font-bebas text-[90px] font-normal uppercase leading-[76px] tracking-[-2px] text-white">
               Active Scholarships
             </h2>
           </div>
@@ -51,28 +51,28 @@ export function ActiveScholarships() {
           </a>
         </div>
 
-        <div className="row g-4 mx-auto max-w-[960px]">
+        <div className="row g-4 mx-auto max-w-[1320px]">
           {scholarships.map((scholarship) => (
             <div className="col-12 col-md-6 col-lg-4" key={scholarship.title}>
               <article className="h-full overflow-hidden rounded-md bg-white p-3 text-[#202020] shadow-[0_5px_0_rgba(0,0,0,0.18)]">
-                <div className="relative h-[180px] overflow-hidden rounded-md bg-[#eee6d6] sm:h-[205px] lg:h-[175px]">
+                <div className="relative h-[384px] w-full overflow-hidden rounded-md bg-[#eee6d6] lg:max-w-[410px]">
                   <Image
                     src={scholarship.image}
                     alt={scholarship.title}
                     fill
-                    sizes="(min-width: 992px) 290px, (min-width: 768px) 48vw, 100vw"
+                    sizes="(min-width: 992px) 410px, (min-width: 768px) 48vw, 100vw"
                     className="object-cover"
                   />
                 </div>
 
                 <div className="pt-3">
-                  <h3 className="font-bebas text-[1.35rem] uppercase leading-none text-[#202020]">
+                  <h3 className="font-bebas text-[36px] font-normal uppercase leading-[57.2px] text-[#1E1E1E]">
                     {scholarship.title}
                   </h3>
-                  <p className="mt-1 text-[11px] font-semibold text-[#b22222]">
+                  <p className="mt-1 font-sans text-[16px] font-normal leading-normal text-[#B22222]">
                     {scholarship.category}
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-[#333]">
+                  <p className="mt-2 font-sans text-[18px] font-normal leading-[26px] text-[#252628]">
                     {scholarship.description}
                   </p>
                 </div>

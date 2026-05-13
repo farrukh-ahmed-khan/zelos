@@ -48,15 +48,15 @@ export function ProgramsOverview() {
           </h2>
         </div>
 
-        <div className="row g-4 mx-auto max-w-[960px]">
+        <div className="row g-4">
           {programs.map((program) => (
             <div className="col-12 col-lg-6" key={program.title}>
               <article className="flex h-full flex-col items-center rounded-2xl bg-white px-8 py-10 text-center shadow-[0_4px_0_rgba(0,0,0,0.08)]">
-                <h3 className="font-bebas text-[2rem] uppercase leading-none text-[#202020] sm:text-[2.35rem]">
+                <h3 className="text-center font-bebas text-[60px] font-normal uppercase leading-[76px] tracking-[-2px] text-[#202020]">
                   {program.title}
                 </h3>
 
-                <div className="my-6 flex h-[190px] w-full items-center justify-center sm:h-[220px]">
+                <div className="my-6 flex h-[500px] w-full items-center justify-center sm:h-[450px]">
                   <video
                     className="h-full max-w-full object-contain"
                     autoPlay
@@ -69,13 +69,13 @@ export function ProgramsOverview() {
                   </video>
                 </div>
 
-                <p className="mx-auto max-w-[360px] flex-1 text-sm leading-relaxed text-[#202020]">
+                <p className="mx-auto max-w-[360px] flex-1 text-center font-sans text-[18px] font-medium leading-[30px] text-[#252628]">
                   {program.description}
                 </p>
 
                 <a
                   href={program.href}
-                  className="mt-5 text-sm font-medium !text-[#b22222] transition hover:!text-[#7a0505]"
+                  className="mt-5 text-center font-sans text-[18px] font-medium leading-[30px] !text-[#b22222] transition hover:!text-[#7a0505]"
                 >
                   {program.action} -&gt;
                 </a>
