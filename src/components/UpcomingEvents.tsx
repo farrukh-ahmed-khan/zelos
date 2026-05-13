@@ -38,7 +38,7 @@ export function UpcomingEvents() {
     <section className="bg-[#eee6d6] px-4 py-16 text-[#202020] sm:px-6 lg:py-20">
       <div className="container">
         <div className="mx-auto mb-8 max-w-[520px] text-center">
-          <p className="mb-1 font-bebas text-sm uppercase leading-none text-[#b22222]">
+          <p className="eyebrow-red mb-1">
             Upcoming Special Events
           </p>
           <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text text-center font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-[-1px] text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[90px] sm:leading-[76px] sm:tracking-[-2px]">

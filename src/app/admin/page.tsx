@@ -111,7 +111,7 @@ export default async function AdminPage() {
         </div>
 
         <div className="container py-10">
-          <p className="font-bebas text-sm uppercase tracking-wide text-white/75">
+          <p className="eyebrow-white">
             Admin Panel
           </p>
           <h1 className="font-bebas text-[clamp(3rem,7vw,5.8rem)] uppercase leading-[0.86]">

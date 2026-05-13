@@ -60,7 +60,7 @@ export function SwagStoreHighlight() {
         <div className="mx-auto max-w-[1200px]">
           <div className="mb-9 flex items-end justify-between gap-5">
             <div>
-              <p className="mb-1 font-bebas text-sm uppercase leading-none text-[#b22222]">
+              <p className="eyebrow-red mb-1">
                 Shop Now
               </p>
               <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-[-1px] text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[70px] sm:leading-[62px] sm:tracking-[-2px]">

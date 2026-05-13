@@ -9,7 +9,7 @@ export default async function EventsPage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <section className="container">
-        <p className="font-bebas text-sm uppercase text-[#b22222]">Events</p>
+        <p className="eyebrow-red">Events</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">
           Upcoming & Past Events
         </h1>

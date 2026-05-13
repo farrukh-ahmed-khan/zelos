@@ -6,7 +6,7 @@ export function NonprofitSupport() {
       <div className="container">
         <div className="row mx-auto max-w-[1120px] items-center gy-8">
           <div className="col-12 col-lg-4">
-            <p className="mb-2 font-bebas text-sm uppercase leading-none text-[#b22222]">
+            <p className="eyebrow-red mb-2">
               Support Zelos
             </p>
             <h2 className="font-bebas text-[clamp(3.1rem,5.2vw,5rem)] uppercase leading-[0.95] tracking-[-1px] text-black">

@@ -10,7 +10,7 @@ export function WatchVideoSection() {
         <div className="mx-auto max-w-[960px]">
           <div className="mb-8 grid gap-7 md:grid-cols-[1fr_0.9fr] md:items-center">
             <div>
-              <p className="mb-1 font-bebas text-xs uppercase leading-none text-[#b22222]">
+              <p className="eyebrow-red mb-1">
                 Watch Video
               </p>
               <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-[-1px] text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[70px] sm:leading-[62px] sm:tracking-[-2px]">

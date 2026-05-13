@@ -4,7 +4,7 @@ export default function DonatePage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <section className="container max-w-[920px]">
-        <p className="font-bebas text-sm uppercase text-[#b22222]">Zelos Mission</p>
+        <p className="eyebrow-red">Zelos Mission</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">Donate</h1>
         <div className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="rounded-md border-2 border-[#212121] bg-[#8c0504] p-5 text-white shadow-[0_4px_0_#111]">

@@ -9,7 +9,7 @@ export default async function StorePage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <section className="container">
-        <p className="font-bebas text-sm uppercase text-[#b22222]">Swag Store</p>
+        <p className="eyebrow-red">Swag Store</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">Zelos Store</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => (

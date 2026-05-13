@@ -21,7 +21,7 @@ export default async function ScholarshipAliasPage({
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <section className="container max-w-[1040px]">
-        <p className="font-bebas text-sm uppercase text-[#b22222]">
+        <p className="eyebrow-red">
           {scholarship.field}
         </p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">

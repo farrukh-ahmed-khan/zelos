@@ -231,7 +231,7 @@ export function DashboardShell({
         </header>
 
         <div className="container py-10">
-          <p className="font-bebas text-sm uppercase tracking-wide text-white/75">
+          <p className="eyebrow-white">
             {roleLabels[user.role] ?? user.role}
           </p>
           <h1 className="font-bebas text-[clamp(3rem,7vw,5.8rem)] uppercase leading-[0.86]">

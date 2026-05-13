@@ -33,7 +33,7 @@ export function CommunityForumPreview() {
     <section className="bg-white px-4 py-16 text-[#111] sm:px-6 lg:py-20">
       <div className="container">
         <div className="mx-auto max-w-[960px]">
-          <p className="mb-1 font-bebas text-sm uppercase leading-none text-[#b22222]">
+          <p className="eyebrow-red mb-1">
             Forum
           </p>
           <h2 className="bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text font-bebas text-[56px] font-bold uppercase leading-[50px] tracking-normal text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] sm:text-[90px] sm:leading-[76px]">

@@ -35,7 +35,7 @@ export function ActiveScholarships() {
       <div className="container relative z-20">
         <div className="mx-auto mb-7 flex max-w-[960px] flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-1 font-bebas text-xs uppercase leading-none text-[#f2ebda]">
+            <p className="eyebrow-white mb-1">
               Our Scholarship
             </p>
             <h2 className="font-bebas text-[clamp(2.5rem,4vw,3.6rem)] uppercase leading-[0.85] text-white">

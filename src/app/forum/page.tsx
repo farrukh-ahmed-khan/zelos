@@ -14,7 +14,7 @@ export default async function ForumPage() {
         <div className="sticky top-0 z-20 mb-6 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black shadow-[0_4px_0_#111]">
           Visitors can read. Sign up free or subscribe to post and reply.
         </div>
-        <p className="font-bebas text-sm uppercase text-[#b22222]">Community</p>
+        <p className="eyebrow-red">Community</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">
           Forum
         </h1>

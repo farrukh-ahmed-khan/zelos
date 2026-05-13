@@ -46,7 +46,7 @@ export function AuthPageShell({ mode }: AuthPageShellProps) {
 
           <div className="grid min-h-[calc(100vh-9rem)] gap-10 py-12 lg:grid-cols-[1fr_520px] lg:items-center">
             <div className="max-w-[700px] text-white">
-              <p className="mb-3 font-bebas text-[13px] uppercase leading-none tracking-wide text-white/80 sm:text-base">
+              <p className="eyebrow-white mb-3">
                 {isSignup ? "Join Zelos" : "Welcome Back"}
               </p>
               <h1 className="font-bebas text-[clamp(3.2rem,7vw,6rem)] uppercase leading-[0.86] text-white">

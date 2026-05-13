@@ -19,7 +19,7 @@ export default async function EventDetailPage({
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <section className="container max-w-[980px]">
-        <p className="font-bebas text-sm uppercase text-[#b22222]">{event.type === "online" ? "Online" : "Physical Event"}</p>
+        <p className="eyebrow-red">{event.type === "online" ? "Online" : "Physical Event"}</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">{event.title}</h1>
         <div className="mt-6 rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
           <p className="font-bold">{new Date(event.date).toLocaleString()}</p>

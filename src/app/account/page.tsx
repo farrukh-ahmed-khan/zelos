@@ -47,7 +47,7 @@ export default async function AccountPage() {
         </header>
 
         <div className="mx-auto max-w-[860px]">
-          <p className="font-bebas text-sm uppercase text-[#b22222]">Account</p>
+          <p className="eyebrow-red">Account</p>
           <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">
             Settings
           </h1>
