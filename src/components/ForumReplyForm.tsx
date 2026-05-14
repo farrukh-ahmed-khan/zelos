@@ -7,7 +7,8 @@ export function ForumReplyForm({ threadId }: { threadId: string }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch(`/api/forum/threads/${threadId}/replies`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -15,7 +16,7 @@ export function ForumReplyForm({ threadId }: { threadId: string }) {
     });
     const result = await response.json();
     setMessage(response.ok ? "Reply posted." : result?.error?.message ?? "Unable to reply.");
-    if (response.ok) event.currentTarget.reset();
+    if (response.ok) form.reset();
   }
 
   return (

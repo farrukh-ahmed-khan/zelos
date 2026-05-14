@@ -71,14 +71,15 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
 
   async function handlePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
 
     try {
       await submitJson("/api/account/password", {
         currentPassword: String(formData.get("currentPassword") ?? ""),
         password: String(formData.get("password") ?? ""),
       });
-      event.currentTarget.reset();
+      form.reset();
       setMessage("Password updated.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Password update failed.");

@@ -30,10 +30,11 @@ export function MentorApplicationForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setSubmitState("submitting");
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
 
     const payload = {
       name: String(formData.get("name") ?? ""),
@@ -70,7 +71,7 @@ export function MentorApplicationForm() {
         );
       }
 
-      event.currentTarget.reset();
+      form.reset();
       setExpertise(["Finance"]);
       setSubmitState("success");
       setMessage("Thanks. Your mentor application has been sent to the admin team.");

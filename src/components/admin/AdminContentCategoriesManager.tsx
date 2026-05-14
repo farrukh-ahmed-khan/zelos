@@ -21,7 +21,8 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     event.preventDefault();
     setError("");
     setMessage("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch("/api/admin/content-categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -42,7 +43,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
 
     setItems((current) => [result.data.category, ...current]);
     setMessage("Category created.");
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (

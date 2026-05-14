@@ -7,7 +7,8 @@ export function StudentInviteForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch("/api/schools/invite-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -15,7 +16,7 @@ export function StudentInviteForm() {
     });
     const result = await response.json();
     setMessage(response.ok ? `Invite created: ${result.data.invite.inviteUrl}` : result?.error?.message ?? "Unable to invite student.");
-    if (response.ok) event.currentTarget.reset();
+    if (response.ok) form.reset();
   }
 
   return (

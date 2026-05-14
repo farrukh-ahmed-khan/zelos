@@ -26,7 +26,8 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
     event.preventDefault();
     setMessage("");
     setError("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch("/api/admin/school-resources", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,7 +54,7 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
 
     setItems((current) => [result.data.resource, ...current]);
     setMessage("School resource created.");
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (

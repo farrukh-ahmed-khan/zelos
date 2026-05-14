@@ -24,7 +24,8 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     event.preventDefault();
     setMessage("");
     setError("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch("/api/schools", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -50,14 +51,15 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
 
     setItems((current) => [result.data.school, ...current]);
     setMessage("School created.");
-    event.currentTarget.reset();
+    form.reset();
   }
 
   async function inviteTeacher(event: FormEvent<HTMLFormElement>, schoolId: string) {
     event.preventDefault();
     setMessage("");
     setError("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch(`/api/schools/${schoolId}/invite-teacher`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,7 +73,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     }
 
     setMessage(`Teacher invite created: ${result.data.invite.inviteUrl}`);
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (

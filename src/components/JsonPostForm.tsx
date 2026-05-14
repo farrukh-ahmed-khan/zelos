@@ -23,7 +23,8 @@ export function JsonPostForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const payload: Record<string, string | number> = {};
     for (const field of fields) {
       const raw = String(formData.get(field.name) ?? "");
@@ -36,7 +37,7 @@ export function JsonPostForm({
     });
     const result = await response.json();
     setMessage(response.ok ? result?.data?.message ?? "Submitted." : result?.error?.message ?? "Unable to submit.");
-    if (response.ok) event.currentTarget.reset();
+    if (response.ok) form.reset();
   }
 
   return (

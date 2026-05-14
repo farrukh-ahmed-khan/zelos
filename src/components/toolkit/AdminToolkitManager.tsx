@@ -24,7 +24,8 @@ export function AdminToolkitManager({ resources }: { resources: Resource[] }) {
     event.preventDefault();
     setMessage("");
     setError("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch("/api/admin/toolkit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -49,7 +50,7 @@ export function AdminToolkitManager({ resources }: { resources: Resource[] }) {
 
     setItems((current) => [result.data.resource, ...current]);
     setMessage("Toolkit resource created.");
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (

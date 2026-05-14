@@ -25,7 +25,8 @@ export function AdminVideosManager({ videos }: { videos: Video[] }) {
     event.preventDefault();
     setMessage("");
     setError("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const response = await fetch("/api/admin/videos", {
       method: "POST",
       body: formData,
@@ -39,7 +40,7 @@ export function AdminVideosManager({ videos }: { videos: Video[] }) {
 
     setItems((current) => [result.data.video, ...current]);
     setMessage("Video uploaded.");
-    event.currentTarget.reset();
+    form.reset();
   }
 
   async function removeVideo(videoId: string) {

@@ -31,7 +31,8 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
     event.preventDefault();
     setMessage("");
     setError("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const selected = permissions.filter((permission) => formData.get(permission) === "on");
     const response = await fetch("/api/admin/invites", {
       method: "POST",
@@ -51,7 +52,7 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
 
     setItems((current) => [result.data.invite, ...current]);
     setMessage(`Invite created: ${result.data.invite.inviteUrl}`);
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (
