@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useMemo } from "react";
+import { Table, Input, Button, Tag, Space, message as antMessage } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import type { TableColumnsType, TablePaginationConfig } from "antd";
 
 type School = {
   id: string;
@@ -17,70 +20,201 @@ type School = {
 
 export function AdminSchoolsManager({ schools }: { schools: School[] }) {
   const [items, setItems] = useState(schools);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [messageText, setMessageText] = useState("");
+  const [errorText, setErrorText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [invitingSchoolId, setInvitingSchoolId] = useState<string | null>(null);
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm) return items;
+    return items.filter(
+      (school) =>
+        school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.district?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [items, searchTerm]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   async function createSchool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
-    setError("");
+    setErrorText("");
+    setIsSubmitting(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch("/api/schools", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: String(formData.get("name") ?? ""),
-        licenseType: String(formData.get("licenseType") ?? "school"),
-        district: String(formData.get("district") ?? ""),
-        teacherLimit: Number(formData.get("teacherLimit") ?? 1),
-        studentLimit: Number(formData.get("studentLimit") ?? 1),
-        licenseStatus: String(formData.get("licenseStatus") ?? "active"),
-        assignedTracks: String(formData.get("assignedTracks") ?? "")
-          .split(",")
-          .map((track) => track.trim())
-          .filter(Boolean),
-      }),
-    });
-    const result = await response.json();
+    try {
+      const response = await fetch("/api/schools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(formData.get("name") ?? ""),
+          licenseType: String(formData.get("licenseType") ?? "school"),
+          district: String(formData.get("district") ?? ""),
+          teacherLimit: Number(formData.get("teacherLimit") ?? 1),
+          studentLimit: Number(formData.get("studentLimit") ?? 1),
+          licenseStatus: String(formData.get("licenseStatus") ?? "active"),
+          assignedTracks: String(formData.get("assignedTracks") ?? "")
+            .split(",")
+            .map((track) => track.trim())
+            .filter(Boolean),
+        }),
+      });
+      const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to create school.");
-      return;
+      if (!response.ok) {
+        setErrorText(result?.error?.message ?? "Unable to create school.");
+        antMessage.error(result?.error?.message ?? "Unable to create school.");
+        return;
+      }
+
+      setItems((current) => [result.data.school, ...current]);
+      antMessage.success("School created successfully.");
+      form.reset();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setItems((current) => [result.data.school, ...current]);
-    setMessage("School created.");
-    form.reset();
   }
 
   async function inviteTeacher(event: FormEvent<HTMLFormElement>, schoolId: string) {
     event.preventDefault();
-    setMessage("");
-    setError("");
+    setErrorText("");
+    setInvitingSchoolId(schoolId);
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch(`/api/schools/${schoolId}/invite-teacher`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: String(formData.get("email") ?? "") }),
-    });
-    const result = await response.json();
+    try {
+      const response = await fetch(`/api/schools/${schoolId}/invite-teacher`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: String(formData.get("email") ?? "") }),
+      });
+      const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to invite teacher.");
-      return;
+      if (!response.ok) {
+        setErrorText(result?.error?.message ?? "Unable to invite teacher.");
+        antMessage.error(result?.error?.message ?? "Unable to invite teacher.");
+        return;
+      }
+
+      antMessage.success(`Teacher invite created for ${formData.get("email")}`);
+      form.reset();
+    } finally {
+      setInvitingSchoolId(null);
     }
-
-    setMessage(`Teacher invite created: ${result.data.invite.inviteUrl}`);
-    form.reset();
   }
+
+  const columns: TableColumnsType<School> = [
+    {
+      title: "School Name",
+      dataIndex: "name",
+      key: "name",
+      width: 200,
+      render: (text: string, record: School) => (
+        <div>
+          <div className="font-bold text-[#202020]">{text}</div>
+          {record.district && <div className="text-xs text-[#667085]">{record.district}</div>}
+        </div>
+      ),
+    },
+    {
+      title: "Type",
+      dataIndex: "licenseType",
+      key: "licenseType",
+      width: 100,
+      render: (text: string) => <span className="capitalize">{text}</span>,
+    },
+    {
+      title: "License Status",
+      dataIndex: "licenseStatus",
+      key: "licenseStatus",
+      width: 120,
+      render: (status: string) => {
+        const colors: { [key: string]: string } = {
+          active: "green",
+          expired: "orange",
+          suspended: "red",
+        };
+        return <Tag color={colors[status] || "default"}>{status.toUpperCase()}</Tag>;
+      },
+    },
+    {
+      title: "Teachers",
+      dataIndex: "teachersCount",
+      key: "teachers",
+      width: 100,
+      render: (_, record: School) => `${record.teachersCount}/${record.teacherLimit}`,
+    },
+    {
+      title: "Students",
+      dataIndex: "studentsCount",
+      key: "students",
+      width: 100,
+      render: (_, record: School) => `${record.studentsCount}/${record.studentLimit}`,
+    },
+    {
+      title: "Tracks",
+      dataIndex: "assignedTracks",
+      key: "tracks",
+      width: 150,
+      render: (tracks: string[]) =>
+        tracks?.length ? (
+          <Space size="small" wrap>
+            {tracks.map((track) => (
+              <Tag key={track} color="blue">
+                {track}
+              </Tag>
+            ))}
+          </Space>
+        ) : (
+          <span className="text-[#999]">—</span>
+        ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      width: 200,
+      render: (_, record: School) => (
+        <form onSubmit={(e) => inviteTeacher(e, record.id)} className="flex gap-1">
+          <input
+            name="email"
+            type="email"
+            placeholder="Teacher email"
+            required
+            className="flex-1 rounded-md border border-[#d8d2c5] px-2 py-1.5 text-xs"
+          />
+          <Button
+            type="primary"
+            size="small"
+            htmlType="submit"
+            loading={invitingSchoolId === record.id}
+          >
+            Invite
+          </Button>
+        </form>
+      ),
+    },
+  ];
+
+  const pagination: TablePaginationConfig = {
+    current: currentPage,
+    pageSize: pageSize,
+    total: filteredItems.length,
+    onChange: (page, pageSize) => {
+      setCurrentPage(page);
+      setPageSize(pageSize);
+    },
+    pageSizeOptions: [10, 20, 50],
+    showSizeChanger: true,
+    showTotal: (total) => `Total ${total} school${total !== 1 ? "s" : ""}`,
+  };
 
   return (
     <div className="grid gap-6">
-      {message ? <p className="rounded-md bg-[#eef8e8] px-4 py-3 text-sm font-bold text-[#24551f]">{message}</p> : null}
-      {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
-
       <form onSubmit={createSchool} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
         <label className="grid gap-1 text-sm font-bold text-[#344054]">
           School / District Name
@@ -119,30 +253,34 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
           Assigned Level Tracks
           <input name="assignedTracks" placeholder="Children, Teens, Young Adults" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Create School</button>
+        <button
+          disabled={isSubmitting}
+          className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? "Creating..." : "Create School"}
+        </button>
       </form>
 
-      <section className="grid gap-3">
-        {items.map((school) => (
-          <article key={school.id} className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
-            <div className="grid gap-3 lg:grid-cols-[1fr_360px]">
-              <div>
-                <p className="font-bold">{school.name}</p>
-                <p className="text-sm text-[#555]">
-                  {school.licenseType} / {school.licenseStatus} / teachers {school.teachersCount}/{school.teacherLimit} / students {school.studentsCount}/{school.studentLimit}
-                </p>
-                <p className="mt-1 text-xs text-[#667085]">
-                  Tracks: {school.assignedTracks?.length ? school.assignedTracks.join(", ") : "None assigned"}
-                </p>
-              </div>
-              <form onSubmit={(event) => inviteTeacher(event, school.id)} className="flex gap-2">
-                <input name="email" type="email" placeholder="Teacher email" required className="min-w-0 flex-1 rounded-md border border-[#d8d2c5] px-3 py-2 text-sm" />
-                <button className="rounded-md border border-[#cfd4dc] px-3 py-2 text-sm font-bold hover:border-[#8c0504]">Invite</button>
-              </form>
-            </div>
-          </article>
-        ))}
-      </section>
+      <div className="grid gap-3 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <Input
+          placeholder="Search schools by name or district..."
+          prefix={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          size="large"
+          className="mb-2"
+        />
+        <Table
+          columns={columns}
+          dataSource={filteredItems}
+          rowKey="id"
+          pagination={pagination}
+          scroll={{ x: 1200 }}
+          locale={{
+            emptyText: "No schools found",
+          }}
+        />
+      </div>
     </div>
   );
 }
