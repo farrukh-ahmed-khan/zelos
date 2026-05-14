@@ -82,20 +82,43 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <form onSubmit={createSchool} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
-        <input name="name" placeholder="School or district name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <select name="licenseType" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="school">School</option>
-          <option value="district">District</option>
-        </select>
-        <input name="district" placeholder="District tag" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <select name="licenseStatus" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-          <option value="suspended">Suspended</option>
-        </select>
-        <input name="teacherLimit" type="number" min={1} defaultValue={5} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="studentLimit" type="number" min={1} defaultValue={100} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="assignedTracks" placeholder="Children, Teens, Young Adults" className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          School / District Name
+          <input name="name" placeholder="Example: Lincoln Middle School" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          License Type
+          <select name="licenseType" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="school">School</option>
+            <option value="district">District</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          District Tag
+          <input name="district" placeholder="Optional, e.g. Dallas ISD" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          License Status
+          <select name="licenseStatus" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Teacher Seat Limit
+          <input name="teacherLimit" type="number" min={1} defaultValue={5} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <span className="text-xs font-normal text-[#667085]">Maximum teacher accounts this school can invite.</span>
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Student / Children Seat Limit
+          <input name="studentLimit" type="number" min={1} defaultValue={100} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <span className="text-xs font-normal text-[#667085]">Maximum student/child accounts teachers can invite.</span>
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054] md:col-span-2">
+          Assigned Level Tracks
+          <input name="assignedTracks" placeholder="Children, Teens, Young Adults" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
         <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Create School</button>
       </form>
 
