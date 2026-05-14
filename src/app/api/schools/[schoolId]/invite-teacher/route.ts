@@ -26,7 +26,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
 
     await queueEmail({
-      template: "school-teacher-invite",
+      template: "teacher-invite",
       recipient: result.invite.email,
       payload: {
         inviteUrl: result.inviteUrl,

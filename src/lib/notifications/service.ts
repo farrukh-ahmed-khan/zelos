@@ -2,6 +2,8 @@ import { connectToDatabase } from "@/lib/db";
 import Notification from "@/models/Notification";
 import EmailOutbox from "@/models/EmailOutbox";
 import User from "@/models/User";
+import { sendTransactionalEmail } from "@/lib/notifications/mailer";
+import type { TransactionalEmailTemplate } from "@/lib/notifications/templates";
 
 export async function createNotification(params: {
   userId: string;
@@ -22,18 +24,38 @@ export async function createNotification(params: {
 }
 
 export async function queueEmail(params: {
-  template: string;
+  template: TransactionalEmailTemplate | "school-teacher-invite";
   recipient: string;
   payload: Record<string, unknown>;
 }) {
   await connectToDatabase();
 
-  return EmailOutbox.create({
+  const email = await EmailOutbox.create({
     template: params.template,
     recipient: params.recipient,
     payload: params.payload,
     status: "pending",
   });
+
+  try {
+    await sendTransactionalEmail({
+      template: params.template,
+      recipient: params.recipient,
+      payload: params.payload,
+    });
+
+    email.status = "sent";
+    email.sentAt = new Date();
+    email.error = null;
+    await email.save();
+  } catch (error) {
+    email.status = "failed";
+    email.error = error instanceof Error ? error.message : "Unknown email delivery error.";
+    await email.save();
+    throw error;
+  }
+
+  return email;
 }
 
 export async function notifyUsers(params: {

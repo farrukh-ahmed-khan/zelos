@@ -106,8 +106,10 @@ function StatCard({
       <p className="text-xs font-black uppercase tracking-wide text-[#b22222]">
         {label}
       </p>
-      <p className="mt-2 font-bebas text-4xl leading-none">{value}</p>
-      <p className="mt-1 text-xs leading-relaxed text-[#4a4a4a]">{detail}</p>
+      <p className="mt-2 line-clamp-2 wrap-break-word font-bebas text-[2.5rem] uppercase leading-[0.88] tracking-tight">
+        {value}
+      </p>
+      <p className="mt-2 text-xs leading-relaxed text-[#4a4a4a]">{detail}</p>
     </article>
   );
 }
