@@ -1,8 +1,22 @@
 import { TokenActionForm } from "@/components/TokenActionForm";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
+import { verifyAuthToken } from "@/lib/auth/jwt";
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+
+  if (token) {
+    const payload = await verifyAuthToken(token).catch(() => null);
+
+    if (payload) {
+      redirect("/dashboard");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-16 text-[#202020]">
       <Header />
