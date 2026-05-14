@@ -35,7 +35,15 @@ export function SwagStoreHighlight() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(1);
 
+  const hasMountedRef = useRef(false);
+
   useEffect(() => {
+    // Skip scrolling on initial mount to avoid jumping the page
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
     const activeSlide = sliderRef.current?.children[activeIndex];
     activeSlide?.scrollIntoView({
       behavior: "smooth",
