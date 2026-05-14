@@ -43,6 +43,12 @@ const UserSchema = new Schema(
       required: true,
       index: true,
     },
+    accountType: {
+      type: String,
+      enum: ["individual", "family"],
+      default: "individual",
+      index: true,
+    },
     age: {
       type: Number,
       required: true,
@@ -135,6 +141,12 @@ const UserSchema = new Schema(
     lastLoginAt: {
       type: Date,
       default: null,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null,
+      index: true,
+      select: false,
     },
     isBanned: {
       type: Boolean,

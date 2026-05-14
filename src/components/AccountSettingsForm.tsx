@@ -95,7 +95,7 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
     });
 
     if (response.ok) {
-      window.location.href = "/login";
+      window.location.assign("/login");
     }
   }
 
@@ -139,6 +139,13 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
           Update Password
         </button>
       </form>
+
+      <a
+        href="/billing"
+        className="w-fit rounded-md border-2 border-[#212121] bg-white px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]"
+      >
+        Billing Portal
+      </a>
 
       <button
         type="button"

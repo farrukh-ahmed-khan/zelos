@@ -2,6 +2,7 @@ import { connectToDatabase } from "@/lib/db";
 import SchoolResource, {
   type SchoolResourceDocument,
 } from "@/models/SchoolResource";
+import School from "@/models/School";
 import { type UserDocument } from "@/models/User";
 
 export function serializeSchoolResource(resource: SchoolResourceDocument) {
@@ -56,6 +57,7 @@ export async function getSchoolResourcesForUser(user: UserDocument) {
   }
 
   const now = new Date();
+  const school = await School.findById(user.schoolId).select("district").lean();
 
   return SchoolResource.find({
     audience: user.role,
@@ -69,8 +71,22 @@ export async function getSchoolResourcesForUser(user: UserDocument) {
         $or: [
           { schoolScope: "all-schools" },
           { schoolScope: "specific-schools", schoolIds: user.schoolId },
+          ...(school?.district
+            ? [{ schoolScope: "district", district: school.district }]
+            : []),
         ],
       },
     ],
   }).sort({ order: 1, createdAt: 1 });
+}
+
+export async function getSchoolResourcesForAdmin() {
+  await connectToDatabase();
+
+  return SchoolResource.find().sort({
+    audience: 1,
+    ageTrack: 1,
+    resourceType: 1,
+    order: 1,
+  });
 }

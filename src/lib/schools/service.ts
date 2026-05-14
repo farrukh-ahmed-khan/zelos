@@ -96,6 +96,8 @@ export async function createSchool(params: {
   name: string;
   teacherLimit: number;
   studentLimit: number;
+  licenseType?: "school" | "district";
+  district?: string;
   licenseStatus?: "active" | "expired" | "suspended";
   licenseStartsAt?: string;
   licenseExpiresAt?: string;
@@ -114,6 +116,8 @@ export async function createSchool(params: {
     name: params.name,
     teacherLimit: params.teacherLimit,
     studentLimit: params.studentLimit,
+    licenseType: params.licenseType ?? "school",
+    district: params.district || null,
     teachersCount: 0,
     studentsCount: 0,
     licenseStatus: params.licenseStatus ?? "active",

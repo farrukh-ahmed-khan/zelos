@@ -4,8 +4,40 @@ import { handleApiError, successResponse, ApiError } from "@/lib/http";
 import { createVideoSchema } from "@/lib/validation/admin";
 import { createVideoByAdminWithUpload } from "@/lib/admin/service";
 import { parseFormData } from "@/lib/aws/parse-form";
+import Video from "@/models/Video";
 
 export const runtime = "nodejs";
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdminPermission(request, "content.manage");
+    const videos = await Video.find()
+      .sort({ audience: 1, ageTrack: 1, order: 1, createdAt: -1 })
+      .lean();
+
+    return successResponse({
+      count: videos.length,
+      videos: videos.map((video) => ({
+        id: video._id.toString(),
+        title: video.title,
+        description: video.description,
+        url: video.url,
+        ageTrack: video.ageTrack,
+        audience: video.audience,
+        category: video.category,
+        order: video.order,
+        releaseDate: video.releaseDate,
+        dripEnabled: video.dripEnabled,
+        isFreePreview: video.isFreePreview,
+        isMissionVideo: video.isMissionVideo,
+        createdAt: video.createdAt,
+        updatedAt: video.updatedAt,
+      })),
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

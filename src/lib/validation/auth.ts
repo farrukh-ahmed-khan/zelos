@@ -13,6 +13,7 @@ export const registerSchema = z.object({
       "Password must include uppercase, lowercase, and a number.",
     ),
   role: z.enum(SELF_REGISTER_ROLES),
+  accountType: z.enum(["individual", "family"]).optional(),
   age: z.number().int().min(1).max(120),
   ageTrack: z.string().trim().min(2).max(60).optional(),
   interests: z.array(z.string().trim().min(1).max(80)).max(10).optional(),

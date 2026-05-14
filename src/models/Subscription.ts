@@ -61,6 +61,20 @@ const SubscriptionSchema = new Schema(
       type: Date,
       default: null,
     },
+    stripeSubscriptionId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    stripeCheckoutSessionId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    canceledAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

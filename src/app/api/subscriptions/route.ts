@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     });
 
     await queueEmail({
-      template: "subscription-payment-confirmed",
+      template: "subscription-confirmation",
       recipient: user.email,
       payload: {
         name: user.name,

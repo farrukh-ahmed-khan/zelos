@@ -52,7 +52,7 @@ export function resolveSubscriptionAccessFromDocument(
     };
   }
 
-  if (subscription.status === "canceled") {
+  if (subscription.status === "canceled" && subscription.expiryDate < now) {
     return {
       hasPremiumAccess: false,
       inGracePeriod: false,

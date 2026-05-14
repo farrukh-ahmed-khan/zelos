@@ -52,6 +52,26 @@ export const createSubscriptionPlanSchema = z.object({
 
 export const updateSubscriptionPlanSchema = createSubscriptionPlanSchema.partial();
 
+export const createAdminInviteSchema = z.object({
+  email: z.email().trim().toLowerCase(),
+  role: z.enum(["forum-moderator", "sub-admin"]),
+  adminPermissions: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
+});
+
+export const acceptAdminInviteSchema = z.object({
+  token: z.string().trim().min(32),
+  name: z.string().trim().min(2).max(120),
+  password: z
+    .string()
+    .min(8)
+    .max(72)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+      "Password must include uppercase, lowercase, and a number.",
+    ),
+  age: z.number().int().min(1).max(120),
+});
+
 export const createBroadcastSchema = z.object({
   title: z.string().trim().min(3).max(180),
   content: z.string().trim().min(5).max(5000),

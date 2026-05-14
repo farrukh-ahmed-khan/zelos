@@ -80,3 +80,9 @@ export async function getUnlockedToolkitDownload(user: UserDocument, resourceId:
 
   return resource;
 }
+
+export async function getToolkitResourcesForAdmin() {
+  await connectToDatabase();
+
+  return ToolkitResource.find().sort({ ageTrack: 1, order: 1, resourceType: 1 });
+}

@@ -25,6 +25,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
   const [role, setRole] = useState<"mentee" | "subscriber">("mentee");
+  const [accountType, setAccountType] = useState<"individual" | "family">("individual");
   const [interests, setInterests] = useState<string[]>(["Budgeting"]);
 
   const isSignup = mode === "signup";
@@ -50,6 +51,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           email: String(formData.get("email") ?? ""),
           password: String(formData.get("password") ?? ""),
           role,
+          accountType,
           age: Number(formData.get("age") ?? 0),
           interests,
           termsAccepted: formData.get("termsAccepted") === "on",
@@ -160,6 +162,28 @@ export function AuthForm({ mode }: AuthFormProps) {
               </div>
             </fieldset>
           </div>
+
+          {role === "subscriber" ? (
+            <fieldset className="grid gap-2">
+              <legend className="text-sm font-bold">Subscriber plan type</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(["individual", "family"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setAccountType(option)}
+                    className={
+                      accountType === option
+                        ? "rounded-md border-2 border-[#212121] bg-[#faff8d] px-3 py-3 text-sm font-black capitalize shadow-[0_3px_0_#111]"
+                        : "rounded-md border border-[#d8d2c5] bg-[#f7f2e8] px-3 py-3 text-sm font-bold capitalize transition hover:border-[#b22222]"
+                    }
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
 
           <fieldset className="grid gap-3">
             <legend className="text-sm font-bold">Interests</legend>

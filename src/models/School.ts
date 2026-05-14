@@ -19,6 +19,18 @@ const SchoolSchema = new Schema(
       required: true,
       min: 1,
     },
+    licenseType: {
+      type: String,
+      enum: ["school", "district"],
+      default: "school",
+      index: true,
+    },
+    district: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
     teachersCount: {
       type: Number,
       required: true,

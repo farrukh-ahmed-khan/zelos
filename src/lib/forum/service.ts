@@ -26,6 +26,16 @@ export async function getForumThreads() {
   ]);
 
   const repliesByThreadId = new Map<string, Array<Record<string, unknown>>>();
+  const replyAuthorIds = Array.from(new Set(replies.map((reply) => reply.authorId)));
+  const replyAuthors = await User.find({ _id: { $in: replyAuthorIds } })
+    .select("name role")
+    .lean();
+  const replyAuthorById = new Map(
+    replyAuthors.map((author) => [
+      author._id.toString(),
+      { name: author.name, role: author.role },
+    ]),
+  );
 
   for (const reply of replies) {
     const list = repliesByThreadId.get(reply.threadId) ?? [];
@@ -37,6 +47,7 @@ export async function getForumThreads() {
       isHidden: reply.isHidden,
       createdAt: reply.createdAt,
       updatedAt: reply.updatedAt,
+      author: replyAuthorById.get(reply.authorId) ?? null,
     });
     repliesByThreadId.set(reply.threadId, list);
   }
@@ -65,6 +76,26 @@ export async function getForumThreads() {
         : null,
     };
   }));
+}
+
+export async function getForumCategorySummary() {
+  await connectToDatabase();
+
+  const threads = await ForumThread.find({ isHidden: false })
+    .select("category updatedAt createdAt")
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  return FORUM_CATEGORIES.map((category) => {
+    const categoryThreads = threads.filter((thread) => thread.category === category);
+    const lastThread = categoryThreads[0];
+
+    return {
+      category,
+      threadCount: categoryThreads.length,
+      lastActivityAt: lastThread?.updatedAt ?? lastThread?.createdAt ?? null,
+    };
+  });
 }
 
 export async function createForumThread(params: {
@@ -163,4 +194,34 @@ export async function getForumReports() {
       };
     }),
   );
+}
+
+export async function hideForumThread(threadId: string) {
+  await connectToDatabase();
+  const thread = await ForumThread.findByIdAndUpdate(
+    threadId,
+    { $set: { isHidden: true } },
+    { new: true },
+  );
+
+  if (!thread) {
+    throw new ApiError(404, "Thread not found.");
+  }
+
+  return thread;
+}
+
+export async function hideForumReply(replyId: string) {
+  await connectToDatabase();
+  const reply = await ForumReply.findByIdAndUpdate(
+    replyId,
+    { $set: { isHidden: true } },
+    { new: true },
+  );
+
+  if (!reply) {
+    throw new ApiError(404, "Reply not found.");
+  }
+
+  return reply;
 }
