@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import Link from "next/link";
 import { Button, Input, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
@@ -174,25 +173,14 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       title: "Playlists",
       dataIndex: "playlists",
       key: "playlists",
-      width: 460,
+      width: 320,
       render: (playlists: Category[]) => (
         <Space size="small" wrap>
-          {playlists.map((playlist) => {
-            const playlistId = playlist.id ?? playlist._id;
-
-            return (
-              <Space key={playlistId ?? playlist.playlist} size={6} wrap>
-                <Tag color={playlist.isActive ? "green" : "default"}>
-                  {playlist.order}. {playlist.playlist ?? "General"}
-                </Tag>
-                {playlistId ? (
-                  <Link href={`/admin/content-categories/${playlistId}/videos`}>
-                    <Button size="small">Upload videos</Button>
-                  </Link>
-                ) : null}
-              </Space>
-            );
-          })}
+          {playlists.map((playlist) => (
+            <Tag key={playlist.id ?? playlist._id ?? playlist.playlist} color={playlist.isActive ? "green" : "default"}>
+              {playlist.order}. {playlist.playlist ?? "General"}
+            </Tag>
+          ))}
         </Space>
       ),
     },
