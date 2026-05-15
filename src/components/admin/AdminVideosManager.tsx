@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Button, Input, Space, Table, Tag, message as antMessage } from "antd";
+import { Button, Input, Select, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 
@@ -13,6 +13,9 @@ type Video = {
   audience: string;
   category: string;
   playlist?: string;
+  schoolScope: "global" | "all-schools" | "specific-schools" | "district";
+  schoolIds: string[];
+  district: string | null;
   order: number;
   releaseDate: string | null;
   dripEnabled: boolean;
@@ -26,6 +29,12 @@ type ContentCategory = {
   playlist: string;
   ageTrack: string;
   audience: string;
+};
+
+type School = {
+  id: string;
+  name: string;
+  district: string | null;
 };
 
 const TEACHER_TRACK = "Teachers";
@@ -55,9 +64,11 @@ function formatAgeTrack(ageTrack: string) {
 export function AdminVideosManager({
   videos,
   categories,
+  schools,
 }: {
   videos: Video[];
   categories: ContentCategory[];
+  schools: School[];
 }) {
   const [items, setItems] = useState(videos);
   const [message, setMessage] = useState("");
@@ -65,12 +76,21 @@ export function AdminVideosManager({
   const [selectedAgeTrack, setSelectedAgeTrack] = useState("");
   const [selectedAudience, setSelectedAudience] = useState("subscriber");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedSchoolScope, setSelectedSchoolScope] = useState<"global" | "all-schools" | "specific-schools" | "district">("global");
+  const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const isTeacherAudience = selectedAudience === "teacher";
+  const isSchoolAudience = selectedAudience === "teacher" || selectedAudience === "student";
+
+  const districtOptions = useMemo(
+    () => Array.from(new Set(schools.map((school) => school.district).filter(Boolean))) as string[],
+    [schools],
+  );
 
   const matchingCategories = useMemo(
     () =>
@@ -93,6 +113,8 @@ export function AdminVideosManager({
         video.description,
         formatAgeTrack(video.ageTrack),
         video.audience,
+        video.schoolScope,
+        video.district ?? "",
         video.category,
         video.playlist ?? "General",
         video.dripEnabled ? "drip locked" : "open order",
@@ -129,6 +151,21 @@ export function AdminVideosManager({
     formData.set("category", selectedCategory.name);
     formData.set("playlist", selectedCategory.playlist);
     formData.set("ageTrack", selectedCategory.ageTrack || TEACHER_TRACK);
+    formData.set("schoolScope", isSchoolAudience ? selectedSchoolScope : "global");
+    formData.set("schoolIds", selectedSchoolScope === "specific-schools" ? selectedSchoolIds.join(",") : "");
+    formData.set("district", selectedSchoolScope === "district" ? selectedDistrict : "");
+
+    if (selectedSchoolScope === "specific-schools" && !selectedSchoolIds.length) {
+      setError("Choose at least one school for specific-school videos.");
+      antMessage.error("Choose at least one school for specific-school videos.");
+      return;
+    }
+
+    if (selectedSchoolScope === "district" && !selectedDistrict) {
+      setError("Choose a district for district-scoped videos.");
+      antMessage.error("Choose a district for district-scoped videos.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -151,6 +188,9 @@ export function AdminVideosManager({
       setSelectedAgeTrack("");
       setSelectedAudience("subscriber");
       setSelectedCategoryId("");
+      setSelectedSchoolScope("global");
+      setSelectedSchoolIds([]);
+      setSelectedDistrict("");
     } finally {
       setIsSubmitting(false);
     }
@@ -221,6 +261,29 @@ export function AdminVideosManager({
           <div className="text-xs text-[#667085]">{record.playlist ?? "General"}</div>
         </div>
       ),
+    },
+    {
+      title: "School Scope",
+      key: "schoolScope",
+      width: 220,
+      render: (_, record: Video) => {
+        if (!["teacher", "student"].includes(record.audience)) {
+          return <span className="text-[#999]">Global</span>;
+        }
+
+        return (
+          <div>
+            <div className="font-bold capitalize text-[#202020]">{record.schoolScope.replace("-", " ")}</div>
+            <div className="text-xs text-[#667085]">
+              {record.schoolScope === "specific-schools"
+                ? `${record.schoolIds.length} school${record.schoolIds.length === 1 ? "" : "s"}`
+                : record.schoolScope === "district"
+                  ? record.district ?? "No district"
+                  : "All schools"}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: "Flags",
@@ -301,6 +364,10 @@ export function AdminVideosManager({
             if (event.target.value === "teacher") {
               setSelectedAgeTrack("");
             }
+            const nextIsSchoolAudience = event.target.value === "teacher" || event.target.value === "student";
+            setSelectedSchoolScope(nextIsSchoolAudience ? "all-schools" : "global");
+            setSelectedSchoolIds([]);
+            setSelectedDistrict("");
             setSelectedCategoryId("");
           }}
           className="rounded-md border border-[#d8d2c5] px-3 py-3"
@@ -310,6 +377,50 @@ export function AdminVideosManager({
           <option value="student">Student Library</option>
           <option value="public-preview">Free Preview</option>
         </select>
+        {isSchoolAudience ? (
+          <>
+            <select
+              value={selectedSchoolScope}
+              onChange={(event) => {
+                setSelectedSchoolScope(event.target.value as "all-schools" | "specific-schools" | "district");
+                setSelectedSchoolIds([]);
+                setSelectedDistrict("");
+              }}
+              className="rounded-md border border-[#d8d2c5] px-3 py-3"
+            >
+              <option value="all-schools">All Schools</option>
+              <option value="specific-schools">Specific Schools</option>
+              <option value="district">District</option>
+            </select>
+            {selectedSchoolScope === "specific-schools" ? (
+              <Select
+                mode="multiple"
+                placeholder="Select schools"
+                value={selectedSchoolIds}
+                onChange={setSelectedSchoolIds}
+                options={schools.map((school) => ({
+                  value: school.id,
+                  label: `${school.name}${school.district ? ` / ${school.district}` : ""}`,
+                }))}
+                className="min-h-[48px]"
+              />
+            ) : null}
+            {selectedSchoolScope === "district" ? (
+              <select
+                value={selectedDistrict}
+                onChange={(event) => setSelectedDistrict(event.target.value)}
+                className="rounded-md border border-[#d8d2c5] px-3 py-3"
+              >
+                <option value="">Select district</option>
+                {districtOptions.map((district) => (
+                  <option key={district} value={district}>
+                    {district}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+          </>
+        ) : null}
         <select
           name="categoryPlaylist"
           required

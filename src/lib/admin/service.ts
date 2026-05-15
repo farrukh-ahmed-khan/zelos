@@ -43,6 +43,17 @@ async function dropLegacyContentCategoryIndex() {
   }
 }
 
+async function dropLegacyVideoOrderIndex() {
+  try {
+    await Video.collection.dropIndex("audience_1_ageTrack_1_order_1");
+  } catch (error) {
+    const mongoError = error as { codeName?: string };
+    if (mongoError.codeName !== "IndexNotFound") {
+      throw error;
+    }
+  }
+}
+
 export async function updateUserBanStatus(params: {
   actor: UserDocument;
   userId: string;
@@ -121,6 +132,9 @@ export async function createVideoByAdmin(params: {
   audience?: "subscriber" | "teacher" | "student" | "public-preview";
   category?: string;
   playlist?: string;
+  schoolScope?: "global" | "all-schools" | "specific-schools" | "district";
+  schoolIds?: string[];
+  district?: string;
   order: number;
   releaseDate?: Date | null;
   dripEnabled?: boolean;
@@ -128,7 +142,14 @@ export async function createVideoByAdmin(params: {
   isMissionVideo?: boolean;
 }) {
   await connectToDatabase();
-  return Video.create(params);
+  await dropLegacyVideoOrderIndex();
+
+  return Video.create({
+    ...params,
+    schoolScope: params.schoolScope ?? "global",
+    schoolIds: params.schoolIds ?? [],
+    district: params.district || null,
+  });
 }
 
 export async function updateVideoByAdmin(params: {
@@ -141,6 +162,9 @@ export async function updateVideoByAdmin(params: {
     audience: "subscriber" | "teacher" | "student" | "public-preview";
     category: string;
     playlist: string;
+    schoolScope: "global" | "all-schools" | "specific-schools" | "district";
+    schoolIds: string[];
+    district: string | null;
     order: number;
     releaseDate: Date | null;
     dripEnabled: boolean;
@@ -213,6 +237,9 @@ export async function createVideoByAdminWithUpload(params: {
   audience?: "subscriber" | "teacher" | "student" | "public-preview";
   category?: string;
   playlist?: string;
+  schoolScope?: "global" | "all-schools" | "specific-schools" | "district";
+  schoolIds?: string[];
+  district?: string;
   order: number;
   releaseDate?: Date | null;
   dripEnabled?: boolean;
@@ -223,6 +250,7 @@ export async function createVideoByAdminWithUpload(params: {
   mimeType: string;
 }) {
   await connectToDatabase();
+  await dropLegacyVideoOrderIndex();
 
   // Upload file to S3
   const { url, key } = await uploadToS3({
@@ -240,6 +268,9 @@ export async function createVideoByAdminWithUpload(params: {
     audience: params.audience ?? "subscriber",
     category: params.category ?? "General",
     playlist: params.playlist ?? "General",
+    schoolScope: params.schoolScope ?? "global",
+    schoolIds: params.schoolIds ?? [],
+    district: params.district || null,
     order: params.order,
     releaseDate: params.releaseDate ?? null,
     dripEnabled: params.dripEnabled ?? true,

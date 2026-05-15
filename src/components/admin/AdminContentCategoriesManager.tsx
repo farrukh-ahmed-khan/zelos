@@ -16,6 +16,15 @@ type Category = {
   isActive: boolean;
 };
 
+type CategoryGroup = {
+  key: string;
+  name: string;
+  ageTrack: string;
+  audience: string;
+  playlists: Category[];
+  activeCount: number;
+};
+
 const TEACHER_TRACK = "Teachers";
 const ageTrackOptions = [
   { value: "child", label: "Children" },
@@ -61,6 +70,31 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     );
   }, [items, searchTerm]);
 
+  const groupedItems = useMemo<CategoryGroup[]>(() => {
+    const groups = new Map<string, CategoryGroup>();
+
+    for (const category of filteredItems) {
+      const key = `${category.name}::${category.ageTrack}::${category.audience}`;
+      const group = groups.get(key) ?? {
+        key,
+        name: category.name,
+        ageTrack: category.ageTrack,
+        audience: category.audience,
+        playlists: [],
+        activeCount: 0,
+      };
+
+      group.playlists.push(category);
+      group.activeCount += category.isActive ? 1 : 0;
+      groups.set(key, group);
+    }
+
+    return Array.from(groups.values()).map((group) => ({
+      ...group,
+      playlists: group.playlists.sort((a, b) => a.order - b.order || (a.playlist ?? "").localeCompare(b.playlist ?? "")),
+    }));
+  }, [filteredItems]);
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
@@ -95,8 +129,8 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       }
 
       setItems((current) => [result.data.category, ...current]);
-      setMessage("Category created.");
-      antMessage.success("Category created successfully.");
+      setMessage("Category playlist saved.");
+      antMessage.success("Category playlist saved successfully.");
       form.reset();
       setSelectedAudience("subscriber");
     } finally {
@@ -104,16 +138,18 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     }
   }
 
-  const columns: TableColumnsType<Category> = [
+  const columns: TableColumnsType<CategoryGroup> = [
     {
       title: "Category",
       dataIndex: "name",
       key: "name",
       width: 220,
-      render: (name: string, record: Category) => (
+      render: (name: string, record: CategoryGroup) => (
         <div>
           <div className="font-bold text-[#202020]">{name}</div>
-          <div className="text-xs text-[#667085]">Playlist: {record.playlist ?? "General"}</div>
+          <div className="text-xs text-[#667085]">
+            {record.playlists.length} playlist{record.playlists.length === 1 ? "" : "s"}
+          </div>
         </div>
       ),
     },
@@ -129,31 +165,47 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       dataIndex: "ageTrack",
       key: "ageTrack",
       width: 140,
-      render: (ageTrack: string, record: Category) => (
+      render: (ageTrack: string, record: CategoryGroup) => (
         <Tag color="blue">{record.audience === "teacher" ? "Not needed" : formatAgeTrack(ageTrack)}</Tag>
       ),
     },
     {
-      title: "Order",
-      dataIndex: "order",
-      key: "order",
-      width: 90,
+      title: "Playlists",
+      dataIndex: "playlists",
+      key: "playlists",
+      width: 320,
+      render: (playlists: Category[]) => (
+        <Space size="small" wrap>
+          {playlists.map((playlist) => (
+            <Tag key={playlist.id ?? playlist._id ?? playlist.playlist} color={playlist.isActive ? "green" : "default"}>
+              {playlist.order}. {playlist.playlist ?? "General"}
+            </Tag>
+          ))}
+        </Space>
+      ),
     },
     {
       title: "Status",
-      dataIndex: "isActive",
+      dataIndex: "activeCount",
       key: "status",
-      width: 110,
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? "green" : "default"}>{isActive ? "ACTIVE" : "INACTIVE"}</Tag>
-      ),
+      width: 140,
+      render: (_: number, record: CategoryGroup) => {
+        const allActive = record.activeCount === record.playlists.length;
+        const noneActive = record.activeCount === 0;
+
+        return (
+          <Tag color={allActive ? "green" : noneActive ? "default" : "orange"}>
+            {record.activeCount}/{record.playlists.length} ACTIVE
+          </Tag>
+        );
+      },
     },
   ];
 
   const pagination: TablePaginationConfig = {
     current: currentPage,
     pageSize,
-    total: filteredItems.length,
+    total: groupedItems.length,
     onChange: (page, nextPageSize) => {
       setCurrentPage(page);
       setPageSize(nextPageSize);
@@ -214,7 +266,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
         </label>
         <Space>
           <Button type="primary" htmlType="submit" loading={isSubmitting}>
-            Add Category
+            Add Category Playlist
           </Button>
         </Space>
       </form>
@@ -230,8 +282,8 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
         />
         <Table
           columns={columns}
-          dataSource={filteredItems}
-          rowKey={(record) => record.id ?? record._id ?? `${record.name}-${record.playlist}-${record.ageTrack}-${record.audience}`}
+          dataSource={groupedItems}
+          rowKey="key"
           pagination={pagination}
           scroll={{ x: 900 }}
           locale={{

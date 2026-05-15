@@ -4,6 +4,7 @@ import { type UserDocument } from "@/models/User";
 import Video, { type VideoDocument } from "@/models/Video";
 import VideoProgress from "@/models/VideoProgress";
 import { getAssignedSchoolVideoIds } from "@/lib/schools/service";
+import School from "@/models/School";
 
 const REQUIRED_COMPLETION_PERCENTAGE = 95;
 const SUBSCRIPTION_VIDEO_ROLES = new Set(["mentee", "subscriber", "child"]);
@@ -36,6 +37,63 @@ export async function getAgeTrackVideos(ageTrack: string) {
   }).sort({ order: 1, createdAt: 1 });
 }
 
+async function getCandidateVideosForUser(user: UserDocument) {
+  await connectToDatabase();
+
+  const audience = resolveVideoAudienceForUser(user);
+
+  const query =
+    audience === "teacher"
+      ? {
+          audience,
+          releaseDate: { $not: { $gt: new Date() } },
+        }
+      : {
+          audience,
+          ageTrack: { $in: getAgeTrackAliases(user.ageTrack) },
+          releaseDate: { $not: { $gt: new Date() } },
+        };
+
+  return Video.find(query).sort({ order: 1, createdAt: 1 });
+}
+
+async function filterSchoolScopedVideos(user: UserDocument, videos: VideoDocument[]) {
+  if (!["teacher", "student"].includes(user.role)) {
+    return videos.filter((video) => video.schoolScope === "global" || !video.schoolScope);
+  }
+
+  if (!user.schoolId) {
+    return [];
+  }
+
+  const [school, assignedVideoIds] = await Promise.all([
+    School.findById(user.schoolId).select("district").lean(),
+    user.role === "student" ? getAssignedSchoolVideoIds(user.schoolId) : Promise.resolve(new Set<string>()),
+  ]);
+
+  return videos.filter((video) => {
+    const scope = video.schoolScope ?? "all-schools";
+
+    if (assignedVideoIds.has(video._id.toString())) {
+      return true;
+    }
+
+    if (scope === "all-schools") {
+      return true;
+    }
+
+    if (scope === "specific-schools") {
+      return video.schoolIds?.includes(user.schoolId ?? "") ?? false;
+    }
+
+    if (scope === "district") {
+      return Boolean(school?.district && video.district === school.district);
+    }
+
+    return false;
+  });
+}
+
 function resolveVideoAudienceForUser(user: UserDocument) {
   if (user.role === "teacher") {
     return "teacher";
@@ -60,20 +118,9 @@ export async function getCompletedVideoIds(userId: string) {
 }
 
 export async function buildVideoAvailability(user: UserDocument) {
-  const audience = resolveVideoAudienceForUser(user);
-  let videos = (await getAgeTrackVideos(user.ageTrack)).filter(
-    (video) => video.audience === audience,
-  );
+  let videos = await getCandidateVideosForUser(user);
   const completedVideoIds = await getCompletedVideoIds(user._id.toString());
-
-  if (user.role === "student") {
-    if (!user.schoolId) {
-      return [];
-    }
-
-    const assignedVideoIds = await getAssignedSchoolVideoIds(user.schoolId);
-    videos = videos.filter((video) => assignedVideoIds.has(video._id.toString()));
-  }
+  videos = await filterSchoolScopedVideos(user, videos);
 
   let unlocked = true;
 
@@ -92,8 +139,8 @@ export async function buildVideoAvailability(user: UserDocument) {
       url: isLocked ? null : video.url,
       ageTrack: video.ageTrack,
       audience: video.audience,
-      category: video.category,
-      playlist: video.playlist,
+      category: video.category ?? "General",
+      playlist: video.playlist ?? "General",
       order: video.order,
       releaseDate: video.releaseDate,
       dripEnabled: video.dripEnabled,
@@ -119,28 +166,17 @@ export async function resolveCompletableVideo(params: {
 
   if (
     !video ||
-    !getAgeTrackAliases(user.ageTrack).includes(video.ageTrack) ||
+    (audience !== "teacher" && !getAgeTrackAliases(user.ageTrack).includes(video.ageTrack)) ||
     video.audience !== audience
   ) {
     throw new ApiError(404, "Video not found for this user.");
   }
 
-  let videos = (await getAgeTrackVideos(user.ageTrack)).filter(
-    (entry) => entry.audience === audience,
-  );
+  let videos = await getCandidateVideosForUser(user);
+  videos = await filterSchoolScopedVideos(user, videos);
 
-  if (user.role === "student") {
-    if (!user.schoolId) {
-      throw new ApiError(404, "Video not found for this user.");
-    }
-
-    const assignedVideoIds = await getAssignedSchoolVideoIds(user.schoolId);
-
-    if (!assignedVideoIds.has(video._id.toString())) {
-      throw new ApiError(404, "Video not found for this user.");
-    }
-
-    videos = videos.filter((entry) => assignedVideoIds.has(entry._id.toString()));
+  if (!videos.some((entry) => entry._id.toString() === video._id.toString())) {
+    throw new ApiError(404, "Video not found for this user.");
   }
 
   const targetIndex = videos.findIndex(

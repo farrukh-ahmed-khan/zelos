@@ -7,6 +7,7 @@ import { verifyAuthToken } from "@/lib/auth/jwt";
 import { hasAdminPermission } from "@/lib/auth/roles";
 import { connectToDatabase } from "@/lib/db";
 import ContentCategory from "@/models/ContentCategory";
+import School from "@/models/School";
 import User from "@/models/User";
 import Video from "@/models/Video";
 
@@ -24,12 +25,16 @@ export default async function AdminVideosPage() {
     redirect("/dashboard");
   }
 
-  const [videos, categories] = await Promise.all([
+  const [videos, categories, schools] = await Promise.all([
     Video.find()
       .sort({ audience: 1, ageTrack: 1, order: 1 })
       .lean(),
     ContentCategory.find({ isActive: true })
       .sort({ audience: 1, ageTrack: 1, order: 1, name: 1, playlist: 1 })
+      .lean(),
+    School.find()
+      .sort({ name: 1 })
+      .select("name district")
       .lean(),
   ]);
 
@@ -44,6 +49,9 @@ export default async function AdminVideosPage() {
           audience: video.audience,
           category: video.category,
           playlist: video.playlist ?? "General",
+          schoolScope: video.schoolScope ?? (["teacher", "student"].includes(video.audience) ? "all-schools" : "global"),
+          schoolIds: video.schoolIds ?? [],
+          district: video.district ?? null,
           order: video.order,
           releaseDate: video.releaseDate,
           dripEnabled: video.dripEnabled,
@@ -56,6 +64,11 @@ export default async function AdminVideosPage() {
           playlist: category.playlist ?? "General",
           ageTrack: category.ageTrack,
           audience: category.audience,
+        }))))}
+        schools={JSON.parse(JSON.stringify(schools.map((school) => ({
+          id: school._id.toString(),
+          name: school.name,
+          district: school.district ?? null,
         }))))}
       />
     </AdminChrome>

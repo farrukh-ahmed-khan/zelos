@@ -49,6 +49,24 @@ const VideoSchema = new Schema(
       maxlength: 120,
       index: true,
     },
+    schoolScope: {
+      type: String,
+      enum: ["global", "all-schools", "specific-schools", "district"],
+      required: true,
+      default: "global",
+      index: true,
+    },
+    schoolIds: {
+      type: [String],
+      default: [],
+      index: true,
+    },
+    district: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
     order: {
       type: Number,
       required: true,
@@ -85,7 +103,7 @@ const VideoSchema = new Schema(
   },
 );
 
-VideoSchema.index({ audience: 1, ageTrack: 1, order: 1 }, { unique: true });
+VideoSchema.index({ audience: 1, ageTrack: 1, schoolScope: 1, order: 1 });
 
 type Video = InferSchemaType<typeof VideoSchema>;
 export type VideoDocument = HydratedDocument<Video>;

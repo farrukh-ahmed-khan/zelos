@@ -28,9 +28,19 @@ type DashboardVideo = {
   description: string;
   url: string | null;
   ageTrack: string;
+  category: string;
+  playlist: string;
   order: number;
   completed: boolean;
   locked: boolean;
+};
+
+type VideoCategoryGroup = {
+  category: string;
+  playlists: Array<{
+    playlist: string;
+    videos: DashboardVideo[];
+  }>;
 };
 
 type DashboardEvent = {
@@ -154,6 +164,28 @@ function VideoPanel({
     () => new Set(videos.filter((video) => video.completed).map((video) => video.id)),
     [videos],
   );
+  const groupedVideos = useMemo<VideoCategoryGroup[]>(() => {
+    const categories = new Map<string, Map<string, DashboardVideo[]>>();
+
+    for (const video of videos) {
+      const categoryName = video.category || "General";
+      const playlistName = video.playlist || "General";
+      const playlistMap = categories.get(categoryName) ?? new Map<string, DashboardVideo[]>();
+      const playlistVideos = playlistMap.get(playlistName) ?? [];
+
+      playlistVideos.push(video);
+      playlistMap.set(playlistName, playlistVideos);
+      categories.set(categoryName, playlistMap);
+    }
+
+    return Array.from(categories.entries()).map(([category, playlistMap]) => ({
+      category,
+      playlists: Array.from(playlistMap.entries()).map(([playlist, playlistVideos]) => ({
+        playlist,
+        videos: playlistVideos,
+      })),
+    }));
+  }, [videos]);
 
   if (!videos.length) {
     return (
@@ -247,26 +279,40 @@ function VideoPanel({
       </div>
 
       <div className="grid content-start gap-2">
-        {videos.slice(0, 6).map((video) => (
-          <div
-            key={video.id}
-            className="flex items-center gap-3 rounded-md bg-white px-3 py-3 text-sm"
-          >
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eee6d6] text-[#b22222]">
-              {video.completed ? <CheckCircleOutlined /> : video.locked ? <LockOutlined /> : <PlayCircleFilled />}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate font-bold text-[#202020]">{video.title}</p>
-              <p className="text-xs text-[#666]">
-                {completingVideoId === video.id
-                  ? "Completing..."
-                  : video.completed
-                    ? "Completed"
-                    : video.locked
-                      ? "Locked"
-                      : "Unlocked"}
-              </p>
-            </div>
+        {groupedVideos.map((categoryGroup) => (
+          <div key={categoryGroup.category} className="grid gap-2">
+            <p className="px-1 text-xs font-black uppercase text-[#b22222]">
+              {categoryGroup.category}
+            </p>
+            {categoryGroup.playlists.map((playlistGroup) => (
+              <div key={`${categoryGroup.category}-${playlistGroup.playlist}`} className="grid gap-2">
+                <p className="px-1 text-xs font-bold uppercase text-[#555]">
+                  {playlistGroup.playlist}
+                </p>
+                {playlistGroup.videos.map((video) => (
+                  <div
+                    key={video.id}
+                    className="flex items-center gap-3 rounded-md bg-white px-3 py-3 text-sm"
+                  >
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eee6d6] text-[#b22222]">
+                      {video.completed ? <CheckCircleOutlined /> : video.locked ? <LockOutlined /> : <PlayCircleFilled />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-bold text-[#202020]">{video.title}</p>
+                      <p className="text-xs text-[#666]">
+                        {completingVideoId === video.id
+                          ? "Completing..."
+                          : video.completed
+                            ? "Completed"
+                            : video.locked
+                              ? "Locked"
+                              : "Unlocked"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         ))}
       </div>
