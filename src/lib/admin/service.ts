@@ -32,6 +32,17 @@ function canManageUser(actor: UserDocument, target: UserDocument) {
   return actor.role === "sub-admin";
 }
 
+async function dropLegacyContentCategoryIndex() {
+  try {
+    await ContentCategory.collection.dropIndex("name_1_ageTrack_1_audience_1");
+  } catch (error) {
+    const mongoError = error as { codeName?: string };
+    if (mongoError.codeName !== "IndexNotFound") {
+      throw error;
+    }
+  }
+}
+
 export async function updateUserBanStatus(params: {
   actor: UserDocument;
   userId: string;
@@ -109,6 +120,7 @@ export async function createVideoByAdmin(params: {
   ageTrack: string;
   audience?: "subscriber" | "teacher" | "student" | "public-preview";
   category?: string;
+  playlist?: string;
   order: number;
   releaseDate?: Date | null;
   dripEnabled?: boolean;
@@ -128,6 +140,7 @@ export async function updateVideoByAdmin(params: {
     ageTrack: string;
     audience: "subscriber" | "teacher" | "student" | "public-preview";
     category: string;
+    playlist: string;
     order: number;
     releaseDate: Date | null;
     dripEnabled: boolean;
@@ -177,12 +190,14 @@ export async function deleteVideoByAdmin(videoId: string) {
 
 export async function createContentCategoryByAdmin(params: {
   name: string;
+  playlist: string;
   ageTrack: string;
   audience: "subscriber" | "teacher" | "student" | "public-preview";
   order?: number;
   isActive?: boolean;
 }) {
   await connectToDatabase();
+  await dropLegacyContentCategoryIndex();
 
   return ContentCategory.create({
     ...params,
@@ -197,6 +212,7 @@ export async function createVideoByAdminWithUpload(params: {
   ageTrack: string;
   audience?: "subscriber" | "teacher" | "student" | "public-preview";
   category?: string;
+  playlist?: string;
   order: number;
   releaseDate?: Date | null;
   dripEnabled?: boolean;
@@ -223,6 +239,7 @@ export async function createVideoByAdminWithUpload(params: {
     ageTrack: params.ageTrack,
     audience: params.audience ?? "subscriber",
     category: params.category ?? "General",
+    playlist: params.playlist ?? "General",
     order: params.order,
     releaseDate: params.releaseDate ?? null,
     dripEnabled: params.dripEnabled ?? true,

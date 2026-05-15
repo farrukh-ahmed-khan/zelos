@@ -6,6 +6,7 @@ import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { hasAdminPermission } from "@/lib/auth/roles";
 import { connectToDatabase } from "@/lib/db";
+import ContentCategory from "@/models/ContentCategory";
 import User from "@/models/User";
 import Video from "@/models/Video";
 
@@ -23,25 +24,40 @@ export default async function AdminVideosPage() {
     redirect("/dashboard");
   }
 
-  const videos = await Video.find()
-    .sort({ audience: 1, ageTrack: 1, order: 1 })
-    .lean();
+  const [videos, categories] = await Promise.all([
+    Video.find()
+      .sort({ audience: 1, ageTrack: 1, order: 1 })
+      .lean(),
+    ContentCategory.find({ isActive: true })
+      .sort({ audience: 1, ageTrack: 1, order: 1, name: 1, playlist: 1 })
+      .lean(),
+  ]);
 
   return (
     <AdminChrome title="Video Library" eyebrow="Admin / Content" isSuperAdmin={user.role === "super-admin"}>
-      <AdminVideosManager videos={JSON.parse(JSON.stringify(videos.map((video) => ({
-        id: video._id.toString(),
-        title: video.title,
-        description: video.description,
-        ageTrack: video.ageTrack,
-        audience: video.audience,
-        category: video.category,
-        order: video.order,
-        releaseDate: video.releaseDate,
-        dripEnabled: video.dripEnabled,
-        isFreePreview: video.isFreePreview,
-        isMissionVideo: video.isMissionVideo,
-      }))))} />
+      <AdminVideosManager
+        videos={JSON.parse(JSON.stringify(videos.map((video) => ({
+          id: video._id.toString(),
+          title: video.title,
+          description: video.description,
+          ageTrack: video.ageTrack,
+          audience: video.audience,
+          category: video.category,
+          playlist: video.playlist ?? "General",
+          order: video.order,
+          releaseDate: video.releaseDate,
+          dripEnabled: video.dripEnabled,
+          isFreePreview: video.isFreePreview,
+          isMissionVideo: video.isMissionVideo,
+        }))))}
+        categories={JSON.parse(JSON.stringify(categories.map((category) => ({
+          id: category._id.toString(),
+          name: category.name,
+          playlist: category.playlist ?? "General",
+          ageTrack: category.ageTrack,
+          audience: category.audience,
+        }))))}
+      />
     </AdminChrome>
   );
 }

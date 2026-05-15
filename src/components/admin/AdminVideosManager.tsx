@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 type Video = {
   id: string;
@@ -9,6 +9,7 @@ type Video = {
   ageTrack: string;
   audience: string;
   category: string;
+  playlist?: string;
   order: number;
   releaseDate: string | null;
   dripEnabled: boolean;
@@ -16,10 +17,37 @@ type Video = {
   isMissionVideo: boolean;
 };
 
-export function AdminVideosManager({ videos }: { videos: Video[] }) {
+type ContentCategory = {
+  id: string;
+  name: string;
+  playlist: string;
+  ageTrack: string;
+  audience: string;
+};
+
+export function AdminVideosManager({
+  videos,
+  categories,
+}: {
+  videos: Video[];
+  categories: ContentCategory[];
+}) {
   const [items, setItems] = useState(videos);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [selectedAgeTrack, setSelectedAgeTrack] = useState("");
+  const [selectedAudience, setSelectedAudience] = useState("subscriber");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+
+  const matchingCategories = useMemo(
+    () =>
+      categories.filter(
+        (category) =>
+          category.ageTrack === selectedAgeTrack &&
+          category.audience === selectedAudience,
+      ),
+    [categories, selectedAgeTrack, selectedAudience],
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,6 +55,18 @@ export function AdminVideosManager({ videos }: { videos: Video[] }) {
     setError("");
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const selectedCategory = categories.find(
+      (category) => category.id === selectedCategoryId,
+    );
+
+    if (!selectedCategory) {
+      setError("Choose a category playlist before uploading.");
+      return;
+    }
+
+    formData.set("category", selectedCategory.name);
+    formData.set("playlist", selectedCategory.playlist);
+
     const response = await fetch("/api/admin/videos", {
       method: "POST",
       body: formData,
@@ -41,6 +81,9 @@ export function AdminVideosManager({ videos }: { videos: Video[] }) {
     setItems((current) => [result.data.video, ...current]);
     setMessage("Video uploaded.");
     form.reset();
+    setSelectedAgeTrack("");
+    setSelectedAudience("subscriber");
+    setSelectedCategoryId("");
   }
 
   async function removeVideo(videoId: string) {
@@ -68,19 +111,52 @@ export function AdminVideosManager({ videos }: { videos: Video[] }) {
 
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
         <input name="title" placeholder="Title" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="category" placeholder="Category" defaultValue="General" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <textarea name="description" placeholder="Description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3">
+        <select
+          name="ageTrack"
+          required
+          value={selectedAgeTrack}
+          onChange={(event) => {
+            setSelectedAgeTrack(event.target.value);
+            setSelectedCategoryId("");
+          }}
+          className="rounded-md border border-[#d8d2c5] px-3 py-3"
+        >
           <option value="">Age track</option>
           <option>Children</option>
           <option>Teens</option>
           <option>Young Adults</option>
         </select>
-        <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3">
+        <select
+          name="audience"
+          value={selectedAudience}
+          onChange={(event) => {
+            setSelectedAudience(event.target.value);
+            setSelectedCategoryId("");
+          }}
+          className="rounded-md border border-[#d8d2c5] px-3 py-3"
+        >
           <option value="subscriber">Subscriber Library</option>
           <option value="teacher">Teacher Library</option>
           <option value="student">Student Library</option>
           <option value="public-preview">Free Preview</option>
+        </select>
+        <select
+          name="categoryPlaylist"
+          required
+          value={selectedCategoryId}
+          onChange={(event) => setSelectedCategoryId(event.target.value)}
+          disabled={!selectedAgeTrack}
+          className="rounded-md border border-[#d8d2c5] px-3 py-3 disabled:bg-[#f5f5f5] disabled:text-[#999]"
+        >
+          <option value="">
+            {selectedAgeTrack ? "Category playlist" : "Select age track first"}
+          </option>
+          {matchingCategories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name} / {category.playlist}
+            </option>
+          ))}
         </select>
         <input name="order" type="number" min={1} placeholder="Sequence order" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
@@ -108,7 +184,7 @@ export function AdminVideosManager({ videos }: { videos: Video[] }) {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-bold">{video.order}. {video.title}</p>
-                <p className="text-sm text-[#555]">{video.audience} / {video.ageTrack} / {video.category}</p>
+                <p className="text-sm text-[#555]">{video.audience} / {video.ageTrack} / {video.category} / {video.playlist ?? "General"}</p>
               </div>
               <button onClick={() => removeVideo(video.id)} className="rounded-md border border-[#cfd4dc] px-3 py-2 text-xs font-black text-[#8c0504] hover:border-[#8c0504]">
                 Delete

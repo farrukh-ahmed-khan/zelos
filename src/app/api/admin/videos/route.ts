@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         ageTrack: video.ageTrack,
         audience: video.audience,
         category: video.category,
+        playlist: video.playlist,
         order: video.order,
         releaseDate: video.releaseDate,
         dripEnabled: video.dripEnabled,
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
       ageTrack: fields.ageTrack,
       audience: fields.audience,
       category: fields.category,
+      playlist: fields.playlist,
       order: fields.order ? parseInt(fields.order, 10) : undefined,
       releaseDate: fields.releaseDate || undefined,
       dripEnabled: fields.dripEnabled ? fields.dripEnabled === "true" : undefined,
@@ -95,6 +97,7 @@ export async function POST(request: NextRequest) {
       ageTrack: parsedFields.ageTrack,
       audience: parsedFields.audience,
       category: parsedFields.category,
+      playlist: parsedFields.playlist,
       order: parsedFields.order,
       releaseDate: parsedFields.releaseDate
         ? new Date(parsedFields.releaseDate)
@@ -118,6 +121,7 @@ export async function POST(request: NextRequest) {
           ageTrack: video.ageTrack,
           audience: video.audience,
           category: video.category,
+          playlist: video.playlist,
           order: video.order,
           releaseDate: video.releaseDate,
           dripEnabled: video.dripEnabled,

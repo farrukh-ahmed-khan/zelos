@@ -24,7 +24,7 @@ export default async function AdminContentCategoriesPage() {
   }
 
   const categories = await ContentCategory.find()
-    .sort({ audience: 1, ageTrack: 1, order: 1, name: 1 })
+    .sort({ audience: 1, ageTrack: 1, order: 1, name: 1, playlist: 1 })
     .lean();
 
   return (

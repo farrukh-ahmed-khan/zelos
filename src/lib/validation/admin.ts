@@ -12,6 +12,7 @@ export const createVideoSchema = z.object({
     .enum(["subscriber", "teacher", "student", "public-preview"])
     .optional(),
   category: z.string().trim().min(2).max(120).optional(),
+  playlist: z.string().trim().min(2).max(120).optional(),
   order: z.number().int().min(1),
   releaseDate: z.string().datetime().optional(),
   dripEnabled: z.boolean().optional(),
@@ -28,6 +29,7 @@ export const updateVideoSchema = createVideoSchema
 
 export const createContentCategorySchema = z.object({
   name: z.string().trim().min(2).max(120),
+  playlist: z.string().trim().min(2).max(120),
   ageTrack: z.string().trim().min(2).max(60),
   audience: z.enum(["subscriber", "teacher", "student", "public-preview"]),
   order: z.number().int().min(1).optional(),

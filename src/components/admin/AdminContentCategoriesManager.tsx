@@ -6,6 +6,7 @@ type Category = {
   _id?: string;
   id?: string;
   name: string;
+  playlist?: string;
   ageTrack: string;
   audience: string;
   order: number;
@@ -28,6 +29,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: String(formData.get("name") ?? ""),
+        playlist: String(formData.get("playlist") ?? ""),
         ageTrack: String(formData.get("ageTrack") ?? ""),
         audience: String(formData.get("audience") ?? "subscriber"),
         order: Number(formData.get("order") ?? 1),
@@ -52,21 +54,37 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
-        <input name="name" placeholder="Category name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="">Age track</option>
-          <option>Children</option>
-          <option>Teens</option>
-          <option>Young Adults</option>
-        </select>
-        <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="subscriber">Subscriber</option>
-          <option value="teacher">Teacher</option>
-          <option value="student">Student</option>
-          <option value="public-preview">Public Preview</option>
-        </select>
-        <input name="order" type="number" min={1} defaultValue={1} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <label className="flex items-center gap-2 text-sm font-bold">
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Category Name
+          <input name="name" placeholder="Example: Budgeting Basics" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Playlist Name
+          <input name="playlist" placeholder="Example: Week 1 Lessons" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Age Track
+          <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="">Select age track</option>
+            <option>Children</option>
+            <option>Teens</option>
+            <option>Young Adults</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Library Audience
+          <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="subscriber">Subscriber</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+            <option value="public-preview">Public Preview</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm font-bold text-[#344054]">
+          Display Order
+          <input name="order" type="number" min={1} defaultValue={1} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="flex items-center gap-2 text-sm font-bold text-[#344054]">
           <input name="isActive" type="checkbox" defaultChecked />
           Active
         </label>
@@ -80,6 +98,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
           <article key={category.id ?? category._id} className="grid gap-2 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-[1fr_auto]">
             <div>
               <p className="font-bold">{category.name}</p>
+              <p className="text-sm text-[#555]">Playlist: {category.playlist ?? "General"}</p>
               <p className="text-sm text-[#555]">{category.audience} / {category.ageTrack} / order {category.order}</p>
             </div>
             <p className="text-sm font-black">{category.isActive ? "Active" : "Inactive"}</p>

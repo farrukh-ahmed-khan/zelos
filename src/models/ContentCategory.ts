@@ -3,6 +3,14 @@ import mongoose, { HydratedDocument, InferSchemaType, Model, Schema } from "mong
 const ContentCategorySchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 120 },
+    playlist: {
+      type: String,
+      required: true,
+      default: "General",
+      trim: true,
+      maxlength: 120,
+      index: true,
+    },
     ageTrack: { type: String, required: true, trim: true, index: true },
     audience: {
       type: String,
@@ -17,7 +25,7 @@ const ContentCategorySchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-ContentCategorySchema.index({ name: 1, ageTrack: 1, audience: 1 }, { unique: true });
+ContentCategorySchema.index({ name: 1, playlist: 1, ageTrack: 1, audience: 1 }, { unique: true });
 
 type ContentCategory = InferSchemaType<typeof ContentCategorySchema>;
 export type ContentCategoryDocument = HydratedDocument<ContentCategory>;

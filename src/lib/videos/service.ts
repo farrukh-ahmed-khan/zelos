@@ -73,6 +73,7 @@ export async function buildVideoAvailability(user: UserDocument) {
       ageTrack: video.ageTrack,
       audience: video.audience,
       category: video.category,
+      playlist: video.playlist,
       order: video.order,
       releaseDate: video.releaseDate,
       dripEnabled: video.dripEnabled,

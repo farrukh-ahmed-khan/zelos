@@ -41,6 +41,14 @@ const VideoSchema = new Schema(
       maxlength: 120,
       index: true,
     },
+    playlist: {
+      type: String,
+      required: true,
+      default: "General",
+      trim: true,
+      maxlength: 120,
+      index: true,
+    },
     order: {
       type: Number,
       required: true,
