@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const user = await acceptSchoolInvite(body);
 
     await queueEmail({
-      template: user.role === "teacher" ? "teacher-welcome" : "student-welcome",
+      template: user.role === "teacher" ? "welcome-teacher" : "welcome-student",
       recipient: user.email,
       payload: {
         name: user.name,

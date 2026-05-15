@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     await queueEmail({
-      template: "child-account-created",
+      template: "welcome-subscriber",
       recipient: parent.email,
       payload: {
         parentName: parent.name,

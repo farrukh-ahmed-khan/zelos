@@ -118,7 +118,7 @@ export async function createRsvp(params: { userId: string; eventId: string }) {
 
   if (user) {
     await queueEmail({
-      template: event.type === "online" ? "event-rsvp-digital" : "event-rsvp-physical",
+      template: event.type === "online" ? "digital-event-link-delivery" : "physical-event-rsvp-confirmation",
       recipient: user.email,
       payload: {
         userName: user.name,

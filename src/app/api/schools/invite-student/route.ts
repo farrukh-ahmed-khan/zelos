@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     });
 
     await queueEmail({
-      template: "school-student-invite",
+      template: "student-invite",
       recipient: result.invite.email,
       payload: {
         inviteUrl: result.inviteUrl,

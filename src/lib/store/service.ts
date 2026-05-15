@@ -92,7 +92,7 @@ export async function createOrder(params: {
   });
 
   await queueEmail({
-    template: "store-order-confirmation",
+    template: "swag-order-confirmation",
     recipient: params.email,
     payload: { orderId: order._id.toString(), totalCents: order.totalCents },
   });
