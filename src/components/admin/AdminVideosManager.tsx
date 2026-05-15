@@ -1,6 +1,9 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { Button, Input, Space, Table, Tag, message as antMessage } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import type { TableColumnsType, TablePaginationConfig } from "antd";
 
 type Video = {
   id: string;
@@ -38,6 +41,11 @@ export function AdminVideosManager({
   const [selectedAgeTrack, setSelectedAgeTrack] = useState("");
   const [selectedAudience, setSelectedAudience] = useState("subscriber");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const matchingCategories = useMemo(
     () =>
@@ -48,6 +56,33 @@ export function AdminVideosManager({
       ),
     [categories, selectedAgeTrack, selectedAudience],
   );
+
+  const filteredItems = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return items;
+
+    return items.filter((video) =>
+      [
+        video.title,
+        video.description,
+        video.ageTrack,
+        video.audience,
+        video.category,
+        video.playlist ?? "General",
+        video.dripEnabled ? "drip locked" : "open order",
+        video.isFreePreview ? "free preview" : "",
+        video.isMissionVideo ? "mission video" : "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [items, searchTerm]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,29 +96,37 @@ export function AdminVideosManager({
 
     if (!selectedCategory) {
       setError("Choose a category playlist before uploading.");
+      antMessage.error("Choose a category playlist before uploading.");
       return;
     }
 
     formData.set("category", selectedCategory.name);
     formData.set("playlist", selectedCategory.playlist);
 
-    const response = await fetch("/api/admin/videos", {
-      method: "POST",
-      body: formData,
-    });
-    const result = await response.json();
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/admin/videos", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to upload video.");
-      return;
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to upload video.");
+        antMessage.error(result?.error?.message ?? "Unable to upload video.");
+        return;
+      }
+
+      setItems((current) => [result.data.video, ...current]);
+      setMessage("Video uploaded.");
+      antMessage.success("Video uploaded successfully.");
+      form.reset();
+      setSelectedAgeTrack("");
+      setSelectedAudience("subscriber");
+      setSelectedCategoryId("");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setItems((current) => [result.data.video, ...current]);
-    setMessage("Video uploaded.");
-    form.reset();
-    setSelectedAgeTrack("");
-    setSelectedAudience("subscriber");
-    setSelectedCategoryId("");
   }
 
   async function removeVideo(videoId: string) {
@@ -91,18 +134,108 @@ export function AdminVideosManager({
       return;
     }
 
-    const response = await fetch(`/api/admin/videos/${videoId}`, {
-      method: "DELETE",
-    });
-    const result = await response.json();
+    setDeletingVideoId(videoId);
+    try {
+      const response = await fetch(`/api/admin/videos/${videoId}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to delete video.");
-      return;
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to delete video.");
+        antMessage.error(result?.error?.message ?? "Unable to delete video.");
+        return;
+      }
+
+      setItems((current) => current.filter((video) => video.id !== videoId));
+      antMessage.success("Video deleted successfully.");
+    } finally {
+      setDeletingVideoId(null);
     }
-
-    setItems((current) => current.filter((video) => video.id !== videoId));
   }
+
+  const columns: TableColumnsType<Video> = [
+    {
+      title: "Video",
+      dataIndex: "title",
+      key: "title",
+      width: 260,
+      render: (title: string, record: Video) => (
+        <div>
+          <div className="font-bold text-[#202020]">{record.order}. {title}</div>
+          <div className="line-clamp-2 text-xs text-[#667085]">{record.description}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Library",
+      dataIndex: "audience",
+      key: "audience",
+      width: 150,
+      render: (audience: string) => <span className="capitalize">{audience.replace("-", " ")}</span>,
+    },
+    {
+      title: "Age Track",
+      dataIndex: "ageTrack",
+      key: "ageTrack",
+      width: 130,
+      render: (ageTrack: string) => <Tag color="blue">{ageTrack}</Tag>,
+    },
+    {
+      title: "Category / Playlist",
+      dataIndex: "category",
+      key: "category",
+      width: 220,
+      render: (_: string, record: Video) => (
+        <div>
+          <div className="font-bold text-[#202020]">{record.category}</div>
+          <div className="text-xs text-[#667085]">{record.playlist ?? "General"}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Flags",
+      key: "flags",
+      width: 230,
+      render: (_, record: Video) => (
+        <Space size="small" wrap>
+          <Tag color={record.dripEnabled ? "orange" : "default"}>
+            {record.dripEnabled ? "DRIP LOCKED" : "OPEN"}
+          </Tag>
+          {record.isFreePreview ? <Tag color="green">FREE PREVIEW</Tag> : null}
+          {record.isMissionVideo ? <Tag color="purple">MISSION</Tag> : null}
+        </Space>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      width: 110,
+      render: (_, record: Video) => (
+        <Button
+          danger
+          size="small"
+          loading={deletingVideoId === record.id}
+          onClick={() => removeVideo(record.id)}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
+
+  const pagination: TablePaginationConfig = {
+    current: currentPage,
+    pageSize,
+    total: filteredItems.length,
+    onChange: (page, nextPageSize) => {
+      setCurrentPage(page);
+      setPageSize(nextPageSize);
+    },
+    pageSizeOptions: [10, 20, 50],
+    showSizeChanger: true,
+    showTotal: (total) => `Total ${total} video${total !== 1 ? "s" : ""}`,
+  };
 
   return (
     <div className="grid gap-6">
@@ -173,30 +306,33 @@ export function AdminVideosManager({
           <input name="isMissionVideo" type="checkbox" value="true" />
           Homepage mission video
         </label>
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">
-          Upload Video
-        </button>
+        <Space>
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
+            Upload Video
+          </Button>
+        </Space>
       </form>
 
-      <section className="grid gap-3">
-        {items.map((video) => (
-          <article key={video.id} className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-bold">{video.order}. {video.title}</p>
-                <p className="text-sm text-[#555]">{video.audience} / {video.ageTrack} / {video.category} / {video.playlist ?? "General"}</p>
-              </div>
-              <button onClick={() => removeVideo(video.id)} className="rounded-md border border-[#cfd4dc] px-3 py-2 text-xs font-black text-[#8c0504] hover:border-[#8c0504]">
-                Delete
-              </button>
-            </div>
-            <p className="mt-2 text-sm text-[#666]">{video.description}</p>
-            <p className="mt-2 text-xs font-bold">
-              {video.dripEnabled ? "Drip locked" : "Open order"} {video.isFreePreview ? "/ Free preview" : ""} {video.isMissionVideo ? "/ Mission video" : ""}
-            </p>
-          </article>
-        ))}
-      </section>
+      <div className="grid gap-3 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <Input
+          placeholder="Search videos by title, category, playlist, age track..."
+          prefix={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(event) => handleSearch(event.target.value)}
+          size="large"
+          className="mb-2"
+        />
+        <Table
+          columns={columns}
+          dataSource={filteredItems}
+          rowKey="id"
+          pagination={pagination}
+          scroll={{ x: 1200 }}
+          locale={{
+            emptyText: "No videos found",
+          }}
+        />
+      </div>
     </div>
   );
 }

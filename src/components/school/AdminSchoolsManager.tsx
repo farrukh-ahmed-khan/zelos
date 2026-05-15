@@ -20,8 +20,6 @@ type School = {
 
 export function AdminSchoolsManager({ schools }: { schools: School[] }) {
   const [items, setItems] = useState(schools);
-  const [messageText, setMessageText] = useState("");
-  const [errorText, setErrorText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +42,6 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
 
   async function createSchool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorText("");
     setIsSubmitting(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -68,7 +65,6 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
       const result = await response.json();
 
       if (!response.ok) {
-        setErrorText(result?.error?.message ?? "Unable to create school.");
         antMessage.error(result?.error?.message ?? "Unable to create school.");
         return;
       }
@@ -83,7 +79,6 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
 
   async function inviteTeacher(event: FormEvent<HTMLFormElement>, schoolId: string) {
     event.preventDefault();
-    setErrorText("");
     setInvitingSchoolId(schoolId);
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -96,7 +91,6 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
       const result = await response.json();
 
       if (!response.ok) {
-        setErrorText(result?.error?.message ?? "Unable to invite teacher.");
         antMessage.error(result?.error?.message ?? "Unable to invite teacher.");
         return;
       }

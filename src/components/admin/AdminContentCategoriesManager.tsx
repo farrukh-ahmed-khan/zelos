@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { Button, Input, Space, Table, Tag, message as antMessage } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import type { TableColumnsType, TablePaginationConfig } from "antd";
 
 type Category = {
   _id?: string;
@@ -17,36 +20,127 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
   const [items, setItems] = useState(categories);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const filteredItems = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return items;
+
+    return items.filter((category) =>
+      [
+        category.name,
+        category.playlist ?? "General",
+        category.ageTrack,
+        category.audience,
+        category.isActive ? "active" : "inactive",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [items, searchTerm]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setMessage("");
+    setIsSubmitting(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch("/api/admin/content-categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: String(formData.get("name") ?? ""),
-        playlist: String(formData.get("playlist") ?? ""),
-        ageTrack: String(formData.get("ageTrack") ?? ""),
-        audience: String(formData.get("audience") ?? "subscriber"),
-        order: Number(formData.get("order") ?? 1),
-        isActive: formData.get("isActive") === "on",
-      }),
-    });
-    const result = await response.json();
+    try {
+      const response = await fetch("/api/admin/content-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(formData.get("name") ?? ""),
+          playlist: String(formData.get("playlist") ?? ""),
+          ageTrack: String(formData.get("ageTrack") ?? ""),
+          audience: String(formData.get("audience") ?? "subscriber"),
+          order: Number(formData.get("order") ?? 1),
+          isActive: formData.get("isActive") === "on",
+        }),
+      });
+      const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to create category.");
-      return;
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to create category.");
+        antMessage.error(result?.error?.message ?? "Unable to create category.");
+        return;
+      }
+
+      setItems((current) => [result.data.category, ...current]);
+      setMessage("Category created.");
+      antMessage.success("Category created successfully.");
+      form.reset();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setItems((current) => [result.data.category, ...current]);
-    setMessage("Category created.");
-    form.reset();
   }
+
+  const columns: TableColumnsType<Category> = [
+    {
+      title: "Category",
+      dataIndex: "name",
+      key: "name",
+      width: 220,
+      render: (name: string, record: Category) => (
+        <div>
+          <div className="font-bold text-[#202020]">{name}</div>
+          <div className="text-xs text-[#667085]">Playlist: {record.playlist ?? "General"}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Audience",
+      dataIndex: "audience",
+      key: "audience",
+      width: 150,
+      render: (audience: string) => <span className="capitalize">{audience.replace("-", " ")}</span>,
+    },
+    {
+      title: "Age Track",
+      dataIndex: "ageTrack",
+      key: "ageTrack",
+      width: 140,
+      render: (ageTrack: string) => <Tag color="blue">{ageTrack}</Tag>,
+    },
+    {
+      title: "Order",
+      dataIndex: "order",
+      key: "order",
+      width: 90,
+    },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      key: "status",
+      width: 110,
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? "green" : "default"}>{isActive ? "ACTIVE" : "INACTIVE"}</Tag>
+      ),
+    },
+  ];
+
+  const pagination: TablePaginationConfig = {
+    current: currentPage,
+    pageSize,
+    total: filteredItems.length,
+    onChange: (page, nextPageSize) => {
+      setCurrentPage(page);
+      setPageSize(nextPageSize);
+    },
+    pageSizeOptions: [10, 20, 50],
+    showSizeChanger: true,
+    showTotal: (total) => `Total ${total} categor${total === 1 ? "y" : "ies"}`,
+  };
 
   return (
     <div className="grid gap-6">
@@ -88,23 +182,33 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
           <input name="isActive" type="checkbox" defaultChecked />
           Active
         </label>
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">
-          Add Category
-        </button>
+        <Space>
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
+            Add Category
+          </Button>
+        </Space>
       </form>
 
-      <section className="grid gap-3">
-        {items.map((category) => (
-          <article key={category.id ?? category._id} className="grid gap-2 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-[1fr_auto]">
-            <div>
-              <p className="font-bold">{category.name}</p>
-              <p className="text-sm text-[#555]">Playlist: {category.playlist ?? "General"}</p>
-              <p className="text-sm text-[#555]">{category.audience} / {category.ageTrack} / order {category.order}</p>
-            </div>
-            <p className="text-sm font-black">{category.isActive ? "Active" : "Inactive"}</p>
-          </article>
-        ))}
-      </section>
+      <div className="grid gap-3 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <Input
+          placeholder="Search categories by name, playlist, age track, audience..."
+          prefix={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(event) => handleSearch(event.target.value)}
+          size="large"
+          className="mb-2"
+        />
+        <Table
+          columns={columns}
+          dataSource={filteredItems}
+          rowKey={(record) => record.id ?? record._id ?? `${record.name}-${record.playlist}-${record.ageTrack}-${record.audience}`}
+          pagination={pagination}
+          scroll={{ x: 900 }}
+          locale={{
+            emptyText: "No categories found",
+          }}
+        />
+      </div>
     </div>
   );
 }
