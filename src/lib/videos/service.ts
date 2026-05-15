@@ -5,6 +5,7 @@ import Video, { type VideoDocument } from "@/models/Video";
 import VideoProgress from "@/models/VideoProgress";
 import { getAssignedSchoolVideoIds } from "@/lib/schools/service";
 import School from "@/models/School";
+import ContentCategory from "@/models/ContentCategory";
 
 const REQUIRED_COMPLETION_PERCENTAGE = 95;
 const SUBSCRIPTION_VIDEO_ROLES = new Set(["mentee", "subscriber", "child"]);
@@ -59,7 +60,7 @@ async function getCandidateVideosForUser(user: UserDocument) {
 
 async function filterSchoolScopedVideos(user: UserDocument, videos: VideoDocument[]) {
   if (!["teacher", "student"].includes(user.role)) {
-    return videos.filter((video) => video.schoolScope === "global" || !video.schoolScope);
+    return videos;
   }
 
   if (!user.schoolId) {
@@ -94,6 +95,64 @@ async function filterSchoolScopedVideos(user: UserDocument, videos: VideoDocumen
   });
 }
 
+async function sortVideosForProgression(videos: VideoDocument[]) {
+  if (!videos.length) {
+    return videos;
+  }
+
+  const categories = await ContentCategory.find({
+    $or: videos.map((video) => ({
+      audience: video.audience,
+      ageTrack: video.ageTrack,
+      name: video.category ?? "General",
+      playlist: video.playlist ?? "General",
+    })),
+  })
+    .select("name playlist ageTrack audience order")
+    .lean();
+
+  const playlistOrderByKey = new Map(
+    categories.map((category) => [
+      `${category.audience}::${category.ageTrack}::${category.name}::${category.playlist ?? "General"}`,
+      category.order ?? 1,
+    ]),
+  );
+
+  const createdAtTime = (video: VideoDocument) => {
+    const createdAt = (video as unknown as { createdAt?: Date }).createdAt;
+    return createdAt instanceof Date ? createdAt.getTime() : 0;
+  };
+
+  return [...videos].sort((first, second) => {
+    const firstCategory = first.category ?? "General";
+    const secondCategory = second.category ?? "General";
+    const categoryCompare = firstCategory.localeCompare(secondCategory);
+
+    if (categoryCompare !== 0) {
+      return categoryCompare;
+    }
+
+    const firstPlaylist = first.playlist ?? "General";
+    const secondPlaylist = second.playlist ?? "General";
+    const firstPlaylistOrder =
+      playlistOrderByKey.get(`${first.audience}::${first.ageTrack}::${firstCategory}::${firstPlaylist}`) ?? 1;
+    const secondPlaylistOrder =
+      playlistOrderByKey.get(`${second.audience}::${second.ageTrack}::${secondCategory}::${secondPlaylist}`) ?? 1;
+
+    if (firstPlaylistOrder !== secondPlaylistOrder) {
+      return firstPlaylistOrder - secondPlaylistOrder;
+    }
+
+    const playlistCompare = firstPlaylist.localeCompare(secondPlaylist);
+
+    if (playlistCompare !== 0) {
+      return playlistCompare;
+    }
+
+    return first.order - second.order || createdAtTime(first) - createdAtTime(second);
+  });
+}
+
 function resolveVideoAudienceForUser(user: UserDocument) {
   if (user.role === "teacher") {
     return "teacher";
@@ -121,6 +180,7 @@ export async function buildVideoAvailability(user: UserDocument) {
   let videos = await getCandidateVideosForUser(user);
   const completedVideoIds = await getCompletedVideoIds(user._id.toString());
   videos = await filterSchoolScopedVideos(user, videos);
+  videos = await sortVideosForProgression(videos);
 
   let unlocked = true;
 
@@ -174,6 +234,7 @@ export async function resolveCompletableVideo(params: {
 
   let videos = await getCandidateVideosForUser(user);
   videos = await filterSchoolScopedVideos(user, videos);
+  videos = await sortVideosForProgression(videos);
 
   if (!videos.some((entry) => entry._id.toString() === video._id.toString())) {
     throw new ApiError(404, "Video not found for this user.");

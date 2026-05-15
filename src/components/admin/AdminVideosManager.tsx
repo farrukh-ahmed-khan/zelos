@@ -37,6 +37,8 @@ type School = {
   district: string | null;
 };
 
+type SchoolScope = "global" | "all-schools" | "specific-schools" | "district";
+
 const TEACHER_TRACK = "Teachers";
 const ageTrackOptions = [
   { value: "child", label: "Children" },
@@ -65,18 +67,29 @@ export function AdminVideosManager({
   videos,
   categories,
   schools,
+  playlistContext,
 }: {
   videos: Video[];
   categories: ContentCategory[];
   schools: School[];
+  playlistContext?: ContentCategory;
 }) {
+  const initialAudience = playlistContext?.audience ?? "subscriber";
+  const initialAgeTrack =
+    playlistContext && playlistContext.audience !== "teacher"
+      ? normalizeAgeTrack(playlistContext.ageTrack)
+      : "";
+  const initialCategoryId = playlistContext?.id ?? "";
+  const initialSchoolScope: SchoolScope =
+    initialAudience === "teacher" || initialAudience === "student" ? "all-schools" : "global";
+  const isPlaylistLocked = Boolean(playlistContext);
   const [items, setItems] = useState(videos);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [selectedAgeTrack, setSelectedAgeTrack] = useState("");
-  const [selectedAudience, setSelectedAudience] = useState("subscriber");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedSchoolScope, setSelectedSchoolScope] = useState<"global" | "all-schools" | "specific-schools" | "district">("global");
+  const [selectedAgeTrack, setSelectedAgeTrack] = useState(initialAgeTrack);
+  const [selectedAudience, setSelectedAudience] = useState(initialAudience);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
+  const [selectedSchoolScope, setSelectedSchoolScope] = useState<SchoolScope>(initialSchoolScope);
   const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -185,10 +198,10 @@ export function AdminVideosManager({
       setMessage("Video uploaded.");
       antMessage.success("Video uploaded successfully.");
       form.reset();
-      setSelectedAgeTrack("");
-      setSelectedAudience("subscriber");
-      setSelectedCategoryId("");
-      setSelectedSchoolScope("global");
+      setSelectedAgeTrack(isPlaylistLocked ? initialAgeTrack : "");
+      setSelectedAudience(isPlaylistLocked ? initialAudience : "subscriber");
+      setSelectedCategoryId(isPlaylistLocked ? initialCategoryId : "");
+      setSelectedSchoolScope(isPlaylistLocked ? initialSchoolScope : "global");
       setSelectedSchoolIds([]);
       setSelectedDistrict("");
     } finally {
@@ -335,9 +348,34 @@ export function AdminVideosManager({
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
+        {playlistContext ? (
+          <div className="rounded-md border border-[#d9dde3] bg-[#f8fafc] p-4 md:col-span-2">
+            <div className="text-xs font-bold uppercase tracking-wide text-[#8c0504]">Uploading Into Playlist</div>
+            <div className="mt-2 grid gap-3 text-sm md:grid-cols-4">
+              <div>
+                <div className="font-bold text-[#202020]">Category</div>
+                <div className="text-[#667085]">{playlistContext.name}</div>
+              </div>
+              <div>
+                <div className="font-bold text-[#202020]">Playlist</div>
+                <div className="text-[#667085]">{playlistContext.playlist}</div>
+              </div>
+              <div>
+                <div className="font-bold text-[#202020]">Audience</div>
+                <div className="capitalize text-[#667085]">{playlistContext.audience.replace("-", " ")}</div>
+              </div>
+              <div>
+                <div className="font-bold text-[#202020]">Age Track</div>
+                <div className="text-[#667085]">
+                  {playlistContext.audience === "teacher" ? "Not needed" : formatAgeTrack(playlistContext.ageTrack)}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <input name="title" placeholder="Title" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <textarea name="description" placeholder="Description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        {!isTeacherAudience ? (
+        {!isPlaylistLocked && !isTeacherAudience ? (
           <select
             name="ageTrack"
             required
@@ -356,27 +394,29 @@ export function AdminVideosManager({
             ))}
           </select>
         ) : null}
-        <select
-          name="audience"
-          value={selectedAudience}
-          onChange={(event) => {
-            setSelectedAudience(event.target.value);
-            if (event.target.value === "teacher") {
-              setSelectedAgeTrack("");
-            }
-            const nextIsSchoolAudience = event.target.value === "teacher" || event.target.value === "student";
-            setSelectedSchoolScope(nextIsSchoolAudience ? "all-schools" : "global");
-            setSelectedSchoolIds([]);
-            setSelectedDistrict("");
-            setSelectedCategoryId("");
-          }}
-          className="rounded-md border border-[#d8d2c5] px-3 py-3"
-        >
-          <option value="subscriber">Subscriber Library</option>
-          <option value="teacher">Teacher Library</option>
-          <option value="student">Student Library</option>
-          <option value="public-preview">Free Preview</option>
-        </select>
+        {!isPlaylistLocked ? (
+          <select
+            name="audience"
+            value={selectedAudience}
+            onChange={(event) => {
+              setSelectedAudience(event.target.value);
+              if (event.target.value === "teacher") {
+                setSelectedAgeTrack("");
+              }
+              const nextIsSchoolAudience = event.target.value === "teacher" || event.target.value === "student";
+              setSelectedSchoolScope(nextIsSchoolAudience ? "all-schools" : "global");
+              setSelectedSchoolIds([]);
+              setSelectedDistrict("");
+              setSelectedCategoryId("");
+            }}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3"
+          >
+            <option value="subscriber">Subscriber Library</option>
+            <option value="teacher">Teacher Library</option>
+            <option value="student">Student Library</option>
+            <option value="public-preview">Free Preview</option>
+          </select>
+        ) : null}
         {isSchoolAudience ? (
           <>
             <select
@@ -421,23 +461,25 @@ export function AdminVideosManager({
             ) : null}
           </>
         ) : null}
-        <select
-          name="categoryPlaylist"
-          required
-          value={selectedCategoryId}
-          onChange={(event) => setSelectedCategoryId(event.target.value)}
-          disabled={!isTeacherAudience && !selectedAgeTrack}
-          className="rounded-md border border-[#d8d2c5] px-3 py-3 disabled:bg-[#f5f5f5] disabled:text-[#999]"
-        >
-          <option value="">
-            {isTeacherAudience || selectedAgeTrack ? "Category playlist" : "Select age track first"}
-          </option>
-          {matchingCategories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name} / {category.playlist}
+        {!isPlaylistLocked ? (
+          <select
+            name="categoryPlaylist"
+            required
+            value={selectedCategoryId}
+            onChange={(event) => setSelectedCategoryId(event.target.value)}
+            disabled={!isTeacherAudience && !selectedAgeTrack}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 disabled:bg-[#f5f5f5] disabled:text-[#999]"
+          >
+            <option value="">
+              {isTeacherAudience || selectedAgeTrack ? "Category playlist" : "Select age track first"}
             </option>
-          ))}
-        </select>
+            {matchingCategories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name} / {category.playlist}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <input name="order" type="number" min={1} placeholder="Sequence order" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="video" type="file" accept="video/*" required className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 md:col-span-2" />

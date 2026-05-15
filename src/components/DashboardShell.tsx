@@ -281,12 +281,12 @@ function VideoPanel({
       <div className="grid content-start gap-2">
         {groupedVideos.map((categoryGroup) => (
           <div key={categoryGroup.category} className="grid gap-2">
-            <p className="px-1 text-xs font-black uppercase text-[#b22222]">
+            <p className="rounded-sm bg-[#8c0504] px-2 py-1 text-xs font-black uppercase text-white">
               {categoryGroup.category}
             </p>
             {categoryGroup.playlists.map((playlistGroup) => (
               <div key={`${categoryGroup.category}-${playlistGroup.playlist}`} className="grid gap-2">
-                <p className="px-1 text-xs font-bold uppercase text-[#555]">
+                <p className="px-1 text-xs font-black uppercase text-[#555]">
                   {playlistGroup.playlist}
                 </p>
                 {playlistGroup.videos.map((video) => (

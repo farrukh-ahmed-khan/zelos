@@ -50,6 +50,8 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedAudience, setSelectedAudience] = useState("subscriber");
+  const [playlistTarget, setPlaylistTarget] = useState<CategoryGroup | null>(null);
+  const [isAddingPlaylist, setIsAddingPlaylist] = useState(false);
   const isTeacherAudience = selectedAudience === "teacher";
 
   const filteredItems = useMemo(() => {
@@ -138,6 +140,47 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     }
   }
 
+  async function submitPlaylist(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!playlistTarget) return;
+
+    setError("");
+    setMessage("");
+    setIsAddingPlaylist(true);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch("/api/admin/content-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: playlistTarget.name,
+          playlist: String(formData.get("playlist") ?? ""),
+          ageTrack: playlistTarget.ageTrack,
+          audience: playlistTarget.audience,
+          order: Number(formData.get("order") ?? playlistTarget.playlists.length + 1),
+          isActive: formData.get("isActive") === "on",
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to add playlist.");
+        antMessage.error(result?.error?.message ?? "Unable to add playlist.");
+        return;
+      }
+
+      setItems((current) => [result.data.category, ...current]);
+      setMessage(`Playlist added to ${playlistTarget.name}.`);
+      antMessage.success("Playlist added successfully.");
+      form.reset();
+      setPlaylistTarget(null);
+    } finally {
+      setIsAddingPlaylist(false);
+    }
+  }
+
   const columns: TableColumnsType<CategoryGroup> = [
     {
       title: "Category",
@@ -176,11 +219,15 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       width: 320,
       render: (playlists: Category[]) => (
         <Space size="small" wrap>
-          {playlists.map((playlist) => (
-            <Tag key={playlist.id ?? playlist._id ?? playlist.playlist} color={playlist.isActive ? "green" : "default"}>
-              {playlist.order}. {playlist.playlist ?? "General"}
-            </Tag>
-          ))}
+          {playlists.map((playlist) => {
+            return (
+              <Space key={playlist.id ?? playlist._id ?? playlist.playlist} size={6} wrap>
+                <Tag color={playlist.isActive ? "green" : "default"}>
+                  {playlist.order}. {playlist.playlist ?? "General"}
+                </Tag>
+              </Space>
+            );
+          })}
         </Space>
       ),
     },
@@ -199,6 +246,16 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
           </Tag>
         );
       },
+    },
+    {
+      title: "Action",
+      key: "action",
+      width: 150,
+      render: (_, record: CategoryGroup) => (
+        <Button size="small" onClick={() => setPlaylistTarget(record)}>
+          Add playlist
+        </Button>
+      ),
     },
   ];
 
@@ -272,6 +329,35 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       </form>
 
       <div className="grid gap-3 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        {playlistTarget ? (
+          <form onSubmit={submitPlaylist} className="grid gap-3 rounded-md border border-[#d9dde3] bg-[#f8fafc] p-4 md:grid-cols-4">
+            <div className="md:col-span-4">
+              <div className="text-xs font-bold uppercase tracking-wide text-[#8c0504]">Add Playlist To Category</div>
+              <div className="mt-1 text-sm text-[#667085]">
+                {playlistTarget.name} / {playlistTarget.audience.replace("-", " ")} /{" "}
+                {playlistTarget.audience === "teacher" ? "No age track" : formatAgeTrack(playlistTarget.ageTrack)}
+              </div>
+            </div>
+            <label className="grid gap-1 text-sm font-bold text-[#344054] md:col-span-2">
+              Playlist Name
+              <input name="playlist" placeholder="Example: Week 2 Lessons" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+            </label>
+            <label className="grid gap-1 text-sm font-bold text-[#344054]">
+              Display Order
+              <input name="order" type="number" min={1} defaultValue={playlistTarget.playlists.length + 1} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+            </label>
+            <label className="flex items-center gap-2 text-sm font-bold text-[#344054]">
+              <input name="isActive" type="checkbox" defaultChecked />
+              Active
+            </label>
+            <Space className="md:col-span-4">
+              <Button type="primary" htmlType="submit" loading={isAddingPlaylist}>
+                Save Playlist
+              </Button>
+              <Button onClick={() => setPlaylistTarget(null)}>Cancel</Button>
+            </Space>
+          </form>
+        ) : null}
         <Input
           placeholder="Search categories by name, playlist, age track, audience..."
           prefix={<SearchOutlined />}
