@@ -29,6 +29,28 @@ type ContentCategory = {
 };
 
 const TEACHER_TRACK = "Teachers";
+const ageTrackOptions = [
+  { value: "child", label: "Children" },
+  { value: "teen", label: "Teens" },
+  { value: "young-adult", label: "Young Adults" },
+  { value: "adult", label: "Adults" },
+];
+
+function normalizeAgeTrack(ageTrack: string) {
+  const option = ageTrackOptions.find(
+    (entry) => entry.value === ageTrack || entry.label === ageTrack,
+  );
+
+  return option?.value ?? ageTrack;
+}
+
+function formatAgeTrack(ageTrack: string) {
+  const option = ageTrackOptions.find(
+    (entry) => entry.value === ageTrack || entry.label === ageTrack,
+  );
+
+  return option?.label ?? ageTrack;
+}
 
 export function AdminVideosManager({
   videos,
@@ -55,7 +77,8 @@ export function AdminVideosManager({
       categories.filter(
         (category) =>
           category.audience === selectedAudience &&
-          (selectedAudience === "teacher" || category.ageTrack === selectedAgeTrack),
+          (selectedAudience === "teacher" ||
+            normalizeAgeTrack(category.ageTrack) === selectedAgeTrack),
       ),
     [categories, selectedAgeTrack, selectedAudience],
   );
@@ -68,7 +91,7 @@ export function AdminVideosManager({
       [
         video.title,
         video.description,
-        video.ageTrack,
+        formatAgeTrack(video.ageTrack),
         video.audience,
         video.category,
         video.playlist ?? "General",
@@ -184,7 +207,7 @@ export function AdminVideosManager({
       key: "ageTrack",
       width: 130,
       render: (ageTrack: string, record: Video) => (
-        <Tag color="blue">{record.audience === "teacher" ? "Not needed" : ageTrack}</Tag>
+        <Tag color="blue">{record.audience === "teacher" ? "Not needed" : formatAgeTrack(ageTrack)}</Tag>
       ),
     },
     {
@@ -263,9 +286,11 @@ export function AdminVideosManager({
             className="rounded-md border border-[#d8d2c5] px-3 py-3"
           >
             <option value="">Age track</option>
-            <option>Children</option>
-            <option>Teens</option>
-            <option>Young Adults</option>
+            {ageTrackOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         ) : null}
         <select

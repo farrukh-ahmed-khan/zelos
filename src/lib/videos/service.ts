@@ -6,12 +6,32 @@ import VideoProgress from "@/models/VideoProgress";
 import { getAssignedSchoolVideoIds } from "@/lib/schools/service";
 
 const REQUIRED_COMPLETION_PERCENTAGE = 95;
+const SUBSCRIPTION_VIDEO_ROLES = new Set(["mentee", "subscriber", "child"]);
+
+export function requiresSubscriptionForVideos(user: UserDocument) {
+  return SUBSCRIPTION_VIDEO_ROLES.has(user.role);
+}
+
+function getAgeTrackAliases(ageTrack: string) {
+  const aliases: Record<string, string[]> = {
+    child: ["child", "Children"],
+    teen: ["teen", "Teens"],
+    "young-adult": ["young-adult", "Young Adults"],
+    adult: ["adult", "Adults"],
+    Children: ["child", "Children"],
+    Teens: ["teen", "Teens"],
+    "Young Adults": ["young-adult", "Young Adults"],
+    Adults: ["adult", "Adults"],
+  };
+
+  return aliases[ageTrack] ?? [ageTrack];
+}
 
 export async function getAgeTrackVideos(ageTrack: string) {
   await connectToDatabase();
 
   return Video.find({
-    ageTrack,
+    ageTrack: { $in: getAgeTrackAliases(ageTrack) },
     releaseDate: { $not: { $gt: new Date() } },
   }).sort({ order: 1, createdAt: 1 });
 }
@@ -97,7 +117,11 @@ export async function resolveCompletableVideo(params: {
 
   const audience = resolveVideoAudienceForUser(user);
 
-  if (!video || video.ageTrack !== user.ageTrack || video.audience !== audience) {
+  if (
+    !video ||
+    !getAgeTrackAliases(user.ageTrack).includes(video.ageTrack) ||
+    video.audience !== audience
+  ) {
     throw new ApiError(404, "Video not found for this user.");
   }
 

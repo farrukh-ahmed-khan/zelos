@@ -17,6 +17,20 @@ type Category = {
 };
 
 const TEACHER_TRACK = "Teachers";
+const ageTrackOptions = [
+  { value: "child", label: "Children" },
+  { value: "teen", label: "Teens" },
+  { value: "young-adult", label: "Young Adults" },
+  { value: "adult", label: "Adults" },
+];
+
+function formatAgeTrack(ageTrack: string) {
+  const option = ageTrackOptions.find(
+    (entry) => entry.value === ageTrack || entry.label === ageTrack,
+  );
+
+  return option?.label ?? ageTrack;
+}
 
 export function AdminContentCategoriesManager({ categories }: { categories: Category[] }) {
   const [items, setItems] = useState(categories);
@@ -37,7 +51,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       [
         category.name,
         category.playlist ?? "General",
-        category.ageTrack,
+        formatAgeTrack(category.ageTrack),
         category.audience,
         category.isActive ? "active" : "inactive",
       ]
@@ -116,7 +130,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       key: "ageTrack",
       width: 140,
       render: (ageTrack: string, record: Category) => (
-        <Tag color="blue">{record.audience === "teacher" ? "Not needed" : ageTrack}</Tag>
+        <Tag color="blue">{record.audience === "teacher" ? "Not needed" : formatAgeTrack(ageTrack)}</Tag>
       ),
     },
     {
@@ -168,9 +182,11 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
             Age Track
             <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
               <option value="">Select age track</option>
-              <option>Children</option>
-              <option>Teens</option>
-              <option>Young Adults</option>
+              {ageTrackOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         ) : null}

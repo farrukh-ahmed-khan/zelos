@@ -70,6 +70,8 @@ type DashboardShellProps = {
   threads: DashboardThread[];
   childrenAccounts: DashboardChild[];
   subscriptionLabel: string;
+  hasVideoLibraryAccess: boolean;
+  needsVideoSubscription: boolean;
   adminSummary?: DashboardAdminSummary;
 };
 
@@ -199,6 +201,31 @@ function VideoPanel({ videos, userRole }: { videos: DashboardVideo[]; userRole: 
   );
 }
 
+function VideoAccessGate({ userRole }: { userRole: string }) {
+  const isChild = userRole === "child";
+
+  return (
+    <div className="rounded-md bg-white px-4 py-4 text-sm text-[#4a4a4a]">
+      <p className="font-bold text-[#202020]">
+        Active subscription required
+      </p>
+      <p className="mt-1 leading-relaxed">
+        {isChild
+          ? "This family member can view lessons after the parent subscriber account has an active plan."
+          : "Subscribe to unlock the video library for your age track."}
+      </p>
+      {!isChild ? (
+        <Link
+          href="/billing"
+          className="mt-3 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+        >
+          View Plans
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
 export function DashboardShell({
   user,
   videos,
@@ -206,6 +233,8 @@ export function DashboardShell({
   threads,
   childrenAccounts,
   subscriptionLabel,
+  hasVideoLibraryAccess,
+  needsVideoSubscription,
   adminSummary,
 }: DashboardShellProps) {
   const upcomingEvents = events
@@ -275,7 +304,11 @@ export function DashboardShell({
                 ) : null
               }
             >
-              <VideoPanel videos={videos} userRole={user.role} />
+              {needsVideoSubscription && !hasVideoLibraryAccess ? (
+                <VideoAccessGate userRole={user.role} />
+              ) : (
+                <VideoPanel videos={videos} userRole={user.role} />
+              )}
             </SectionCard>
 
             {isAdmin ? (

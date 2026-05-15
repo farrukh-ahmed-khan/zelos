@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { handleApiError, successResponse } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
+import { requirePremiumAccess } from "@/lib/subscriptions/service";
 import { completeVideoSchema } from "@/lib/validation/video";
 import {
   buildVideoAvailability,
   markVideoAsCompleted,
+  requiresSubscriptionForVideos,
   resolveCompletableVideo,
 } from "@/lib/videos/service";
 
@@ -19,6 +21,10 @@ type RouteContext = {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const user = await requireUser(request);
+    if (requiresSubscriptionForVideos(user)) {
+      await requirePremiumAccess(user);
+    }
+
     const { videoId } = await context.params;
     const body = completeVideoSchema.parse(await request.json());
 

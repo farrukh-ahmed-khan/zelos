@@ -12,7 +12,7 @@ import { getChildSubscriberAccounts } from "@/lib/subscribers/service";
 import { resolveSubscriptionAccessForUser } from "@/lib/subscriptions/service";
 import { serializeResolvedSubscription } from "@/lib/subscriptions/serialize-subscription";
 import { serializeUser } from "@/lib/users/serialize-user";
-import { buildVideoAvailability } from "@/lib/videos/service";
+import { buildVideoAvailability, requiresSubscriptionForVideos } from "@/lib/videos/service";
 import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
@@ -66,7 +66,6 @@ export default async function DashboardPage() {
   );
 
   const [
-    videosResult,
     eventsResult,
     threadsResult,
     childrenResult,
@@ -75,21 +74,17 @@ export default async function DashboardPage() {
     reportsResult,
     mentorApplicationsResult,
   ] = await Promise.allSettled([
-    buildVideoAvailability(user),
     getEventsWithRsvpStatus(userId),
     getForumThreads(),
     user.role === "subscriber"
       ? getChildSubscriberAccounts(user)
       : Promise.resolve([]),
-    user.role === "child"
-      ? Promise.resolve(null)
-      : resolveSubscriptionAccessForUser(user),
+    resolveSubscriptionAccessForUser(user),
     canReadUsers ? User.countDocuments() : Promise.resolve(0),
     canModerateForum ? getForumReports() : Promise.resolve([]),
     canReadUsers ? getMentorApplications() : Promise.resolve([]),
   ]);
 
-  const videos = videosResult.status === "fulfilled" ? videosResult.value : [];
   const events = eventsResult.status === "fulfilled" ? eventsResult.value : [];
   const threads = threadsResult.status === "fulfilled" ? threadsResult.value : [];
   const childrenAccounts =
@@ -100,6 +95,10 @@ export default async function DashboardPage() {
     subscriptionResult.status === "fulfilled" && subscriptionResult.value
       ? serializeResolvedSubscription(subscriptionResult.value)
       : null;
+  const needsVideoSubscription = requiresSubscriptionForVideos(user);
+  const hasVideoLibraryAccess =
+    !needsVideoSubscription || Boolean(subscription?.hasPremiumAccess);
+  const videos = hasVideoLibraryAccess ? await buildVideoAvailability(user) : [];
   const usersCount =
     usersCountResult.status === "fulfilled" ? usersCountResult.value : 0;
   const reports = reportsResult.status === "fulfilled" ? reportsResult.value : [];
@@ -116,6 +115,8 @@ export default async function DashboardPage() {
       threads={threads}
       childrenAccounts={childrenAccounts}
       subscriptionLabel={resolveSubscriptionLabel(subscription)}
+      hasVideoLibraryAccess={hasVideoLibraryAccess}
+      needsVideoSubscription={needsVideoSubscription}
       adminSummary={{
         usersCount,
         forumReportsCount: reports.length,
