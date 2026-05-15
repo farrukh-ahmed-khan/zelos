@@ -16,6 +16,8 @@ type Category = {
   isActive: boolean;
 };
 
+const TEACHER_TRACK = "Teachers";
+
 export function AdminContentCategoriesManager({ categories }: { categories: Category[] }) {
   const [items, setItems] = useState(categories);
   const [error, setError] = useState("");
@@ -24,6 +26,8 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedAudience, setSelectedAudience] = useState("subscriber");
+  const isTeacherAudience = selectedAudience === "teacher";
 
   const filteredItems = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -62,8 +66,8 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
         body: JSON.stringify({
           name: String(formData.get("name") ?? ""),
           playlist: String(formData.get("playlist") ?? ""),
-          ageTrack: String(formData.get("ageTrack") ?? ""),
-          audience: String(formData.get("audience") ?? "subscriber"),
+          ageTrack: isTeacherAudience ? TEACHER_TRACK : String(formData.get("ageTrack") ?? ""),
+          audience: selectedAudience,
           order: Number(formData.get("order") ?? 1),
           isActive: formData.get("isActive") === "on",
         }),
@@ -80,6 +84,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       setMessage("Category created.");
       antMessage.success("Category created successfully.");
       form.reset();
+      setSelectedAudience("subscriber");
     } finally {
       setIsSubmitting(false);
     }
@@ -110,7 +115,9 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
       dataIndex: "ageTrack",
       key: "ageTrack",
       width: 140,
-      render: (ageTrack: string) => <Tag color="blue">{ageTrack}</Tag>,
+      render: (ageTrack: string, record: Category) => (
+        <Tag color="blue">{record.audience === "teacher" ? "Not needed" : ageTrack}</Tag>
+      ),
     },
     {
       title: "Order",
@@ -156,18 +163,25 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
           Playlist Name
           <input name="playlist" placeholder="Example: Week 1 Lessons" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <label className="grid gap-1 text-sm font-bold text-[#344054]">
-          Age Track
-          <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
-            <option value="">Select age track</option>
-            <option>Children</option>
-            <option>Teens</option>
-            <option>Young Adults</option>
-          </select>
-        </label>
+        {!isTeacherAudience ? (
+          <label className="grid gap-1 text-sm font-bold text-[#344054]">
+            Age Track
+            <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+              <option value="">Select age track</option>
+              <option>Children</option>
+              <option>Teens</option>
+              <option>Young Adults</option>
+            </select>
+          </label>
+        ) : null}
         <label className="grid gap-1 text-sm font-bold text-[#344054]">
           Library Audience
-          <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+          <select
+            name="audience"
+            value={selectedAudience}
+            onChange={(event) => setSelectedAudience(event.target.value)}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          >
             <option value="subscriber">Subscriber</option>
             <option value="teacher">Teacher</option>
             <option value="student">Student</option>

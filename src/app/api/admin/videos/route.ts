@@ -8,6 +8,20 @@ import Video from "@/models/Video";
 
 export const runtime = "nodejs";
 
+function parseOptionalDate(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiError(400, "Invalid release date.");
+  }
+
+  return date;
+}
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminPermission(request, "content.manage");
@@ -99,9 +113,7 @@ export async function POST(request: NextRequest) {
       category: parsedFields.category,
       playlist: parsedFields.playlist,
       order: parsedFields.order,
-      releaseDate: parsedFields.releaseDate
-        ? new Date(parsedFields.releaseDate)
-        : null,
+      releaseDate: parseOptionalDate(parsedFields.releaseDate),
       dripEnabled: parsedFields.dripEnabled,
       isFreePreview: parsedFields.isFreePreview,
       isMissionVideo: parsedFields.isMissionVideo,

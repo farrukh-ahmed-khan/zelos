@@ -28,6 +28,8 @@ type ContentCategory = {
   audience: string;
 };
 
+const TEACHER_TRACK = "Teachers";
+
 export function AdminVideosManager({
   videos,
   categories,
@@ -46,13 +48,14 @@ export function AdminVideosManager({
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const isTeacherAudience = selectedAudience === "teacher";
 
   const matchingCategories = useMemo(
     () =>
       categories.filter(
         (category) =>
-          category.ageTrack === selectedAgeTrack &&
-          category.audience === selectedAudience,
+          category.audience === selectedAudience &&
+          (selectedAudience === "teacher" || category.ageTrack === selectedAgeTrack),
       ),
     [categories, selectedAgeTrack, selectedAudience],
   );
@@ -102,6 +105,7 @@ export function AdminVideosManager({
 
     formData.set("category", selectedCategory.name);
     formData.set("playlist", selectedCategory.playlist);
+    formData.set("ageTrack", selectedCategory.ageTrack || TEACHER_TRACK);
 
     setIsSubmitting(true);
     try {
@@ -179,7 +183,9 @@ export function AdminVideosManager({
       dataIndex: "ageTrack",
       key: "ageTrack",
       width: 130,
-      render: (ageTrack: string) => <Tag color="blue">{ageTrack}</Tag>,
+      render: (ageTrack: string, record: Video) => (
+        <Tag color="blue">{record.audience === "teacher" ? "Not needed" : ageTrack}</Tag>
+      ),
     },
     {
       title: "Category / Playlist",
@@ -245,26 +251,31 @@ export function AdminVideosManager({
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
         <input name="title" placeholder="Title" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <textarea name="description" placeholder="Description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <select
-          name="ageTrack"
-          required
-          value={selectedAgeTrack}
-          onChange={(event) => {
-            setSelectedAgeTrack(event.target.value);
-            setSelectedCategoryId("");
-          }}
-          className="rounded-md border border-[#d8d2c5] px-3 py-3"
-        >
-          <option value="">Age track</option>
-          <option>Children</option>
-          <option>Teens</option>
-          <option>Young Adults</option>
-        </select>
+        {!isTeacherAudience ? (
+          <select
+            name="ageTrack"
+            required
+            value={selectedAgeTrack}
+            onChange={(event) => {
+              setSelectedAgeTrack(event.target.value);
+              setSelectedCategoryId("");
+            }}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3"
+          >
+            <option value="">Age track</option>
+            <option>Children</option>
+            <option>Teens</option>
+            <option>Young Adults</option>
+          </select>
+        ) : null}
         <select
           name="audience"
           value={selectedAudience}
           onChange={(event) => {
             setSelectedAudience(event.target.value);
+            if (event.target.value === "teacher") {
+              setSelectedAgeTrack("");
+            }
             setSelectedCategoryId("");
           }}
           className="rounded-md border border-[#d8d2c5] px-3 py-3"
@@ -279,11 +290,11 @@ export function AdminVideosManager({
           required
           value={selectedCategoryId}
           onChange={(event) => setSelectedCategoryId(event.target.value)}
-          disabled={!selectedAgeTrack}
+          disabled={!isTeacherAudience && !selectedAgeTrack}
           className="rounded-md border border-[#d8d2c5] px-3 py-3 disabled:bg-[#f5f5f5] disabled:text-[#999]"
         >
           <option value="">
-            {selectedAgeTrack ? "Category playlist" : "Select age track first"}
+            {isTeacherAudience || selectedAgeTrack ? "Category playlist" : "Select age track first"}
           </option>
           {matchingCategories.map((category) => (
             <option key={category.id} value={category.id}>

@@ -14,7 +14,7 @@ export const createVideoSchema = z.object({
   category: z.string().trim().min(2).max(120).optional(),
   playlist: z.string().trim().min(2).max(120).optional(),
   order: z.number().int().min(1),
-  releaseDate: z.string().datetime().optional(),
+  releaseDate: z.string().trim().min(1).optional(),
   dripEnabled: z.boolean().optional(),
   isFreePreview: z.boolean().optional(),
   isMissionVideo: z.boolean().optional(),
