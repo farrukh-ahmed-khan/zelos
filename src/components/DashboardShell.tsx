@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   CalendarOutlined,
   CheckCircleOutlined,
@@ -138,7 +140,21 @@ function SectionCard({
   );
 }
 
-function VideoPanel({ videos, userRole }: { videos: DashboardVideo[]; userRole: string }) {
+function VideoPanel({
+  videos: initialVideos,
+  userRole,
+}: {
+  videos: DashboardVideo[];
+  userRole: string;
+}) {
+  const [videos, setVideos] = useState(initialVideos);
+  const [completionError, setCompletionError] = useState("");
+  const [completingVideoId, setCompletingVideoId] = useState<string | null>(null);
+  const completedVideoIds = useMemo(
+    () => new Set(videos.filter((video) => video.completed).map((video) => video.id)),
+    [videos],
+  );
+
   if (!videos.length) {
     return (
       <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
@@ -149,15 +165,66 @@ function VideoPanel({ videos, userRole }: { videos: DashboardVideo[]; userRole: 
 
   const nextVideo = videos.find((video) => !video.completed && !video.locked) ?? videos[0];
 
+  async function completeVideo(video: DashboardVideo, watchedPercentage: number) {
+    if (video.locked || completedVideoIds.has(video.id) || completingVideoId === video.id) {
+      return;
+    }
+
+    setCompletionError("");
+    setCompletingVideoId(video.id);
+
+    try {
+      const response = await fetch(`/api/videos/${video.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ watchedPercentage }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setCompletionError(result?.error?.message ?? "Unable to unlock the next lesson.");
+        return;
+      }
+
+      setVideos(result.data.videos);
+    } finally {
+      setCompletingVideoId(null);
+    }
+  }
+
+  function maybeCompleteFromProgress(video: DashboardVideo, element: HTMLVideoElement) {
+    if (!element.duration || Number.isNaN(element.duration)) {
+      return;
+    }
+
+    const watchedPercentage = Math.min(
+      100,
+      Math.round((element.currentTime / element.duration) * 100),
+    );
+
+    if (watchedPercentage >= 95) {
+      void completeVideo(video, watchedPercentage);
+    }
+  }
+
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+    <div className="grid gap-3">
+      {completionError ? (
+        <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">
+          {completionError}
+        </p>
+      ) : null}
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="overflow-hidden rounded-md bg-[#151515]">
         {nextVideo.url ? (
           <video
+            key={nextVideo.id}
             className="aspect-video w-full bg-black"
             controls
             controlsList="nodownload noplaybackrate"
             preload="metadata"
+            onTimeUpdate={(event) => maybeCompleteFromProgress(nextVideo, event.currentTarget)}
+            onEnded={(event) => maybeCompleteFromProgress(nextVideo, event.currentTarget)}
           >
             <source src={nextVideo.url} />
           </video>
@@ -191,11 +258,18 @@ function VideoPanel({ videos, userRole }: { videos: DashboardVideo[]; userRole: 
             <div className="min-w-0">
               <p className="truncate font-bold text-[#202020]">{video.title}</p>
               <p className="text-xs text-[#666]">
-                {video.completed ? "Completed" : video.locked ? "Locked" : "Unlocked"}
+                {completingVideoId === video.id
+                  ? "Completing..."
+                  : video.completed
+                    ? "Completed"
+                    : video.locked
+                      ? "Locked"
+                      : "Unlocked"}
               </p>
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
