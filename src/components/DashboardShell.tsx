@@ -425,7 +425,14 @@ export function DashboardShell({
                   : "Video Library"
               }
               action={
-                user.role === "mentee" ? (
+                user.role === "teacher" ? (
+                  <Link
+                    href="/educator"
+                    className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                  >
+                    Invite Students
+                  </Link>
+                ) : user.role === "mentee" ? (
                   <Link
                     href="/signup"
                     className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
