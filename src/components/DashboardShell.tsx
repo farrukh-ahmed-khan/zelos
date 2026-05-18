@@ -5,6 +5,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import {
   CalendarOutlined,
   CheckCircleOutlined,
+  CreditCardOutlined,
   LockOutlined,
   PlayCircleFilled,
   TeamOutlined,
@@ -500,6 +501,28 @@ export function DashboardShell({
           </div>
 
           <aside className="grid content-start gap-6">
+            {user.role === "subscriber" ? (
+              <SectionCard
+                title="Subscription"
+                action={<CreditCardOutlined className="text-2xl text-[#b22222]" />}
+              >
+                <div className="rounded-md bg-white px-4 py-4 text-sm text-[#4a4a4a]">
+                  <p className="font-bold text-[#202020]">
+                    Current access: {subscriptionLabel}
+                  </p>
+                  <p className="mt-1 leading-relaxed">
+                    View your current subscription, upgrade plans, update payment details, or open the billing portal.
+                  </p>
+                  <Link
+                    href="/billing"
+                    className="mt-3 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                  >
+                    Manage Billing
+                  </Link>
+                </div>
+              </SectionCard>
+            ) : null}
+
             <SectionCard
               title="Upcoming Events"
               action={<CalendarOutlined className="text-2xl text-[#b22222]" />}

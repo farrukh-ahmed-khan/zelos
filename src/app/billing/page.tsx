@@ -34,7 +34,7 @@ export default async function BillingPage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
       <Header />
-      <section className="container mt-12">
+      <section className="container mb-16 mt-12">
         <div className="mx-auto max-w-[980px]">
           <p className="eyebrow-red">Billing</p>
           <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">

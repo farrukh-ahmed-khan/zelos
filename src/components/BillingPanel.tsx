@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Modal } from "antd";
+import { Modal, message as antMessage } from "antd";
 
 type Plan = {
   id: string;
@@ -34,54 +34,74 @@ export function BillingPanel({
   history: Subscription[];
 }) {
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null);
+  const [portalAction, setPortalAction] = useState<"portal" | "payment" | null>(null);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   async function checkout(planId: string) {
     setMessage("");
-    setError("");
-    const response = await fetch("/api/billing/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planId }),
-    });
-    const result = await response.json();
+    setCheckoutPlanId(planId);
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Checkout failed.");
-      return;
+    try {
+      const response = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        antMessage.error(result?.error?.message ?? "Checkout failed.");
+        return;
+      }
+
+      window.location.assign(result.data.checkoutUrl);
+    } finally {
+      setCheckoutPlanId(null);
     }
-
-    window.location.assign(result.data.checkoutUrl);
   }
 
-  async function openPortal() {
+  async function openPortal(action: "portal" | "payment") {
     setMessage("");
-    setError("");
-    const response = await fetch("/api/billing/portal", { method: "POST" });
-    const result = await response.json();
+    setPortalAction(action);
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Billing portal unavailable.");
-      return;
+    try {
+      const response = await fetch("/api/billing/portal", { method: "POST" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        antMessage.error(result?.error?.message ?? "Billing portal unavailable.");
+        return;
+      }
+
+      window.location.assign(result.data.portalUrl);
+    } finally {
+      setPortalAction(null);
     }
-
-    window.location.assign(result.data.portalUrl);
   }
 
   async function cancelSubscription() {
-    const response = await fetch("/api/billing/cancel", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-    const result = await response.json();
+    setMessage("");
+    setIsCanceling(true);
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Cancellation failed.");
-      return;
+    try {
+      const response = await fetch("/api/billing/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        antMessage.error(result?.error?.message ?? "Cancellation failed.");
+        return;
+      }
+
+      setMessage(result.data.message);
+      antMessage.success(result.data.message ?? "Subscription canceled.");
+    } finally {
+      setIsCanceling(false);
     }
-
-    setMessage(result.data.message);
   }
 
   function confirmCancelSubscription() {
@@ -97,7 +117,6 @@ export function BillingPanel({
   return (
     <div className="grid gap-6">
       {message ? <p className="rounded-md bg-[#eef8e8] px-4 py-3 text-sm font-bold text-[#24551f]">{message}</p> : null}
-      {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <section className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
         <h2 className="font-bebas text-3xl uppercase leading-none">Current Plan</h2>
@@ -111,15 +130,27 @@ export function BillingPanel({
           <p className="mt-3 text-sm text-[#555]">No paid subscription is active yet.</p>
         )}
         <div className="mt-4 flex flex-wrap gap-3">
-          <button onClick={openPortal} className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black">
-            Billing Portal
+          <button
+            onClick={() => openPortal("portal")}
+            disabled={Boolean(portalAction)}
+            className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {portalAction === "portal" ? "Opening..." : "Billing Portal"}
           </button>
-          <button onClick={openPortal} className="rounded-md border-2 border-[#212121] px-4 py-2 text-sm font-black">
-            Update Payment Method
+          <button
+            onClick={() => openPortal("payment")}
+            disabled={Boolean(portalAction)}
+            className="rounded-md border-2 border-[#212121] px-4 py-2 text-sm font-black disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {portalAction === "payment" ? "Opening..." : "Update Payment Method"}
           </button>
           {subscription?.status === "active" ? (
-            <button onClick={confirmCancelSubscription} className="rounded-md border-2 border-[#212121] bg-[#ffe8e6] px-4 py-2 text-sm font-black text-[#8c0504]">
-              Cancel Subscription
+            <button
+              onClick={confirmCancelSubscription}
+              disabled={isCanceling}
+              className="rounded-md border-2 border-[#212121] bg-[#ffe8e6] px-4 py-2 text-sm font-black text-[#8c0504] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isCanceling ? "Canceling..." : "Cancel Subscription"}
             </button>
           ) : null}
         </div>
@@ -142,8 +173,12 @@ export function BillingPanel({
                 currency: plan.currency.toUpperCase(),
               })}
             </p>
-            <button onClick={() => checkout(plan.id)} disabled={!plan.stripePriceId} className="mt-4 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black disabled:opacity-50">
-              Checkout
+            <button
+              onClick={() => checkout(plan.id)}
+              disabled={!plan.stripePriceId || Boolean(checkoutPlanId)}
+              className="mt-4 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {checkoutPlanId === plan.id ? "Opening Checkout..." : "Checkout"}
             </button>
           </article>
         ))}
