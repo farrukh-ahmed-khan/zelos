@@ -5,6 +5,7 @@ import {
   DownOutlined,
   MenuOutlined,
   SmileFilled,
+  UserOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -91,32 +92,15 @@ export function Header() {
         </button>
       </nav>
 
-      {isLoggedIn ? (
-        <Link
-          href="/dashboard"
-          className="hidden !py-[15px] items-center gap-4 rounded-md bg-white px-4 text-sm font-bold !text-[#000] 
-        shadow-[0_3px_0_rgba(0,0,0,0.18)] md:flex text-[18px]"
-        >
-          Dashboard
-        </Link>
-      ) : (
-        <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/login"
-            className="!py-[15px] rounded-md bg-white px-4 text-sm font-bold !text-[#000] 
-        shadow-[0_3px_0_rgba(0,0,0,0.18)] text-[18px]"
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            className="!py-[15px] rounded-md bg-white px-4 text-sm font-bold !text-[#000] 
-        shadow-[0_3px_0_rgba(0,0,0,0.18)] text-[18px]"
-          >
-            Signup
-          </Link>
-        </div>
-      )}
+      <Link
+        href={isLoggedIn ? "/dashboard" : "/login"}
+        aria-label={isLoggedIn ? "Go to dashboard" : "Go to login"}
+        title={isLoggedIn ? "Dashboard" : "Login"}
+        className="hidden h-[60px] w-[60px] place-items-center rounded-md bg-white text-[22px] font-bold !text-[#000] 
+        shadow-[0_3px_0_rgba(0,0,0,0.18)] md:grid"
+      >
+        <UserOutlined />
+      </Link>
 
       <Link
         href="/donate"
