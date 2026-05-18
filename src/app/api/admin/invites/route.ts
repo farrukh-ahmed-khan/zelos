@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
           role: result.invite.role,
           adminPermissions: result.invite.adminPermissions,
           expiresAt: result.invite.expiresAt,
+          usedAt: result.invite.usedAt ?? null,
+          createdAt: result.invite.createdAt,
           inviteUrl: result.inviteUrl,
           ...(process.env.NODE_ENV !== "production"
             ? { inviteToken: result.inviteToken }

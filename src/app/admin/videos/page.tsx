@@ -45,6 +45,7 @@ export default async function AdminVideosPage() {
           id: video._id.toString(),
           title: video.title,
           description: video.description,
+          url: video.url,
           ageTrack: video.ageTrack,
           audience: video.audience,
           category: video.category,

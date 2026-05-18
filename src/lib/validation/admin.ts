@@ -63,6 +63,10 @@ export const createAdminInviteSchema = z.object({
   adminPermissions: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
 });
 
+export const updateAdminInviteSchema = createAdminInviteSchema.partial().extend({
+  deactivate: z.boolean().optional(),
+});
+
 export const acceptAdminInviteSchema = z.object({
   token: z.string().trim().min(32),
   name: z.string().trim().min(2).max(120),

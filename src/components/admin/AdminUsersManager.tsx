@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { Button, Checkbox, Input, Modal, Select, Space, Table, Tag, message as antMessage } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import type { TableColumnsType, TablePaginationConfig } from "antd";
 
 type User = {
   id: string;
@@ -22,119 +25,295 @@ const permissions = [
   "billing.read",
 ];
 
+const statusOptions = [
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+  { value: "banned", label: "Banned" },
+  { value: "deactivated", label: "Deactivated" },
+];
+
+const statusColors: Record<User["status"], string> = {
+  active: "green",
+  suspended: "orange",
+  banned: "red",
+  deactivated: "default",
+};
+
+function formatRole(role: string) {
+  return role
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export function AdminUsersManager({ users }: { users: User[] }) {
   const [items, setItems] = useState(users);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [savingPermissionsUserId, setSavingPermissionsUserId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const filteredItems = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return items;
+
+    return items.filter((user) =>
+      [user.name, user.email, user.role, user.ageTrack, user.status, ...user.adminPermissions]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [items, searchTerm]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   async function updateStatus(user: User, status: User["status"]) {
     setError("");
-    const response = await fetch(`/api/admin/users/${user.id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    const result = await response.json();
+    setUpdatingUserId(user.id);
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to update user.");
-      return;
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to update user.");
+        return;
+      }
+
+      setItems((current) =>
+        current.map((item) => (item.id === user.id ? { ...item, status } : item)),
+      );
+      antMessage.success("User status updated.");
+    } finally {
+      setUpdatingUserId(null);
     }
-
-    setItems((current) =>
-      current.map((item) => (item.id === user.id ? { ...item, status } : item)),
-    );
   }
 
   async function savePermissions(user: User, form: HTMLFormElement) {
     setError("");
+    setSavingPermissionsUserId(user.id);
     const formData = new FormData(form);
     const selected = permissions.filter((permission) => formData.get(permission) === "on");
-    const response = await fetch(`/api/admin/users/${user.id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: user.status, adminPermissions: selected }),
-    });
-    const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to update permissions.");
-      return;
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: user.status, adminPermissions: selected }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to update permissions.");
+        return;
+      }
+
+      setItems((current) =>
+        current.map((item) =>
+          item.id === user.id ? { ...item, adminPermissions: selected } : item,
+        ),
+      );
+      antMessage.success("Permissions saved.");
+    } finally {
+      setSavingPermissionsUserId(null);
     }
-
-    setItems((current) =>
-      current.map((item) =>
-        item.id === user.id ? { ...item, adminPermissions: selected } : item,
-      ),
-    );
   }
 
   async function deleteUser(user: User) {
-    if (!confirm(`Permanently delete ${user.email}?`)) {
-      return;
-    }
-
     setError("");
-    const response = await fetch(`/api/admin/users/${user.id}`, {
-      method: "DELETE",
-    });
-    const result = await response.json();
+    setDeletingUserId(user.id);
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to delete user.");
-      return;
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to delete user.");
+        return;
+      }
+
+      setItems((current) => current.filter((item) => item.id !== user.id));
+      antMessage.success("User deleted.");
+    } finally {
+      setDeletingUserId(null);
     }
-
-    setItems((current) => current.filter((item) => item.id !== user.id));
   }
+
+  function confirmDeleteUser(user: User) {
+    Modal.confirm({
+      title: "Delete user?",
+      content: `Permanently delete ${user.email}? This cannot be undone.`,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: () => deleteUser(user),
+    });
+  }
+
+  const columns: TableColumnsType<User> = [
+    {
+      title: "User",
+      dataIndex: "name",
+      key: "name",
+      width: 320,
+      render: (_, user) => (
+        <div>
+          <div className="font-bold text-[#202020]">{user.name}</div>
+          <div className="text-xs text-[#667085]">{user.email}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Role",
+      dataIndex: "role",
+      key: "role",
+      width: 160,
+      render: (role: string) => <Tag color={role.includes("admin") || role.includes("moderator") ? "blue" : "default"}>{formatRole(role)}</Tag>,
+    },
+    {
+      title: "Age Track",
+      dataIndex: "ageTrack",
+      key: "ageTrack",
+      width: 140,
+      render: (ageTrack: string) => <span className="capitalize">{ageTrack}</span>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 180,
+      render: (status: User["status"], user) => (
+        <Space size="small">
+          <Tag color={statusColors[status]}>{status.toUpperCase()}</Tag>
+          <Select
+            size="small"
+            value={status}
+            options={statusOptions}
+            disabled={updatingUserId === user.id}
+            loading={updatingUserId === user.id}
+            style={{ width: 120 }}
+            onChange={(value) => updateStatus(user, value as User["status"])}
+          />
+        </Space>
+      ),
+    },
+    {
+      title: "Permissions",
+      dataIndex: "adminPermissions",
+      key: "adminPermissions",
+      render: (adminPermissions: string[], user) =>
+        user.role === "sub-admin" ? (
+          <Space size={[4, 4]} wrap>
+            {adminPermissions.length ? (
+              adminPermissions.map((permission) => (
+                <Tag key={permission}>{permission}</Tag>
+              ))
+            ) : (
+              <span className="text-xs text-[#667085]">No permissions</span>
+            )}
+          </Space>
+        ) : (
+          <span className="text-xs text-[#667085]">Not applicable</span>
+        ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      width: 120,
+      align: "right",
+      render: (_, user) => (
+        <Button
+          danger
+          size="small"
+          loading={deletingUserId === user.id}
+          onClick={() => confirmDeleteUser(user)}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
+
+  const pagination: TablePaginationConfig = {
+    current: currentPage,
+    pageSize,
+    total: filteredItems.length,
+    pageSizeOptions: [10, 20, 50],
+    showSizeChanger: true,
+    showTotal: (total) => `Total ${total} user${total === 1 ? "" : "s"}`,
+    onChange: (page, nextPageSize) => {
+      setCurrentPage(page);
+      setPageSize(nextPageSize);
+    },
+  };
 
   return (
     <div className="grid gap-4">
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
-      {items.map((user) => (
-        <article key={user.id} className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="font-bold">{user.name}</p>
-              <p className="text-sm text-[#555]">{user.email} / {user.role} / {user.ageTrack}</p>
-            </div>
-            <select
-              value={user.status}
-              onChange={(event) => updateStatus(user, event.target.value as User["status"])}
-              className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm font-bold"
-            >
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-              <option value="banned">Banned</option>
-              <option value="deactivated">Deactivated</option>
-            </select>
-            <button
-              onClick={() => deleteUser(user)}
-              className="rounded-md border border-[#f2b8b5] bg-[#fff4f3] px-3 py-2 text-xs font-black text-[#8c0504]"
-            >
-              Delete
-            </button>
-          </div>
-          {user.role === "sub-admin" ? (
+
+      <div className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <Input
+          allowClear
+          prefix={<SearchOutlined />}
+          placeholder="Search users by name, email, role, status, or permission"
+          value={searchTerm}
+          onChange={(event) => handleSearch(event.target.value)}
+          className="max-w-xl"
+        />
+      </div>
+
+      <Table
+        rowKey="id"
+        columns={columns}
+        dataSource={filteredItems}
+        pagination={pagination}
+        scroll={{ x: 980 }}
+        bordered
+        expandable={{
+          rowExpandable: (user) => user.role === "sub-admin",
+          expandedRowRender: (user) => (
             <form
-              className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
-              onSubmit={(event) => {
+              className="grid gap-3"
+              onSubmit={(event: FormEvent<HTMLFormElement>) => {
                 event.preventDefault();
                 savePermissions(user, event.currentTarget);
               }}
             >
-              {permissions.map((permission) => (
-                <label key={permission} className="flex items-center gap-2 text-xs font-bold">
-                  <input name={permission} type="checkbox" defaultChecked={user.adminPermissions.includes(permission)} />
-                  {permission}
-                </label>
-              ))}
-              <button className="w-fit rounded-md border border-[#cfd4dc] px-4 py-2 text-xs font-black hover:border-[#8c0504]">
+              <p className="text-sm font-bold text-[#344054]">Sub-admin permissions</p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {permissions.map((permission) => (
+                  <Checkbox
+                    key={permission}
+                    name={permission}
+                    defaultChecked={user.adminPermissions.includes(permission)}
+                  >
+                    <span className="text-xs font-bold">{permission}</span>
+                  </Checkbox>
+                ))}
+              </div>
+              <Button
+                htmlType="submit"
+                size="small"
+                loading={savingPermissionsUserId === user.id}
+                className="w-fit"
+              >
                 Save Permissions
-              </button>
+              </Button>
             </form>
-          ) : null}
-        </article>
-      ))}
+          ),
+        }}
+      />
     </div>
   );
 }

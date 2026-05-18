@@ -58,6 +58,7 @@ export default async function AdminInvitesPage({
         adminPermissions: invite.adminPermissions ?? [],
         expiresAt: invite.expiresAt,
         usedAt: invite.usedAt ?? null,
+        createdAt: invite.createdAt,
       }))))} />
     </AdminChrome>
   );

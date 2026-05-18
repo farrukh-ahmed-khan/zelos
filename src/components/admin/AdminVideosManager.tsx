@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Button, Input, Select, Space, Table, Tag, message as antMessage } from "antd";
+import { Button, Input, Modal, Select, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 
@@ -9,6 +9,7 @@ type Video = {
   id: string;
   title: string;
   description: string;
+  url: string | null;
   ageTrack: string;
   audience: string;
   category: string;
@@ -61,6 +62,20 @@ function formatAgeTrack(ageTrack: string) {
   );
 
   return option?.label ?? ageTrack;
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "Not scheduled";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 export function AdminVideosManager({
@@ -124,6 +139,7 @@ export function AdminVideosManager({
       [
         video.title,
         video.description,
+        video.url ?? "",
         formatAgeTrack(video.ageTrack),
         video.audience,
         video.schoolScope,
@@ -210,10 +226,6 @@ export function AdminVideosManager({
   }
 
   async function removeVideo(videoId: string) {
-    if (!confirm("Delete this video?")) {
-      return;
-    }
-
     setDeletingVideoId(videoId);
     try {
       const response = await fetch(`/api/admin/videos/${videoId}`, {
@@ -234,18 +246,59 @@ export function AdminVideosManager({
     }
   }
 
+  function confirmRemoveVideo(videoId: string) {
+    Modal.confirm({
+      title: "Delete video?",
+      content: "This removes the uploaded video record from the library.",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: () => removeVideo(videoId),
+    });
+  }
+
   const columns: TableColumnsType<Video> = [
     {
       title: "Video",
       dataIndex: "title",
       key: "title",
-      width: 260,
+      width: 320,
       render: (title: string, record: Video) => (
         <div>
           <div className="font-bold text-[#202020]">{record.order}. {title}</div>
           <div className="line-clamp-2 text-xs text-[#667085]">{record.description}</div>
+          {record.url ? (
+            <a
+              href={record.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-flex text-xs font-bold !text-[#8c0504]"
+            >
+              Open uploaded file
+            </a>
+          ) : (
+            <div className="mt-1 text-xs font-bold text-[#8c0504]">No uploaded file URL</div>
+          )}
         </div>
       ),
+    },
+    {
+      title: "Preview",
+      key: "preview",
+      width: 240,
+      render: (_, record: Video) =>
+        record.url ? (
+          <video
+            className="aspect-video w-[200px] rounded-md bg-black"
+            controls
+            preload="metadata"
+          >
+            <source src={record.url} />
+          </video>
+        ) : (
+          <div className="grid aspect-video w-[200px] place-items-center rounded-md bg-[#f8fafc] text-xs font-bold text-[#667085]">
+            No video
+          </div>
+        ),
     },
     {
       title: "Library",
@@ -253,6 +306,18 @@ export function AdminVideosManager({
       key: "audience",
       width: 150,
       render: (audience: string) => <span className="capitalize">{audience.replace("-", " ")}</span>,
+    },
+    {
+      title: "Schedule",
+      dataIndex: "releaseDate",
+      key: "releaseDate",
+      width: 190,
+      render: (releaseDate: string | null) => (
+        <div>
+          <div className="font-bold text-[#202020]">{releaseDate ? "Scheduled" : "Available now"}</div>
+          <div className="text-xs text-[#667085]">{formatDateTime(releaseDate)}</div>
+        </div>
+      ),
     },
     {
       title: "Age Track",
@@ -321,7 +386,7 @@ export function AdminVideosManager({
           danger
           size="small"
           loading={deletingVideoId === record.id}
-          onClick={() => removeVideo(record.id)}
+          onClick={() => confirmRemoveVideo(record.id)}
         >
           Delete
         </Button>
@@ -516,7 +581,56 @@ export function AdminVideosManager({
           dataSource={filteredItems}
           rowKey="id"
           pagination={pagination}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1600 }}
+          expandable={{
+            expandedRowRender: (record) => (
+              <div className="grid gap-3 lg:grid-cols-[360px_1fr]">
+                {record.url ? (
+                  <video
+                    className="aspect-video w-full rounded-md bg-black"
+                    controls
+                    preload="metadata"
+                  >
+                    <source src={record.url} />
+                  </video>
+                ) : (
+                  <div className="grid aspect-video w-full place-items-center rounded-md bg-[#f8fafc] text-sm font-bold text-[#667085]">
+                    No uploaded video URL found
+                  </div>
+                )}
+                <div className="grid content-start gap-2 text-sm">
+                  <div>
+                    <div className="font-bold text-[#202020]">Description</div>
+                    <div className="text-[#667085]">{record.description}</div>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div>
+                      <div className="font-bold text-[#202020]">Category</div>
+                      <div className="text-[#667085]">{record.category} / {record.playlist ?? "General"}</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#202020]">Release</div>
+                      <div className="text-[#667085]">{formatDateTime(record.releaseDate)}</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#202020]">Library</div>
+                      <div className="capitalize text-[#667085]">{record.audience.replace("-", " ")}</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#202020]">Video URL</div>
+                      {record.url ? (
+                        <a href={record.url} target="_blank" rel="noreferrer" className="break-all !text-[#8c0504]">
+                          {record.url}
+                        </a>
+                      ) : (
+                        <span className="text-[#667085]">Not available</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ),
+          }}
           locale={{
             emptyText: "No videos found",
           }}
