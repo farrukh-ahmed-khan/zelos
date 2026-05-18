@@ -29,8 +29,12 @@ type DashboardVideo = {
   description: string;
   url: string | null;
   ageTrack: string;
+  audience: string;
   category: string;
   playlist: string;
+  schoolScope?: "global" | "all-schools" | "specific-schools" | "district";
+  schoolIds?: string[];
+  district?: string | null;
   order: number;
   completed: boolean;
   locked: boolean;
@@ -105,6 +109,23 @@ function formatDate(value: string | Date) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function formatSchoolScope(video: DashboardVideo) {
+  if (!["teacher", "student"].includes(video.audience)) {
+    return "Subscriber Library";
+  }
+
+  if (video.schoolScope === "specific-schools") {
+    const count = video.schoolIds?.length ?? 0;
+    return count === 1 ? "Specific School" : `${count} Schools`;
+  }
+
+  if (video.schoolScope === "district") {
+    return video.district ? `District: ${video.district}` : "District";
+  }
+
+  return "All Schools";
 }
 
 function StatCard({
@@ -271,9 +292,16 @@ function VideoPanel({
           </div>
         )}
         <div className="bg-white p-4 text-[#202020]">
-          <p className="text-xs font-black uppercase text-[#b22222]">
-            {userRole === "teacher" ? "Teacher Preview" : "Next Lesson"}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-black uppercase text-[#b22222]">
+              {userRole === "teacher" ? "Teacher Preview" : userRole === "student" ? "Student Lesson" : "Next Lesson"}
+            </p>
+            {["teacher", "student"].includes(nextVideo.audience) ? (
+              <span className="rounded-sm bg-[#eaf3ff] px-2 py-1 text-[11px] font-black uppercase text-[#175cd3]">
+                {formatSchoolScope(nextVideo)}
+              </span>
+            ) : null}
+          </div>
           <h3 className="font-bebas text-3xl uppercase leading-none">
             {nextVideo.title}
           </h3>
@@ -285,45 +313,61 @@ function VideoPanel({
 
       <div className="grid content-start gap-2">
         {groupedVideos.map((categoryGroup) => (
-          <div key={categoryGroup.category} className="grid gap-2">
+          <div key={categoryGroup.category} className="grid gap-2 rounded-md bg-white p-2">
             <p className="rounded-sm bg-[#8c0504] px-2 py-1 text-xs font-black uppercase text-white">
               {categoryGroup.category}
             </p>
             {categoryGroup.playlists.map((playlistGroup) => (
-              <div key={`${categoryGroup.category}-${playlistGroup.playlist}`} className="grid gap-2">
-                <p className="px-1 text-xs font-black uppercase text-[#555]">
-                  {playlistGroup.playlist}
-                </p>
-                {playlistGroup.videos.map((video) => (
-                  <button
-                    key={video.id}
-                    type="button"
-                    disabled={video.locked}
-                    onClick={() => setSelectedVideoId(video.id)}
-                    className={`flex items-center gap-3 rounded-md px-3 py-3 text-left text-sm transition ${
-                      nextVideo.id === video.id
-                        ? "bg-[#faff8d] ring-2 ring-[#8c0504]"
-                        : "bg-white"
-                    } ${video.locked ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:bg-[#fff8d9]"}`}
-                  >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eee6d6] text-[#b22222]">
-                      {video.completed ? <CheckCircleOutlined /> : video.locked ? <LockOutlined /> : <PlayCircleFilled />}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate font-bold text-[#202020]">{video.title}</p>
-                      <p className="text-xs text-[#666]">
-                        {completingVideoId === video.id
-                          ? "Completing..."
-                          : video.completed
-                            ? "Completed / replay"
-                            : video.locked
-                              ? "Locked"
-                              : "Unlocked"}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <details
+                key={`${categoryGroup.category}-${playlistGroup.playlist}`}
+                open={playlistGroup.videos.some((video) => video.id === nextVideo.id)}
+                className="group rounded-md border border-[#e4ded1] bg-[#fbf7ef]"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-xs font-black uppercase text-[#555]">
+                  <span>{playlistGroup.playlist}</span>
+                  <span className="rounded-sm bg-white px-2 py-1 text-[11px] text-[#8c0504]">
+                    {playlistGroup.videos.length} lesson{playlistGroup.videos.length === 1 ? "" : "s"}
+                  </span>
+                </summary>
+                <div className="grid gap-2 border-t border-[#e4ded1] p-2">
+                  {playlistGroup.videos.map((video) => (
+                    <button
+                      key={video.id}
+                      type="button"
+                      disabled={video.locked}
+                      onClick={() => setSelectedVideoId(video.id)}
+                      className={`flex items-center gap-3 rounded-md px-3 py-3 text-left text-sm transition ${
+                        nextVideo.id === video.id
+                          ? "bg-[#faff8d] ring-2 ring-[#8c0504]"
+                          : "bg-white"
+                      } ${video.locked ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:bg-[#fff8d9]"}`}
+                    >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eee6d6] text-[#b22222]">
+                        {video.completed ? <CheckCircleOutlined /> : video.locked ? <LockOutlined /> : <PlayCircleFilled />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-bold text-[#202020]">{video.title}</p>
+                          {["teacher", "student"].includes(video.audience) ? (
+                            <span className="rounded-sm bg-[#eaf3ff] px-2 py-0.5 text-[10px] font-black uppercase text-[#175cd3]">
+                              {formatSchoolScope(video)}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-[#666]">
+                          {completingVideoId === video.id
+                            ? "Completing..."
+                            : video.completed
+                              ? "Completed / replay"
+                              : video.locked
+                                ? "Locked"
+                                : "Unlocked"}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
           </div>
         ))}
