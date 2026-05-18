@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -21,9 +22,30 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navLinkClass =
     "px-1 py-2 font-[Inter] text-[18.1px] font-medium leading-[22.58px] tracking-[-0.722px] !text-[#2C2E2A] transition hover:text-[#cf1e1e]";
   const activeNavLinkClass = "rounded-full bg-[#efe6d8] px-4";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch("/api/me", { cache: "no-store" })
+      .then((response) => {
+        if (isMounted) {
+          setIsLoggedIn(response.ok);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsLoggedIn(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <header className="container relative z-20 mx-auto flex items-center gap-3">
@@ -67,6 +89,33 @@ export function Header() {
           <MenuOutlined />
         </button>
       </nav>
+
+      {isLoggedIn ? (
+        <Link
+          href="/dashboard"
+          className="hidden !py-[15px] items-center gap-4 rounded-md bg-white px-4 text-sm font-bold !text-[#000] 
+        shadow-[0_3px_0_rgba(0,0,0,0.18)] md:flex text-[18px]"
+        >
+          Dashboard
+        </Link>
+      ) : (
+        <div className="hidden items-center gap-3 md:flex">
+          <Link
+            href="/login"
+            className="!py-[15px] rounded-md bg-white px-4 text-sm font-bold !text-[#000] 
+        shadow-[0_3px_0_rgba(0,0,0,0.18)] text-[18px]"
+          >
+            Login
+          </Link>
+          <Link
+            href="/signup"
+            className="!py-[15px] rounded-md bg-white px-4 text-sm font-bold !text-[#000] 
+        shadow-[0_3px_0_rgba(0,0,0,0.18)] text-[18px]"
+          >
+            Signup
+          </Link>
+        </div>
+      )}
 
       <Link
         href="/donate"
