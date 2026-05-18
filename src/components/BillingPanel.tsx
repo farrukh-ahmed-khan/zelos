@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Modal } from "antd";
 
 type Plan = {
   id: string;
@@ -68,10 +69,6 @@ export function BillingPanel({
   }
 
   async function cancelSubscription() {
-    if (!confirm("Cancel auto-renewal? Access continues until the paid period ends.")) {
-      return;
-    }
-
     const response = await fetch("/api/billing/cancel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,6 +82,16 @@ export function BillingPanel({
     }
 
     setMessage(result.data.message);
+  }
+
+  function confirmCancelSubscription() {
+    Modal.confirm({
+      title: "Cancel auto-renewal?",
+      content: "Access continues until the paid period ends.",
+      okText: "Cancel Auto-Renewal",
+      okButtonProps: { danger: true },
+      onOk: cancelSubscription,
+    });
   }
 
   return (
@@ -111,7 +118,7 @@ export function BillingPanel({
             Update Payment Method
           </button>
           {subscription?.status === "active" ? (
-            <button onClick={cancelSubscription} className="rounded-md border-2 border-[#212121] bg-[#ffe8e6] px-4 py-2 text-sm font-black text-[#8c0504]">
+            <button onClick={confirmCancelSubscription} className="rounded-md border-2 border-[#212121] bg-[#ffe8e6] px-4 py-2 text-sm font-black text-[#8c0504]">
               Cancel Subscription
             </button>
           ) : null}

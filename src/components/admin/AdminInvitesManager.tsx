@@ -179,10 +179,6 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
   }
 
   async function deactivateInvite(invite: Invite) {
-    if (!confirm(`Deactivate invite for ${invite.email}?`)) {
-      return;
-    }
-
     setError("");
     setDeactivatingInviteId(invite.id);
 
@@ -209,10 +205,6 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
   }
 
   async function removeInvite(invite: Invite) {
-    if (!confirm(`Remove invite for ${invite.email}?`)) {
-      return;
-    }
-
     setError("");
     setRemovingInviteId(invite.id);
 
@@ -232,6 +224,25 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
     } finally {
       setRemovingInviteId(null);
     }
+  }
+
+  function confirmDeactivateInvite(invite: Invite) {
+    Modal.confirm({
+      title: "Deactivate invite?",
+      content: `Deactivate invite for ${invite.email}? The invite link will stop working immediately.`,
+      okText: "Deactivate",
+      onOk: () => deactivateInvite(invite),
+    });
+  }
+
+  function confirmRemoveInvite(invite: Invite) {
+    Modal.confirm({
+      title: "Remove invite?",
+      content: `Remove invite for ${invite.email}? This deletes the invite record from the list.`,
+      okText: "Remove",
+      okButtonProps: { danger: true },
+      onOk: () => removeInvite(invite),
+    });
   }
 
   const columns: TableColumnsType<Invite> = [
@@ -303,7 +314,7 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
               size="small"
               disabled={isUsed || isInactive}
               loading={deactivatingInviteId === invite.id}
-              onClick={() => deactivateInvite(invite)}
+              onClick={() => confirmDeactivateInvite(invite)}
             >
               Deactivate
             </Button>
@@ -311,7 +322,7 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
               danger
               size="small"
               loading={removingInviteId === invite.id}
-              onClick={() => removeInvite(invite)}
+              onClick={() => confirmRemoveInvite(invite)}
             >
               Remove
             </Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { message as antMessage } from "antd";
 
 type Plan = {
   id: string;
@@ -20,6 +21,7 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
   const [items, setItems] = useState(plans);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [togglingPlanId, setTogglingPlanId] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,21 +59,30 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
   }
 
   async function togglePlan(plan: Plan) {
-    const response = await fetch(`/api/admin/subscription-plans/${plan.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: !plan.isActive }),
-    });
-    const result = await response.json();
+    setMessage("");
+    setError("");
+    setTogglingPlanId(plan.id);
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to update plan.");
-      return;
+    try {
+      const response = await fetch(`/api/admin/subscription-plans/${plan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !plan.isActive }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to update plan.");
+        return;
+      }
+
+      setItems((current) =>
+        current.map((item) => (item.id === plan.id ? result.data.plan : item)),
+      );
+      antMessage.success(plan.isActive ? "Plan deactivated." : "Plan activated.");
+    } finally {
+      setTogglingPlanId(null);
     }
-
-    setItems((current) =>
-      current.map((item) => (item.id === plan.id ? result.data.plan : item)),
-    );
   }
 
   return (
@@ -127,8 +138,18 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
               })}
             </p>
             <p className="mt-1 text-xs text-[#666]">{plan.stripePriceId ?? "Missing Stripe price ID"}</p>
-            <button onClick={() => togglePlan(plan)} className="mt-4 rounded-md border border-[#cfd4dc] px-3 py-2 text-sm font-bold hover:border-[#8c0504]">
-              {plan.isActive ? "Deactivate" : "Activate"}
+            <button
+              onClick={() => togglePlan(plan)}
+              disabled={togglingPlanId === plan.id}
+              className="mt-4 rounded-md border border-[#cfd4dc] px-3 py-2 text-sm font-bold hover:border-[#8c0504] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {togglingPlanId === plan.id
+                ? plan.isActive
+                  ? "Deactivating..."
+                  : "Activating..."
+                : plan.isActive
+                  ? "Deactivate"
+                  : "Activate"}
             </button>
           </article>
         ))}

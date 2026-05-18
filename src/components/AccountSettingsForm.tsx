@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { Modal } from "antd";
 
 type AccountSettingsFormProps = {
   user: {
@@ -86,11 +87,7 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
     }
   }
 
-  async function handleDeactivate() {
-    if (!confirm("Deactivate this account?")) {
-      return;
-    }
-
+  async function deactivateAccount() {
     const response = await fetch("/api/account/deactivate", {
       method: "POST",
     });
@@ -98,6 +95,16 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
     if (response.ok) {
       window.location.assign("/login");
     }
+  }
+
+  function handleDeactivate() {
+    Modal.confirm({
+      title: "Deactivate account?",
+      content: "You will be signed out and this account will no longer be active.",
+      okText: "Deactivate",
+      okButtonProps: { danger: true },
+      onOk: deactivateAccount,
+    });
   }
 
   return (
