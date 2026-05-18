@@ -11,6 +11,15 @@ type EmailContent = {
 
 type TemplateName = TransactionalEmailTemplate | "school-teacher-invite";
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function getFromAddress() {
   return process.env.MAIL_FROM_ADDRESS?.trim();
 }
@@ -40,27 +49,41 @@ function getTransport() {
   });
 }
 
-function inviteEmailContent(payload: EmailPayload): EmailContent {
+function schoolInviteEmailContent(payload: EmailPayload, role: "teacher" | "student"): EmailContent {
   const inviteUrl = String(payload.inviteUrl ?? "");
   const expiresAt = payload.expiresAt ? new Date(String(payload.expiresAt)).toLocaleString() : "soon";
   const schoolId = String(payload.schoolId ?? "your school");
+  const roleLabel = role === "teacher" ? "teacher" : "student";
+  const escapedInviteUrl = escapeHtml(inviteUrl);
+  const escapedExpiresAt = escapeHtml(expiresAt);
+  const escapedSchoolId = escapeHtml(schoolId);
 
   return {
     subject: "You're invited to join a Zelos school",
     text: [
-      "You have been invited to join a Zelos school as a teacher.",
+      `You have been invited to join a Zelos school as a ${roleLabel}.`,
       `School ID: ${schoolId}`,
       `Invite expires: ${expiresAt}`,
       `Open this link to accept: ${inviteUrl}`,
     ].join("\n\n"),
     html: `
-      <div style="font-family:Arial,sans-serif;color:#202020;line-height:1.6">
-        <h2 style="margin:0 0 12px">You're invited to join a Zelos school</h2>
-        <p>You have been invited to join a Zelos school as a teacher.</p>
-        <p><strong>School ID:</strong> ${schoolId}</p>
-        <p><strong>Invite expires:</strong> ${expiresAt}</p>
-        <p><a href="${inviteUrl}" style="display:inline-block;background:#202020;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px">Accept invitation</a></p>
-        <p style="font-size:12px;color:#666">If the button does not work, open this link: ${inviteUrl}</p>
+      <div style="margin:0;background:#f4f5f7;padding:28px 16px;font-family:Arial,sans-serif;color:#202020">
+        <div style="max-width:560px;margin:0 auto;overflow:hidden;border:1px solid #d9dde3;border-radius:10px;background:#ffffff">
+          <div style="background:#8c0504;padding:24px;color:#ffffff">
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Zelos School Invite</p>
+            <h1 style="margin:0;font-size:26px;line-height:1.2">You're invited to join Zelos</h1>
+          </div>
+          <div style="padding:24px;line-height:1.6">
+            <p style="margin:0 0 16px;font-size:16px">You have been invited to join a Zelos school workspace as a <strong>${roleLabel}</strong>.</p>
+            <div style="margin:0 0 20px;border-radius:8px;background:#f8fafc;padding:14px 16px">
+              <p style="margin:0;font-size:14px"><strong>School ID:</strong> ${escapedSchoolId}</p>
+              <p style="margin:6px 0 0;font-size:14px"><strong>Invite expires:</strong> ${escapedExpiresAt}</p>
+            </div>
+            <a href="${escapedInviteUrl}" style="display:inline-block;border-radius:6px;background:#202020;padding:12px 18px;color:#ffffff;font-weight:700;text-decoration:none">Accept invitation</a>
+            <p style="margin:20px 0 0;font-size:12px;color:#667085">If the button does not work, copy and paste this link into your browser:</p>
+            <p style="margin:6px 0 0;word-break:break-all;font-size:12px;color:#667085">${escapedInviteUrl}</p>
+          </div>
+        </div>
       </div>
     `,
   };
@@ -78,7 +101,11 @@ function fallbackContent(template: string, payload: EmailPayload): EmailContent 
 
 export function buildTransactionalEmail(template: TemplateName, payload: EmailPayload): EmailContent {
   if (template === "teacher-invite" || template === "school-teacher-invite") {
-    return inviteEmailContent(payload);
+    return schoolInviteEmailContent(payload, "teacher");
+  }
+
+  if (template === "student-invite") {
+    return schoolInviteEmailContent(payload, "student");
   }
 
   if (TRANSACTIONAL_EMAIL_TEMPLATES.includes(template as TransactionalEmailTemplate)) {
