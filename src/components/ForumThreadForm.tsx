@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function ForumThreadForm() {
   const [message, setMessage] = useState("");
@@ -10,18 +11,14 @@ export function ForumThreadForm() {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch("/api/forum/threads", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: String(formData.get("title") ?? ""),
-        category: String(formData.get("category") ?? ""),
-        content: String(formData.get("content") ?? ""),
-      }),
+    const response = await api.post("/api/forum/threads", {
+      title: String(formData.get("title") ?? ""),
+      category: String(formData.get("category") ?? ""),
+      content: String(formData.get("content") ?? ""),
     });
-    const result = await response.json();
-    setMessage(response.ok ? "Thread posted." : result?.error?.message ?? "Unable to post.");
-    if (response.ok) form.reset();
+    const result = response.data;
+    setMessage(isApiSuccess(response.status) ? "Thread posted." : result?.error?.message ?? "Unable to post.");
+    if (isApiSuccess(response.status)) form.reset();
   }
 
   return (

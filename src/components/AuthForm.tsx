@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type AuthMode = "login" | "signup";
 type SubmitState = "idle" | "submitting" | "error";
@@ -63,16 +64,10 @@ export function AuthForm({ mode }: AuthFormProps) {
         };
 
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
+      const response = await api.post(endpoint, payload);
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         throw new Error(result?.error?.message ?? "Something went wrong.");
       }
 

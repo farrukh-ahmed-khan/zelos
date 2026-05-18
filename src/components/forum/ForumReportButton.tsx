@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input, Modal } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function ForumReportButton({
   targetType,
@@ -22,16 +23,16 @@ export function ForumReportButton({
     }
 
     setIsSubmitting(true);
-    const response = await fetch("/api/forum/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targetType, targetId, reason: trimmedReason }),
+    const response = await api.post("/api/forum/report", {
+      targetType,
+      targetId,
+      reason: trimmedReason,
     });
-    const result = await response.json();
-    setMessage(response.ok ? "Reported." : result?.error?.message ?? "Unable to report.");
+    const result = response.data;
+    setMessage(isApiSuccess(response.status) ? "Reported." : result?.error?.message ?? "Unable to report.");
     setIsSubmitting(false);
 
-    if (response.ok) {
+    if (isApiSuccess(response.status)) {
       setReason("");
       setIsOpen(false);
     }

@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Button, Input, Modal, Select, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Video = {
   id: string;
@@ -198,13 +199,10 @@ export function AdminVideosManager({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/admin/videos", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json();
+      const response = await api.post("/api/admin/videos", formData);
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to upload video.");
         antMessage.error(result?.error?.message ?? "Unable to upload video.");
         return;
@@ -228,12 +226,10 @@ export function AdminVideosManager({
   async function removeVideo(videoId: string) {
     setDeletingVideoId(videoId);
     try {
-      const response = await fetch(`/api/admin/videos/${videoId}`, {
-        method: "DELETE",
-      });
-      const result = await response.json();
+      const response = await api.delete(`/api/admin/videos/${videoId}`);
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to delete video.");
         antMessage.error(result?.error?.message ?? "Unable to delete video.");
         return;

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Field = {
   name: string;
@@ -30,14 +31,10 @@ export function JsonPostForm({
       const raw = String(formData.get(field.name) ?? "");
       payload[field.name] = field.type === "number" ? Number(raw) : raw;
     }
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
-    setMessage(response.ok ? result?.data?.message ?? "Submitted." : result?.error?.message ?? "Unable to submit.");
-    if (response.ok) form.reset();
+    const response = await api.post(endpoint, payload);
+    const result = response.data;
+    setMessage(isApiSuccess(response.status) ? result?.data?.message ?? "Submitted." : result?.error?.message ?? "Unable to submit.");
+    if (isApiSuccess(response.status)) form.reset();
   }
 
   return (

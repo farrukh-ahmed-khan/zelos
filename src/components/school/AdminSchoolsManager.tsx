@@ -4,6 +4,7 @@ import { FormEvent, useState, useMemo } from "react";
 import { Table, Input, Button, Tag, Space, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type School = {
   id: string;
@@ -46,25 +47,21 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     const form = event.currentTarget;
     const formData = new FormData(form);
     try {
-      const response = await fetch("/api/schools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: String(formData.get("name") ?? ""),
-          licenseType: String(formData.get("licenseType") ?? "school"),
-          district: String(formData.get("district") ?? ""),
-          teacherLimit: Number(formData.get("teacherLimit") ?? 1),
-          studentLimit: Number(formData.get("studentLimit") ?? 1),
-          licenseStatus: String(formData.get("licenseStatus") ?? "active"),
-          assignedTracks: String(formData.get("assignedTracks") ?? "")
-            .split(",")
-            .map((track) => track.trim())
-            .filter(Boolean),
-        }),
+      const response = await api.post("/api/schools", {
+        name: String(formData.get("name") ?? ""),
+        licenseType: String(formData.get("licenseType") ?? "school"),
+        district: String(formData.get("district") ?? ""),
+        teacherLimit: Number(formData.get("teacherLimit") ?? 1),
+        studentLimit: Number(formData.get("studentLimit") ?? 1),
+        licenseStatus: String(formData.get("licenseStatus") ?? "active"),
+        assignedTracks: String(formData.get("assignedTracks") ?? "")
+          .split(",")
+          .map((track) => track.trim())
+          .filter(Boolean),
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         antMessage.error(result?.error?.message ?? "Unable to create school.");
         return;
       }
@@ -83,14 +80,12 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     const form = event.currentTarget;
     const formData = new FormData(form);
     try {
-      const response = await fetch(`/api/schools/${schoolId}/invite-teacher`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: String(formData.get("email") ?? "") }),
+      const response = await api.post(`/api/schools/${schoolId}/invite-teacher`, {
+        email: String(formData.get("email") ?? ""),
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         antMessage.error(result?.error?.message ?? "Unable to invite teacher.");
         return;
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type TokenActionFormProps = {
   endpoint: string;
@@ -28,14 +29,10 @@ export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormP
             }
           : { token: String(formData.get("token") ?? "") };
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
+    const response = await api.post(endpoint, payload);
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       setError(result?.error?.message ?? "Request failed.");
       return;
     }

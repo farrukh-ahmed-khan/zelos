@@ -11,6 +11,7 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { LogoutButton } from "@/components/LogoutButton";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type DashboardUser = {
   id: string;
@@ -232,14 +233,10 @@ function VideoPanel({
     setCompletingVideoId(video.id);
 
     try {
-      const response = await fetch(`/api/videos/${video.id}/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ watchedPercentage }),
-      });
-      const result = await response.json();
+      const response = await api.post(`/api/videos/${video.id}/complete`, { watchedPercentage });
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setCompletionError(result?.error?.message ?? "Unable to unlock the next lesson.");
         return;
       }

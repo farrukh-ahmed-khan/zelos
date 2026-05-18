@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function ForumReplyForm({ threadId }: { threadId: string }) {
   const [message, setMessage] = useState("");
@@ -9,14 +10,12 @@ export function ForumReplyForm({ threadId }: { threadId: string }) {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch(`/api/forum/threads/${threadId}/replies`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: String(formData.get("content") ?? "") }),
+    const response = await api.post(`/api/forum/threads/${threadId}/replies`, {
+      content: String(formData.get("content") ?? ""),
     });
-    const result = await response.json();
-    setMessage(response.ok ? "Reply posted." : result?.error?.message ?? "Unable to reply.");
-    if (response.ok) form.reset();
+    const result = response.data;
+    setMessage(isApiSuccess(response.status) ? "Reply posted." : result?.error?.message ?? "Unable to reply.");
+    if (isApiSuccess(response.status)) form.reset();
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -55,17 +56,11 @@ export function MentorApplicationForm() {
     };
 
     try {
-      const response = await fetch("/api/mentor-applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await api.post("/api/mentor-applications", payload);
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         throw new Error(
           result?.error?.message ?? "Unable to submit mentor application.",
         );

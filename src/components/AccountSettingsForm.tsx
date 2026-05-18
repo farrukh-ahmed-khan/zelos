@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { Modal } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type AccountSettingsFormProps = {
   user: {
@@ -22,14 +23,10 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
     setMessage("");
     setError("");
 
-    const response = await fetch(endpoint, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
+    const response = await api.patch(endpoint, payload);
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       throw new Error(result?.error?.message ?? "Update failed.");
     }
 
@@ -88,11 +85,9 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
   }
 
   async function deactivateAccount() {
-    const response = await fetch("/api/account/deactivate", {
-      method: "POST",
-    });
+    const response = await api.post("/api/account/deactivate");
 
-    if (response.ok) {
+    if (isApiSuccess(response.status)) {
       window.location.assign("/login");
     }
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Resource = {
   id: string;
@@ -28,26 +29,22 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
     setError("");
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch("/api/admin/school-resources", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: String(formData.get("title") ?? ""),
-        description: String(formData.get("description") ?? ""),
-        resourceType: String(formData.get("resourceType") ?? "lesson-plan"),
-        url: String(formData.get("url") ?? ""),
-        audience: String(formData.get("audience") ?? "teacher"),
-        ageTrack: String(formData.get("ageTrack") ?? ""),
-        schoolScope: String(formData.get("schoolScope") ?? "all-schools"),
-        schoolIds: String(formData.get("schoolIds") ?? "").split(",").map((id) => id.trim()).filter(Boolean),
-        district: String(formData.get("district") ?? ""),
-        releaseDate: String(formData.get("releaseDate") ?? "") || undefined,
-        order: Number(formData.get("order") ?? 1),
-      }),
+    const response = await api.post("/api/admin/school-resources", {
+      title: String(formData.get("title") ?? ""),
+      description: String(formData.get("description") ?? ""),
+      resourceType: String(formData.get("resourceType") ?? "lesson-plan"),
+      url: String(formData.get("url") ?? ""),
+      audience: String(formData.get("audience") ?? "teacher"),
+      ageTrack: String(formData.get("ageTrack") ?? ""),
+      schoolScope: String(formData.get("schoolScope") ?? "all-schools"),
+      schoolIds: String(formData.get("schoolIds") ?? "").split(",").map((id) => id.trim()).filter(Boolean),
+      district: String(formData.get("district") ?? ""),
+      releaseDate: String(formData.get("releaseDate") ?? "") || undefined,
+      order: Number(formData.get("order") ?? 1),
     });
-    const result = await response.json();
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       setError(result?.error?.message ?? "Unable to create resource.");
       return;
     }

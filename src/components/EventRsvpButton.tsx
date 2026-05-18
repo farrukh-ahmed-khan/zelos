@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function EventRsvpButton({ eventId, hasRsvped }: { eventId: string; hasRsvped: boolean }) {
   const [message, setMessage] = useState(hasRsvped ? "RSVP confirmed" : "");
 
   async function rsvp() {
-    const response = await fetch(`/api/events/${eventId}/rsvp`, { method: "POST" });
-    const result = await response.json();
-    setMessage(response.ok ? "RSVP confirmed. Details were emailed." : result?.error?.message ?? "Sign up to RSVP.");
+    const response = await api.post(`/api/events/${eventId}/rsvp`);
+    const result = response.data;
+    setMessage(isApiSuccess(response.status) ? "RSVP confirmed. Details were emailed." : result?.error?.message ?? "Sign up to RSVP.");
   }
 
   return (

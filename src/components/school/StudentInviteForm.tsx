@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { message as antMessage } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function StudentInviteForm() {
   const [error, setError] = useState("");
@@ -16,14 +17,12 @@ export function StudentInviteForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/schools/invite-student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: String(formData.get("email") ?? "") }),
+      const response = await api.post("/api/schools/invite-student", {
+        email: String(formData.get("email") ?? ""),
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to invite student.");
         return;
       }

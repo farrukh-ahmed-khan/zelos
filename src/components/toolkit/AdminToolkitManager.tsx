@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Resource = {
   id: string;
@@ -26,24 +27,20 @@ export function AdminToolkitManager({ resources }: { resources: Resource[] }) {
     setError("");
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await fetch("/api/admin/toolkit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: String(formData.get("title") ?? ""),
-        description: String(formData.get("description") ?? ""),
-        resourceType: String(formData.get("resourceType") ?? "worksheet"),
-        url: String(formData.get("url") ?? ""),
-        linkedVideoId: String(formData.get("linkedVideoId") ?? "") || undefined,
-        ageTrack: String(formData.get("ageTrack") ?? ""),
-        order: Number(formData.get("order") ?? 1),
-        answers: String(formData.get("answers") ?? "").split("\n").map((answer) => answer.trim()).filter(Boolean),
-        isActive: true,
-      }),
+    const response = await api.post("/api/admin/toolkit", {
+      title: String(formData.get("title") ?? ""),
+      description: String(formData.get("description") ?? ""),
+      resourceType: String(formData.get("resourceType") ?? "worksheet"),
+      url: String(formData.get("url") ?? ""),
+      linkedVideoId: String(formData.get("linkedVideoId") ?? "") || undefined,
+      ageTrack: String(formData.get("ageTrack") ?? ""),
+      order: Number(formData.get("order") ?? 1),
+      answers: String(formData.get("answers") ?? "").split("\n").map((answer) => answer.trim()).filter(Boolean),
+      isActive: true,
     });
-    const result = await response.json();
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       setError(result?.error?.message ?? "Unable to create toolkit resource.");
       return;
     }

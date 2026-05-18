@@ -1,3 +1,4 @@
+import axios from "axios";
 import { ApiError } from "@/lib/http";
 
 type StripeCheckoutParams = {
@@ -24,18 +25,17 @@ async function postStripeForm(path: string, values: Record<string, string>) {
   }
 
   const body = new URLSearchParams(values);
-  const response = await fetch(`https://api.stripe.com/v1/${path}`, {
-    method: "POST",
+  const response = await axios.post(`https://api.stripe.com/v1/${path}`, body, {
     headers: {
       Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body,
+    validateStatus: () => true,
   });
 
-  const data = await response.json();
+  const data = response.data;
 
-  if (!response.ok) {
+  if (response.status < 200 || response.status >= 300) {
     throw new ApiError(response.status, data?.error?.message ?? "Stripe request failed.", data);
   }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Modal, message as antMessage } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Plan = {
   id: string;
@@ -43,14 +44,10 @@ export function BillingPanel({
     setCheckoutPlanId(planId);
 
     try {
-      const response = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
-      });
-      const result = await response.json();
+      const response = await api.post("/api/billing/checkout", { planId });
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         antMessage.error(result?.error?.message ?? "Checkout failed.");
         return;
       }
@@ -66,10 +63,10 @@ export function BillingPanel({
     setPortalAction(action);
 
     try {
-      const response = await fetch("/api/billing/portal", { method: "POST" });
-      const result = await response.json();
+      const response = await api.post("/api/billing/portal");
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         antMessage.error(result?.error?.message ?? "Billing portal unavailable.");
         return;
       }
@@ -85,14 +82,10 @@ export function BillingPanel({
     setIsCanceling(true);
 
     try {
-      const response = await fetch("/api/billing/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const result = await response.json();
+      const response = await api.post("/api/billing/cancel", {});
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         antMessage.error(result?.error?.message ?? "Cancellation failed.");
         return;
       }

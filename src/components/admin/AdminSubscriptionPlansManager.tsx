@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { message as antMessage } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Plan = {
   id: string;
@@ -30,25 +31,21 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    const response = await fetch("/api/admin/subscription-plans", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: String(formData.get("name") ?? ""),
-        description: String(formData.get("description") ?? ""),
-        interval: String(formData.get("interval") ?? "monthly"),
-        accountType: String(formData.get("accountType") ?? "individual"),
-        priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
-        currency: String(formData.get("currency") ?? "usd"),
-        stripePriceId: String(formData.get("stripePriceId") ?? ""),
-        discountBadge: String(formData.get("discountBadge") ?? ""),
-        isPromotional: formData.get("isPromotional") === "on",
-        isActive: formData.get("isActive") === "on",
-      }),
+    const response = await api.post("/api/admin/subscription-plans", {
+      name: String(formData.get("name") ?? ""),
+      description: String(formData.get("description") ?? ""),
+      interval: String(formData.get("interval") ?? "monthly"),
+      accountType: String(formData.get("accountType") ?? "individual"),
+      priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
+      currency: String(formData.get("currency") ?? "usd"),
+      stripePriceId: String(formData.get("stripePriceId") ?? ""),
+      discountBadge: String(formData.get("discountBadge") ?? ""),
+      isPromotional: formData.get("isPromotional") === "on",
+      isActive: formData.get("isActive") === "on",
     });
-    const result = await response.json();
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       setError(result?.error?.message ?? "Unable to create plan.");
       return;
     }
@@ -64,14 +61,10 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
     setTogglingPlanId(plan.id);
 
     try {
-      const response = await fetch(`/api/admin/subscription-plans/${plan.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !plan.isActive }),
-      });
-      const result = await response.json();
+      const response = await api.patch(`/api/admin/subscription-plans/${plan.id}`, { isActive: !plan.isActive });
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to update plan.");
         return;
       }

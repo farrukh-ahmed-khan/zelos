@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function SchoolInviteAcceptForm({ token }: { token: string }) {
   const [error, setError] = useState("");
@@ -15,20 +16,16 @@ export function SchoolInviteAcceptForm({ token }: { token: string }) {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const response = await fetch("/api/schools/invite/accept", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          name: String(formData.get("name") ?? ""),
-          age: Number(formData.get("age") ?? 0),
-          ageTrack: String(formData.get("ageTrack") ?? "") || undefined,
-          password: String(formData.get("password") ?? ""),
-        }),
+      const response = await api.post("/api/schools/invite/accept", {
+        token,
+        name: String(formData.get("name") ?? ""),
+        age: Number(formData.get("age") ?? 0),
+        ageTrack: String(formData.get("ageTrack") ?? "") || undefined,
+        password: String(formData.get("password") ?? ""),
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to accept invite.");
         setIsSubmitting(false);
         return;

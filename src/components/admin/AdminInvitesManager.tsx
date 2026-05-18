@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Button, Input, Modal, Select, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type InviteRole = "forum-moderator" | "sub-admin";
 
@@ -115,18 +116,14 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
       : [];
 
     try {
-      const response = await fetch("/api/admin/invites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: String(formData.get("email") ?? ""),
-          role,
-          adminPermissions: selected,
-        }),
+      const response = await api.post("/api/admin/invites", {
+        email: String(formData.get("email") ?? ""),
+        role,
+        adminPermissions: selected,
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to create invite.");
         return;
       }
@@ -152,18 +149,14 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
       : [];
 
     try {
-      const response = await fetch(`/api/admin/invites/${editInvite.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: String(formData.get("email") ?? ""),
-          role,
-          adminPermissions: selected,
-        }),
+      const response = await api.patch(`/api/admin/invites/${editInvite.id}`, {
+        email: String(formData.get("email") ?? ""),
+        role,
+        adminPermissions: selected,
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to update invite.");
         return;
       }
@@ -183,14 +176,10 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
     setDeactivatingInviteId(invite.id);
 
     try {
-      const response = await fetch(`/api/admin/invites/${invite.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deactivate: true }),
-      });
-      const result = await response.json();
+      const response = await api.patch(`/api/admin/invites/${invite.id}`, { deactivate: true });
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to deactivate invite.");
         return;
       }
@@ -209,12 +198,10 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
     setRemovingInviteId(invite.id);
 
     try {
-      const response = await fetch(`/api/admin/invites/${invite.id}`, {
-        method: "DELETE",
-      });
-      const result = await response.json();
+      const response = await api.delete(`/api/admin/invites/${invite.id}`);
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to remove invite.");
         return;
       }

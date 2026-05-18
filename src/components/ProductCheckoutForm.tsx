@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function ProductCheckoutForm({ productId }: { productId: string }) {
   const [message, setMessage] = useState("");
@@ -8,25 +9,21 @@ export function ProductCheckoutForm({ productId }: { productId: string }) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firstName: String(formData.get("firstName") ?? ""),
-        lastName: String(formData.get("lastName") ?? ""),
-        email: String(formData.get("email") ?? ""),
-        items: [
-          {
-            productId,
-            quantity: Number(formData.get("quantity") ?? 1),
-            size: String(formData.get("size") ?? ""),
-            color: String(formData.get("color") ?? ""),
-          },
-        ],
-      }),
+    const response = await api.post("/api/checkout", {
+      firstName: String(formData.get("firstName") ?? ""),
+      lastName: String(formData.get("lastName") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      items: [
+        {
+          productId,
+          quantity: Number(formData.get("quantity") ?? 1),
+          size: String(formData.get("size") ?? ""),
+          color: String(formData.get("color") ?? ""),
+        },
+      ],
     });
-    const result = await response.json();
-    setMessage(response.ok ? result?.data?.message ?? "Order recorded." : result?.error?.message ?? "Checkout failed.");
+    const result = response.data;
+    setMessage(isApiSuccess(response.status) ? result?.data?.message ?? "Order recorded." : result?.error?.message ?? "Checkout failed.");
   }
 
   return (

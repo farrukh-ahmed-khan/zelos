@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Report = {
   id: string;
@@ -22,14 +23,13 @@ export function ForumModerationManager({ reports }: { reports: Report[] }) {
 
   async function resolve(report: Report, action: string) {
     setError("");
-    const response = await fetch(`/api/admin/forum/reports/${report.id}/resolve`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, note: action }),
+    const response = await api.post(`/api/admin/forum/reports/${report.id}/resolve`, {
+      action,
+      note: action,
     });
-    const result = await response.json();
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       setError(result?.error?.message ?? "Unable to resolve report.");
       return;
     }
@@ -43,10 +43,10 @@ export function ForumModerationManager({ reports }: { reports: Report[] }) {
       report.targetType === "thread"
         ? `/api/admin/forum/threads/${report.targetId}`
         : `/api/admin/forum/replies/${report.targetId}`;
-    const response = await fetch(endpoint, { method: "DELETE" });
-    const result = await response.json();
+    const response = await api.delete(endpoint);
+    const result = response.data;
 
-    if (!response.ok) {
+    if (!isApiSuccess(response.status)) {
       setError(result?.error?.message ?? "Unable to remove target.");
       return;
     }

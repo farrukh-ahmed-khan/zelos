@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 export function AdminInviteAcceptForm({ token }: { token: string }) {
   const [error, setError] = useState("");
@@ -15,19 +16,15 @@ export function AdminInviteAcceptForm({ token }: { token: string }) {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const response = await fetch("/api/admin/invites/accept", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          name: String(formData.get("name") ?? ""),
-          password: String(formData.get("password") ?? ""),
-          age: Number(formData.get("age") ?? 0),
-        }),
+      const response = await api.post("/api/admin/invites/accept", {
+        token,
+        name: String(formData.get("name") ?? ""),
+        password: String(formData.get("password") ?? ""),
+        age: Number(formData.get("age") ?? 0),
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to accept invite.");
         setIsSubmitting(false);
         return;

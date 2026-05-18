@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Button, Input, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type Category = {
   _id?: string;
@@ -110,21 +111,17 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     const form = event.currentTarget;
     const formData = new FormData(form);
     try {
-      const response = await fetch("/api/admin/content-categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: String(formData.get("name") ?? ""),
-          playlist: String(formData.get("playlist") ?? ""),
-          ageTrack: isTeacherAudience ? TEACHER_TRACK : String(formData.get("ageTrack") ?? ""),
-          audience: selectedAudience,
-          order: Number(formData.get("order") ?? 1),
-          isActive: formData.get("isActive") === "on",
-        }),
+      const response = await api.post("/api/admin/content-categories", {
+        name: String(formData.get("name") ?? ""),
+        playlist: String(formData.get("playlist") ?? ""),
+        ageTrack: isTeacherAudience ? TEACHER_TRACK : String(formData.get("ageTrack") ?? ""),
+        audience: selectedAudience,
+        order: Number(formData.get("order") ?? 1),
+        isActive: formData.get("isActive") === "on",
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to create category.");
         antMessage.error(result?.error?.message ?? "Unable to create category.");
         return;
@@ -151,21 +148,17 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     const formData = new FormData(form);
 
     try {
-      const response = await fetch("/api/admin/content-categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: playlistTarget.name,
-          playlist: String(formData.get("playlist") ?? ""),
-          ageTrack: playlistTarget.ageTrack,
-          audience: playlistTarget.audience,
-          order: Number(formData.get("order") ?? playlistTarget.playlists.length + 1),
-          isActive: formData.get("isActive") === "on",
-        }),
+      const response = await api.post("/api/admin/content-categories", {
+        name: playlistTarget.name,
+        playlist: String(formData.get("playlist") ?? ""),
+        ageTrack: playlistTarget.ageTrack,
+        audience: playlistTarget.audience,
+        order: Number(formData.get("order") ?? playlistTarget.playlists.length + 1),
+        isActive: formData.get("isActive") === "on",
       });
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to add playlist.");
         antMessage.error(result?.error?.message ?? "Unable to add playlist.");
         return;

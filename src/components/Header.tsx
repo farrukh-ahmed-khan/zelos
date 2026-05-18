@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -30,10 +31,10 @@ export function Header() {
   useEffect(() => {
     let isMounted = true;
 
-    fetch("/api/me", { cache: "no-store" })
+    api.get("/api/me")
       .then((response) => {
         if (isMounted) {
-          setIsLoggedIn(response.ok);
+          setIsLoggedIn(isApiSuccess(response.status));
         }
       })
       .catch(() => {

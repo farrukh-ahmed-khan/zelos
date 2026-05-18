@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Button, Checkbox, Input, Modal, Select, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type User = {
   id: string;
@@ -78,14 +79,10 @@ export function AdminUsersManager({ users }: { users: User[] }) {
     setUpdatingUserId(user.id);
 
     try {
-      const response = await fetch(`/api/admin/users/${user.id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      const result = await response.json();
+      const response = await api.patch(`/api/admin/users/${user.id}/status`, { status });
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to update user.");
         return;
       }
@@ -106,14 +103,10 @@ export function AdminUsersManager({ users }: { users: User[] }) {
     const selected = permissions.filter((permission) => formData.get(permission) === "on");
 
     try {
-      const response = await fetch(`/api/admin/users/${user.id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: user.status, adminPermissions: selected }),
-      });
-      const result = await response.json();
+      const response = await api.patch(`/api/admin/users/${user.id}/status`, { status: user.status, adminPermissions: selected });
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to update permissions.");
         return;
       }
@@ -134,12 +127,10 @@ export function AdminUsersManager({ users }: { users: User[] }) {
     setDeletingUserId(user.id);
 
     try {
-      const response = await fetch(`/api/admin/users/${user.id}`, {
-        method: "DELETE",
-      });
-      const result = await response.json();
+      const response = await api.delete(`/api/admin/users/${user.id}`);
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!isApiSuccess(response.status)) {
         setError(result?.error?.message ?? "Unable to delete user.");
         return;
       }
