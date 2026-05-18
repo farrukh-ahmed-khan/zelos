@@ -158,6 +158,7 @@ function VideoPanel({
   userRole: string;
 }) {
   const [videos, setVideos] = useState(initialVideos);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState("");
   const [completingVideoId, setCompletingVideoId] = useState<string | null>(null);
   const completedVideoIds = useMemo(
@@ -195,7 +196,10 @@ function VideoPanel({
     );
   }
 
-  const nextVideo = videos.find((video) => !video.completed && !video.locked) ?? videos[0];
+  const selectedVideo = selectedVideoId
+    ? videos.find((video) => video.id === selectedVideoId && !video.locked)
+    : null;
+  const nextVideo = selectedVideo ?? videos.find((video) => !video.completed && !video.locked) ?? videos[0];
 
   async function completeVideo(video: DashboardVideo, watchedPercentage: number) {
     if (video.locked || completedVideoIds.has(video.id) || completingVideoId === video.id) {
@@ -290,9 +294,16 @@ function VideoPanel({
                   {playlistGroup.playlist}
                 </p>
                 {playlistGroup.videos.map((video) => (
-                  <div
+                  <button
                     key={video.id}
-                    className="flex items-center gap-3 rounded-md bg-white px-3 py-3 text-sm"
+                    type="button"
+                    disabled={video.locked}
+                    onClick={() => setSelectedVideoId(video.id)}
+                    className={`flex items-center gap-3 rounded-md px-3 py-3 text-left text-sm transition ${
+                      nextVideo.id === video.id
+                        ? "bg-[#faff8d] ring-2 ring-[#8c0504]"
+                        : "bg-white"
+                    } ${video.locked ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:bg-[#fff8d9]"}`}
                   >
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eee6d6] text-[#b22222]">
                       {video.completed ? <CheckCircleOutlined /> : video.locked ? <LockOutlined /> : <PlayCircleFilled />}
@@ -303,13 +314,13 @@ function VideoPanel({
                         {completingVideoId === video.id
                           ? "Completing..."
                           : video.completed
-                            ? "Completed"
+                            ? "Completed / replay"
                             : video.locked
                               ? "Locked"
                               : "Unlocked"}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             ))}
