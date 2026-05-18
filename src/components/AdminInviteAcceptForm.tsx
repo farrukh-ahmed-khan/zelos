@@ -5,31 +5,40 @@ import { FormEvent, useState } from "react";
 export function AdminInviteAcceptForm({ token }: { token: string }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setMessage("");
+    setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/admin/invites/accept", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token,
-        name: String(formData.get("name") ?? ""),
-        password: String(formData.get("password") ?? ""),
-        age: Number(formData.get("age") ?? 0),
-      }),
-    });
-    const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to accept invite.");
-      return;
+    try {
+      const response = await fetch("/api/admin/invites/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token,
+          name: String(formData.get("name") ?? ""),
+          password: String(formData.get("password") ?? ""),
+          age: Number(formData.get("age") ?? 0),
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to accept invite.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      setMessage("Invite accepted. Redirecting...");
+      window.location.assign("/dashboard");
+    } catch {
+      setError("Unable to accept invite. Please try again.");
+      setIsSubmitting(false);
     }
-
-    setMessage("Invite accepted. Redirecting...");
-    window.location.assign("/dashboard");
   }
 
   return (
@@ -39,8 +48,11 @@ export function AdminInviteAcceptForm({ token }: { token: string }) {
       <input name="name" placeholder="Full name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
       <input name="age" type="number" min={1} max={120} placeholder="Age" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
       <input name="password" type="password" placeholder="Password" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-      <button className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black shadow-[0_4px_0_#111]">
-        Accept Invite
+      <button
+        disabled={isSubmitting}
+        className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isSubmitting ? "Accepting..." : "Accept Invite"}
       </button>
     </form>
   );

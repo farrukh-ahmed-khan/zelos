@@ -89,6 +89,45 @@ function schoolInviteEmailContent(payload: EmailPayload, role: "teacher" | "stud
   };
 }
 
+function adminInviteEmailContent(payload: EmailPayload): EmailContent {
+  const inviteUrl = String(payload.inviteUrl ?? "");
+  const expiresAt = payload.expiresAt ? new Date(String(payload.expiresAt)).toLocaleString() : "soon";
+  const role = String(payload.role ?? "admin");
+  const roleLabel = role === "sub-admin" ? "Sub-Admin" : "Forum Moderator";
+  const escapedInviteUrl = escapeHtml(inviteUrl);
+  const escapedExpiresAt = escapeHtml(expiresAt);
+  const escapedRoleLabel = escapeHtml(roleLabel);
+
+  return {
+    subject: `You're invited to join Zelos as ${roleLabel}`,
+    text: [
+      `You have been invited to join the Zelos admin console as ${roleLabel}.`,
+      `Invite expires: ${expiresAt}`,
+      `Open this link to accept: ${inviteUrl}`,
+    ].join("\n\n"),
+    html: `
+      <div style="margin:0;background:#f4f5f7;padding:28px 16px;font-family:Arial,sans-serif;color:#202020">
+        <div style="max-width:560px;margin:0 auto;overflow:hidden;border:1px solid #d9dde3;border-radius:10px;background:#ffffff">
+          <div style="background:#202020;padding:24px;color:#ffffff">
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Zelos Admin Invite</p>
+            <h1 style="margin:0;font-size:26px;line-height:1.2">Join the Zelos admin console</h1>
+          </div>
+          <div style="padding:24px;line-height:1.6">
+            <p style="margin:0 0 16px;font-size:16px">You have been invited to help manage Zelos as a <strong>${escapedRoleLabel}</strong>.</p>
+            <div style="margin:0 0 20px;border-radius:8px;background:#f8fafc;padding:14px 16px">
+              <p style="margin:0;font-size:14px"><strong>Role:</strong> ${escapedRoleLabel}</p>
+              <p style="margin:6px 0 0;font-size:14px"><strong>Invite expires:</strong> ${escapedExpiresAt}</p>
+            </div>
+            <a href="${escapedInviteUrl}" style="display:inline-block;border-radius:6px;background:#8c0504;padding:12px 18px;color:#ffffff;font-weight:700;text-decoration:none">Accept admin invite</a>
+            <p style="margin:20px 0 0;font-size:12px;color:#667085">If the button does not work, copy and paste this link into your browser:</p>
+            <p style="margin:6px 0 0;word-break:break-all;font-size:12px;color:#667085">${escapedInviteUrl}</p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+}
+
 function fallbackContent(template: string, payload: EmailPayload): EmailContent {
   const prettyPayload = JSON.stringify(payload, null, 2);
 
@@ -106,6 +145,10 @@ export function buildTransactionalEmail(template: TemplateName, payload: EmailPa
 
   if (template === "student-invite") {
     return schoolInviteEmailContent(payload, "student");
+  }
+
+  if (template === "forum-moderator-invite" || template === "sub-admin-invite") {
+    return adminInviteEmailContent(payload);
   }
 
   if (TRANSACTIONAL_EMAIL_TEMPLATES.includes(template as TransactionalEmailTemplate)) {

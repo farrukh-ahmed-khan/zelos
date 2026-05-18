@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { message as antMessage } from "antd";
 
 type Invite = {
   id: string;
@@ -24,40 +25,44 @@ const permissions = [
 
 export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
   const [items, setItems] = useState(invites);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
     setError("");
+    setIsSubmitting(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
     const selected = permissions.filter((permission) => formData.get(permission) === "on");
-    const response = await fetch("/api/admin/invites", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: String(formData.get("email") ?? ""),
-        role: String(formData.get("role") ?? "forum-moderator"),
-        adminPermissions: selected,
-      }),
-    });
-    const result = await response.json();
 
-    if (!response.ok) {
-      setError(result?.error?.message ?? "Unable to create invite.");
-      return;
+    try {
+      const response = await fetch("/api/admin/invites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: String(formData.get("email") ?? ""),
+          role: String(formData.get("role") ?? "forum-moderator"),
+          adminPermissions: selected,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result?.error?.message ?? "Unable to create invite.");
+        return;
+      }
+
+      setItems((current) => [result.data.invite, ...current]);
+      antMessage.success("Invite created.");
+      form.reset();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setItems((current) => [result.data.invite, ...current]);
-    setMessage(`Invite created: ${result.data.invite.inviteUrl}`);
-    form.reset();
   }
 
   return (
     <div className="grid gap-6">
-      {message ? <p className="rounded-md bg-[#eef8e8] px-4 py-3 text-sm font-bold text-[#24551f]">{message}</p> : null}
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
@@ -74,8 +79,11 @@ export function AdminInvitesManager({ invites }: { invites: Invite[] }) {
             </label>
           ))}
         </div>
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">
-          Create Invite
+        <button
+          disabled={isSubmitting}
+          className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting ? "Creating..." : "Create Invite"}
         </button>
       </form>
 
