@@ -25,6 +25,12 @@ const EventSchema = new Schema(
       required: true,
       index: true,
     },
+    timezone: {
+      type: String,
+      trim: true,
+      maxlength: 80,
+      default: "America/New_York",
+    },
     location: {
       type: String,
       required: true,
@@ -43,6 +49,29 @@ const EventSchema = new Schema(
       maxlength: 2048,
       default: null,
       select: false,
+    },
+    speakers: {
+      type: [
+        {
+          name: { type: String, trim: true, maxlength: 120, required: true },
+          title: { type: String, trim: true, maxlength: 160, default: "" },
+          bio: { type: String, trim: true, maxlength: 600, default: "" },
+          imageUrl: { type: String, trim: true, maxlength: 2048, default: "" },
+        },
+      ],
+      default: [],
+    },
+    recap: {
+      type: String,
+      trim: true,
+      maxlength: 3000,
+      default: null,
+    },
+    recapImageUrl: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
     },
     status: {
       type: String,

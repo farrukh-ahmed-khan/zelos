@@ -355,6 +355,10 @@ export async function createAdminEvent(params: {
   type: "online" | "physical";
   coverImageUrl?: string;
   meetingLink?: string;
+  timezone?: string;
+  speakers?: Array<{ name: string; title?: string; bio?: string; imageUrl?: string }>;
+  recap?: string;
+  recapImageUrl?: string;
 }) {
   return createEvent(params);
 }

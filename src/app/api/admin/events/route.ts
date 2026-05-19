@@ -3,8 +3,23 @@ import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { createEventSchema } from "@/lib/validation/event";
 import { createAdminEvent } from "@/lib/admin/service";
+import { getAdminEvents } from "@/lib/events/service";
 
 export const runtime = "nodejs";
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdminPermission(request, "events.manage");
+    const events = await getAdminEvents();
+
+    return successResponse({
+      count: events.length,
+      events,
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +34,10 @@ export async function POST(request: NextRequest) {
       type: body.type,
       coverImageUrl: body.coverImageUrl,
       meetingLink: body.meetingLink,
+      timezone: body.timezone,
+      speakers: body.speakers,
+      recap: body.recap,
+      recapImageUrl: body.recapImageUrl,
     });
 
     return successResponse(
@@ -30,9 +49,13 @@ export async function POST(request: NextRequest) {
           description: event.description,
           coverImageUrl: event.coverImageUrl,
           date: event.date,
+          timezone: event.timezone,
           location: event.location,
           type: event.type,
           status: event.status,
+          speakers: event.speakers,
+          recap: event.recap,
+          recapImageUrl: event.recapImageUrl,
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
         },

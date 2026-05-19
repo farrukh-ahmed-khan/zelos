@@ -31,7 +31,7 @@ const modules = [
   { title: "School Content", href: "/admin/school-content", permission: "content.manage", detail: "Teacher videos, student lessons, lesson plans, worksheets" },
   { title: "Money Toolkit", href: "/admin/toolkit", permission: "content.manage", detail: "Subscriber worksheets, quizzes, templates, prompts" },
   { title: "Forum Moderation", href: "/admin/forum-moderation", permission: "forum.moderate", detail: "Reports, post removal, thread removal, user actions" },
-  { title: "Events", href: "/api/admin/events", permission: "events.manage", detail: "Create, edit, cancel, RSVP lists, online links" },
+  { title: "Events", href: "/admin/events", permission: "events.manage", detail: "Create, edit, cancel, RSVP lists, online links" },
   { title: "Scholarships", href: "/api/admin/scholarships", permission: "content.manage", detail: "Listings, escrow, applicants, awards" },
   { title: "Mentor Applications", href: "/api/admin/mentor-applications", permission: "users.manage-limited", detail: "Review/contact inbox" },
   { title: "Forum Moderation", href: "/api/admin/forum/reports", permission: "forum.moderate", detail: "Reports, remove, suspend, resolve" },

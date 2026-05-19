@@ -29,7 +29,7 @@ const navItems = [
 ];
 
 const secondaryItems = [
-  { href: "/api/admin/events", label: "Events", icon: CalendarOutlined },
+  { href: "/admin/events", label: "Events", icon: CalendarOutlined },
   { href: "/api/admin/forum/reports", label: "Reports API", icon: SafetyCertificateOutlined },
   { href: "/api/admin/analytics/overview", label: "Analytics API", icon: BarChartOutlined },
   { href: "/api/admin/emails", label: "Email Outbox", icon: MailOutlined },

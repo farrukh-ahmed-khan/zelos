@@ -56,6 +56,10 @@ export async function POST(request: NextRequest) {
       type: body.type,
       coverImageUrl: body.coverImageUrl,
       meetingLink: body.meetingLink,
+      timezone: body.timezone,
+      speakers: body.speakers,
+      recap: body.recap,
+      recapImageUrl: body.recapImageUrl,
     });
 
     return successResponse(
@@ -67,9 +71,13 @@ export async function POST(request: NextRequest) {
           description: event.description,
           coverImageUrl: event.coverImageUrl,
           date: event.date,
+          timezone: event.timezone,
           location: event.location,
           type: event.type,
           status: event.status,
+          speakers: event.speakers,
+          recap: event.recap,
+          recapImageUrl: event.recapImageUrl,
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
           hasRsvped: false,

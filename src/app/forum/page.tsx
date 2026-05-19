@@ -1,13 +1,37 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 import { getForumCategorySummary, getForumThreads } from "@/lib/forum/service";
 import { Footer } from "@/components/Footer";
 import { ForumThreadForm } from "@/components/ForumThreadForm";
 import { Header } from "@/components/Header";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
+import { verifyAuthToken } from "@/lib/auth/jwt";
+import { connectToDatabase } from "@/lib/db";
+import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
 export default async function ForumPage() {
+  const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+  const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
+  let canPost = false;
+  let readOnlyReason = "Visitors can read every thread. Sign in to create a public post.";
+
+  if (payload?.sub) {
+    await connectToDatabase();
+    const user = await User.findById(payload.sub).select("age forumPostingRevoked");
+
+    if (user?.forumPostingRevoked) {
+      readOnlyReason = "Your forum posting access has been revoked.";
+    } else if (user && user.age < 16) {
+      readOnlyReason = "Accounts under 16 can read the forum but cannot post or reply.";
+    } else if (user) {
+      canPost = true;
+      readOnlyReason = "";
+    }
+  }
+
   const threads = await getForumThreads();
   const categories = await getForumCategorySummary();
 
@@ -32,7 +56,7 @@ export default async function ForumPage() {
                 <p className="mt-1 text-sm text-[#555]">{summary?.threadCount ?? 0} threads</p>
               </div>
             )})}
-            <ForumThreadForm />
+            <ForumThreadForm canPost={canPost} readOnlyReason={readOnlyReason} />
           </aside>
           <div className="grid gap-3">
             {threads.map((thread) => (

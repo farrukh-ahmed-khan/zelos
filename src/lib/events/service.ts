@@ -5,6 +5,49 @@ import EventRsvp from "@/models/EventRsvp";
 import User from "@/models/User";
 import { notifyUsers, queueEmail, queueEmailsForUserIds } from "@/lib/notifications/service";
 
+type EventSpeaker = {
+  name: string;
+  title?: string;
+  bio?: string;
+  imageUrl?: string;
+};
+
+function serializeEvent(event: {
+  _id: { toString(): string };
+  title: string;
+  description: string;
+  coverImageUrl?: string | null;
+  date: Date;
+  timezone?: string | null;
+  location: string;
+  type: "online" | "physical";
+  status: "scheduled" | "updated" | "cancelled";
+  speakers?: EventSpeaker[];
+  recap?: string | null;
+  recapImageUrl?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  meetingLink?: string | null;
+}) {
+  return {
+    id: event._id.toString(),
+    title: event.title,
+    description: event.description,
+    coverImageUrl: event.coverImageUrl ?? null,
+    date: event.date,
+    timezone: event.timezone ?? "America/New_York",
+    location: event.location,
+    type: event.type,
+    status: event.status,
+    speakers: event.speakers ?? [],
+    recap: event.recap ?? null,
+    recapImageUrl: event.recapImageUrl ?? null,
+    meetingLink: event.meetingLink ?? null,
+    createdAt: event.createdAt,
+    updatedAt: event.updatedAt,
+  };
+}
+
 export async function getEventsWithRsvpStatus(userId?: string) {
   await connectToDatabase();
 
@@ -16,17 +59,28 @@ export async function getEventsWithRsvpStatus(userId?: string) {
   const rsvpEventIds = new Set(rsvps.map((rsvp) => rsvp.eventId));
 
   return events.map((event) => ({
-    id: event._id.toString(),
-    title: event.title,
-    description: event.description,
-    coverImageUrl: event.coverImageUrl,
-    date: event.date,
-    location: event.location,
-    type: event.type,
-    status: event.status,
-    createdAt: event.createdAt,
-    updatedAt: event.updatedAt,
+    ...serializeEvent(event),
+    meetingLink: null,
     hasRsvped: userId ? rsvpEventIds.has(event._id.toString()) : false,
+  }));
+}
+
+export async function getAdminEvents() {
+  await connectToDatabase();
+
+  const events = await Event.find()
+    .select("+meetingLink")
+    .sort({ date: 1, createdAt: -1 })
+    .lean();
+
+  const counts = await EventRsvp.aggregate([
+    { $group: { _id: "$eventId", count: { $sum: 1 } } },
+  ]);
+  const countById = new Map(counts.map((entry) => [entry._id, entry.count]));
+
+  return events.map((event) => ({
+    ...serializeEvent(event),
+    rsvpCount: countById.get(event._id.toString()) ?? 0,
   }));
 }
 
@@ -43,16 +97,8 @@ export async function getEventWithRsvpStatus(eventId: string, userId?: string) {
   }
 
   return {
-    id: event._id.toString(),
-    title: event.title,
-    description: event.description,
-    coverImageUrl: event.coverImageUrl,
-    date: event.date,
-    location: event.location,
-    type: event.type,
-    status: event.status,
-    createdAt: event.createdAt,
-    updatedAt: event.updatedAt,
+    ...serializeEvent(event),
+    meetingLink: null,
     rsvpCount,
     hasRsvped: Boolean(userRsvp),
   };
@@ -81,12 +127,20 @@ export async function createEvent(params: {
   type: "online" | "physical";
   coverImageUrl?: string;
   meetingLink?: string;
+  timezone?: string;
+  speakers?: EventSpeaker[];
+  recap?: string;
+  recapImageUrl?: string;
 }) {
   await connectToDatabase();
   return Event.create({
     ...params,
     coverImageUrl: params.coverImageUrl ?? null,
     meetingLink: params.meetingLink ?? null,
+    timezone: params.timezone ?? "America/New_York",
+    speakers: params.speakers ?? [],
+    recap: params.recap || null,
+    recapImageUrl: params.recapImageUrl || null,
     status: "scheduled",
   });
 }
@@ -139,10 +193,14 @@ export async function updateEventDetails(params: {
     title?: string;
     description?: string;
     date?: Date;
+    timezone?: string;
     location?: string;
     type?: "online" | "physical";
     coverImageUrl?: string | null;
     meetingLink?: string | null;
+    speakers?: EventSpeaker[];
+    recap?: string | null;
+    recapImageUrl?: string | null;
     status?: "scheduled" | "updated" | "cancelled";
   };
 }) {

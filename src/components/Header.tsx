@@ -17,7 +17,7 @@ const navItems = [
   { label: "About", href: "/about" },
   { label: "Mission", href: "/mission-video" },
   { label: "Program", href: "/financial-literacy" },
-  { label: "Community", href: "/forum" },
+  { label: "Forum", href: "/forum" },
   { label: "Store", href: "/store" },
   { label: "Contact", href: "/contact" },
 ];

@@ -135,7 +135,11 @@ export async function createForumReply(params: {
     throw new ApiError(404, "Thread not found.");
   }
 
-  return ForumReply.create(params);
+  const reply = await ForumReply.create(params);
+  thread.updatedAt = new Date();
+  await thread.save();
+
+  return reply;
 }
 
 export async function reportForumPost(params: {
