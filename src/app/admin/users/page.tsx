@@ -24,7 +24,7 @@ export default async function AdminUsersPage() {
 
   const users = await User.find()
     .sort({ createdAt: -1 })
-    .select("name email role ageTrack status adminPermissions")
+    .select("name email role ageTrack status adminPermissions emailVerifiedAt")
     .lean();
 
   return (
@@ -37,6 +37,7 @@ export default async function AdminUsersPage() {
         ageTrack: user.ageTrack,
         status: user.status,
         adminPermissions: user.adminPermissions ?? [],
+        emailVerifiedAt: user.emailVerifiedAt ?? null,
       }))))} />
     </AdminChrome>
   );

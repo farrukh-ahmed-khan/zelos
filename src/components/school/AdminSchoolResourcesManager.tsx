@@ -212,6 +212,17 @@ export function AdminSchoolResourcesManager({
     setError("");
     const form = event.currentTarget;
     const formData = new FormData(form);
+
+    if (selectedSchoolScope === "specific-schools" && !selectedSchoolIds.length) {
+      setError("Choose at least one school for specific-school resources.");
+      return;
+    }
+
+    if (selectedSchoolScope === "district" && !String(formData.get("district") ?? "").trim()) {
+      setError("Enter a district for district-scoped resources.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -290,9 +301,10 @@ export function AdminSchoolResourcesManager({
             Age track
             <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
             <option value="">Age track</option>
-            <option>Children</option>
-            <option>Teens</option>
-            <option>Young Adults</option>
+            <option value="child">Children</option>
+            <option value="teen">Teens</option>
+            <option value="young-adult">Young Adults</option>
+            <option value="adult">Adults</option>
             </select>
           </label>
         ) : null}

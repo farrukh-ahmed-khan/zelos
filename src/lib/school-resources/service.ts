@@ -8,6 +8,21 @@ import { uploadToS3 } from "@/lib/aws/s3";
 
 const TEACHER_TRACK = "teacher";
 
+function getAgeTrackAliases(ageTrack: string) {
+  const aliases: Record<string, string[]> = {
+    child: ["child", "Children"],
+    teen: ["teen", "Teens"],
+    "young-adult": ["young-adult", "Young Adults"],
+    adult: ["adult", "Adults"],
+    Children: ["child", "Children"],
+    Teens: ["teen", "Teens"],
+    "Young Adults": ["young-adult", "Young Adults"],
+    Adults: ["adult", "Adults"],
+  };
+
+  return aliases[ageTrack] ?? [ageTrack];
+}
+
 export function serializeSchoolResource(resource: SchoolResourceDocument) {
   return {
     id: resource._id.toString(),
@@ -81,7 +96,9 @@ export async function getSchoolResourcesForUser(user: UserDocument) {
 
   return SchoolResource.find({
     audience: user.role,
-    ...(user.role === "student" ? { ageTrack: user.ageTrack } : {}),
+    ...(user.role === "student"
+      ? { ageTrack: { $in: getAgeTrackAliases(user.ageTrack) } }
+      : {}),
     $or: [
       { releaseDate: null },
       { releaseDate: { $lte: now } },
@@ -90,6 +107,7 @@ export async function getSchoolResourcesForUser(user: UserDocument) {
       {
         $or: [
           { schoolScope: "all-schools" },
+          { schoolScope: "district", district: { $in: [null, ""] } },
           { schoolScope: "specific-schools", schoolIds: user.schoolId },
           ...(school?.district
             ? [{ schoolScope: "district", district: school.district }]

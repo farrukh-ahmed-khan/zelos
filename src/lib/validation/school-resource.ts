@@ -31,4 +31,20 @@ export const createSchoolResourceSchema = z
         message: "Choose an age track for student resources.",
       });
     }
+
+    if (value.schoolScope === "specific-schools" && !value.schoolIds?.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["schoolIds"],
+        message: "Choose at least one school for specific-school resources.",
+      });
+    }
+
+    if (value.schoolScope === "district" && !value.district) {
+      context.addIssue({
+        code: "custom",
+        path: ["district"],
+        message: "Enter a district for district-scoped resources.",
+      });
+    }
   });

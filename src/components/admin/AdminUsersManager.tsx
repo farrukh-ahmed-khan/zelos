@@ -14,6 +14,7 @@ type User = {
   ageTrack: string;
   status: "active" | "suspended" | "banned" | "deactivated";
   adminPermissions: string[];
+  emailVerifiedAt: string | Date | null;
 };
 
 const permissions = [
@@ -56,13 +57,22 @@ export function AdminUsersManager({ users }: { users: User[] }) {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [savingPermissionsUserId, setSavingPermissionsUserId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [resendingVerificationUserId, setResendingVerificationUserId] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     if (!query) return items;
 
     return items.filter((user) =>
-      [user.name, user.email, user.role, user.ageTrack, user.status, ...user.adminPermissions]
+      [
+        user.name,
+        user.email,
+        user.role,
+        user.ageTrack,
+        user.status,
+        user.emailVerifiedAt ? "verified" : "unverified",
+        ...user.adminPermissions,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(query),
@@ -152,6 +162,26 @@ export function AdminUsersManager({ users }: { users: User[] }) {
     });
   }
 
+  async function resendVerificationEmail(user: User) {
+    setError("");
+    setResendingVerificationUserId(user.id);
+
+    try {
+      const response = await api.post(`/api/admin/users/${user.id}/resend-verification`);
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to resend verification email.");
+        antMessage.error(result?.error?.message ?? "Unable to resend verification email.");
+        return;
+      }
+
+      antMessage.success("Verification email resent.");
+    } finally {
+      setResendingVerificationUserId(null);
+    }
+  }
+
   const columns: TableColumnsType<User> = [
     {
       title: "User",
@@ -183,10 +213,15 @@ export function AdminUsersManager({ users }: { users: User[] }) {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      width: 180,
+      width: 230,
       render: (status: User["status"], user) => (
-        <Space size="small">
-          <Tag color={statusColors[status]}>{status.toUpperCase()}</Tag>
+        <div className="grid gap-2">
+          <Space size="small" wrap>
+            <Tag color={statusColors[status]}>{status.toUpperCase()}</Tag>
+            <Tag color={user.emailVerifiedAt ? "green" : "orange"}>
+              {user.emailVerifiedAt ? "VERIFIED" : "UNVERIFIED"}
+            </Tag>
+          </Space>
           <Select
             size="small"
             value={status}
@@ -196,7 +231,7 @@ export function AdminUsersManager({ users }: { users: User[] }) {
             style={{ width: 120 }}
             onChange={(value) => updateStatus(user, value as User["status"])}
           />
-        </Space>
+        </div>
       ),
     },
     {
@@ -221,17 +256,28 @@ export function AdminUsersManager({ users }: { users: User[] }) {
     {
       title: "Action",
       key: "action",
-      width: 120,
+      width: 210,
       align: "right",
       render: (_, user) => (
-        <Button
-          danger
-          size="small"
-          loading={deletingUserId === user.id}
-          onClick={() => confirmDeleteUser(user)}
-        >
-          Delete
-        </Button>
+        <Space size="small" wrap className="justify-end">
+          {!user.emailVerifiedAt ? (
+            <Button
+              size="small"
+              loading={resendingVerificationUserId === user.id}
+              onClick={() => resendVerificationEmail(user)}
+            >
+              Resend Email
+            </Button>
+          ) : null}
+          <Button
+            danger
+            size="small"
+            loading={deletingUserId === user.id}
+            onClick={() => confirmDeleteUser(user)}
+          >
+            Delete
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -269,7 +315,7 @@ export function AdminUsersManager({ users }: { users: User[] }) {
         columns={columns}
         dataSource={filteredItems}
         pagination={pagination}
-        scroll={{ x: 980 }}
+        scroll={{ x: 1120 }}
         bordered
         expandable={{
           rowExpandable: (user) => user.role === "sub-admin",
