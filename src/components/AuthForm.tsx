@@ -269,6 +269,17 @@ export function AuthForm({ mode }: AuthFormProps) {
         />
       </label>
 
+      {!isSignup ? (
+        <div className="-mt-2 text-right">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-black !text-[#b22222] transition hover:!text-[#7a0505]"
+          >
+            Forgot password?
+          </Link>
+        </div>
+      ) : null}
+
       {isSignup ? (
         <>
           <div className="grid gap-4">
