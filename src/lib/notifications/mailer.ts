@@ -169,6 +169,47 @@ function emailConfirmationContent(payload: EmailPayload): EmailContent {
   };
 }
 
+function passwordResetContent(payload: EmailPayload): EmailContent {
+  const name = String(payload.name ?? "there");
+  const resetUrl = String(payload.resetUrl ?? "");
+  const expiresAt = payload.expiresAt
+    ? new Date(String(payload.expiresAt)).toLocaleString()
+    : "soon";
+  const escapedName = escapeHtml(name);
+  const escapedResetUrl = escapeHtml(resetUrl);
+  const escapedExpiresAt = escapeHtml(expiresAt);
+
+  return {
+    subject: "Reset your Zelos password",
+    text: [
+      `Hi ${name},`,
+      "We received a request to reset your Zelos password.",
+      `This reset link expires: ${expiresAt}`,
+      `Reset your password: ${resetUrl}`,
+      "If you did not request this, you can ignore this email.",
+    ].join("\n\n"),
+    html: `
+      <div style="margin:0;background:#f4f5f7;padding:28px 16px;font-family:Arial,sans-serif;color:#202020">
+        <div style="max-width:560px;margin:0 auto;overflow:hidden;border:1px solid #d9dde3;border-radius:10px;background:#ffffff">
+          <div style="background:#202020;padding:24px;color:#ffffff">
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Zelos Password Reset</p>
+            <h1 style="margin:0;font-size:26px;line-height:1.2">Reset your password</h1>
+          </div>
+          <div style="padding:24px;line-height:1.6">
+            <p style="margin:0 0 16px;font-size:16px">Hi ${escapedName},</p>
+            <p style="margin:0 0 18px;font-size:16px">We received a request to reset your Zelos password. Use the button below to choose a new one.</p>
+            <a href="${escapedResetUrl}" style="display:inline-block;border-radius:6px;background:#8c0504;padding:12px 18px;color:#ffffff;font-weight:700;text-decoration:none">Reset password</a>
+            <p style="margin:20px 0 0;font-size:13px;color:#667085">This link expires: ${escapedExpiresAt}</p>
+            <p style="margin:14px 0 0;font-size:12px;color:#667085">If the button does not work, copy and paste this link into your browser:</p>
+            <p style="margin:6px 0 0;word-break:break-all;font-size:12px;color:#667085">${escapedResetUrl}</p>
+            <p style="margin:20px 0 0;font-size:12px;color:#667085">If you did not request this, you can ignore this email.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+}
+
 function fallbackContent(template: string, payload: EmailPayload): EmailContent {
   const prettyPayload = JSON.stringify(payload, null, 2);
 
@@ -194,6 +235,10 @@ export function buildTransactionalEmail(template: TemplateName, payload: EmailPa
 
   if (template === "email-confirmation") {
     return emailConfirmationContent(payload);
+  }
+
+  if (template === "password-reset") {
+    return passwordResetContent(payload);
   }
 
   if (TRANSACTIONAL_EMAIL_TEMPLATES.includes(template as TransactionalEmailTemplate)) {
