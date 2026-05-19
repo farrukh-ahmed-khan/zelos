@@ -10,7 +10,6 @@ export function serializeSubscriptionPlan(plan: SubscriptionPlanDocument) {
     name: plan.name,
     description: plan.description,
     interval: plan.interval,
-    accountType: plan.accountType,
     priceCents: plan.priceCents,
     currency: plan.currency,
     ageTrack: plan.ageTrack ?? null,
@@ -28,7 +27,6 @@ export async function getSubscriptionPlans(includeInactive = false) {
 
   return SubscriptionPlan.find(includeInactive ? {} : { isActive: true }).sort({
     interval: 1,
-    accountType: 1,
     priceCents: 1,
   });
 }
@@ -37,7 +35,6 @@ export async function createSubscriptionPlan(params: {
   name: string;
   description: string;
   interval: "monthly" | "annual";
-  accountType: "individual" | "family";
   priceCents: number;
   currency?: string;
   ageTrack?: string;
@@ -65,7 +62,6 @@ export async function updateSubscriptionPlan(
     name: string;
     description: string;
     interval: "monthly" | "annual";
-    accountType: "individual" | "family";
     priceCents: number;
     currency: string;
     ageTrack: string;

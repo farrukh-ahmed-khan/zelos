@@ -43,12 +43,6 @@ const UserSchema = new Schema(
       required: true,
       index: true,
     },
-    accountType: {
-      type: String,
-      enum: ["individual", "family"],
-      default: "individual",
-      index: true,
-    },
     age: {
       type: Number,
       required: true,

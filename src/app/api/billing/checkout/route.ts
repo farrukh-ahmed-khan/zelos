@@ -22,10 +22,6 @@ export async function POST(request: NextRequest) {
       throw new ApiError(422, "This plan is missing a Stripe price ID.");
     }
 
-    if (plan.accountType !== (user.accountType ?? "individual")) {
-      throw new ApiError(403, "This plan does not match the account type selected at signup.");
-    }
-
     const latestSubscription = await getLatestSubscriptionByUserId(user._id.toString());
 
     if (latestSubscription && latestSubscription.expiryDate > new Date()) {

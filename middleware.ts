@@ -64,6 +64,5 @@ export const config = {
     "/api/schools/:path*/students",
     "/api/schools/:path*/progress",
     "/api/schools/invite-student",
-    "/api/subscribers/:path*",
   ],
 };

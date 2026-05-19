@@ -51,7 +51,7 @@ export function AuthPageShell({ mode }: AuthPageShellProps) {
                 </p>
                 <p className="mt-3 max-w-[620px] text-lg leading-snug text-white sm:text-xl">
                   {isSignup
-                    ? "Create a mentee or subscriber account and get access to the Zelos tools made for practical growth."
+                    ? "Start free or choose a monthly or yearly subscriber package for full access to Zelos tools made for practical growth."
                     : "Log in to pick up your learning, community, events, and opportunities right where you left them."}
                 </p>
               </div>

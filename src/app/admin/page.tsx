@@ -24,7 +24,7 @@ const modules = [
   { title: "Super Admin Dashboard", href: "/super-admin", permission: "analytics.read", detail: "Full-platform command center for David" },
   { title: "Content Management", href: "/admin/videos", permission: "content.manage", detail: "Subscriber, school, preview, mission videos" },
   { title: "Content Categories", href: "/admin/content-categories", permission: "content.manage", detail: "Age track category setup" },
-  { title: "Subscription Plans", href: "/admin/subscription-plans", permission: "billing.read", detail: "Monthly, annual, individual, family, promo plans" },
+  { title: "Subscription Plans", href: "/admin/subscription-plans", permission: "billing.read", detail: "Monthly, annual, and promo plans" },
   { title: "Users & Roles", href: "/admin/users", permission: "users.manage-limited", detail: "Statuses, deletion, RBAC scopes" },
   { title: "Admin Invites", href: "/admin/invites", permission: "users.manage-limited", detail: "Moderator and sub-admin invite links" },
   { title: "Schools", href: "/admin/schools", permission: "schools.manage", detail: "School and district onboarding, seats, teacher invites" },

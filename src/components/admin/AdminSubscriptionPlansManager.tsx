@@ -9,7 +9,6 @@ type Plan = {
   name: string;
   description: string;
   interval: "monthly" | "annual";
-  accountType: "individual" | "family";
   priceCents: number;
   currency: string;
   stripePriceId: string | null;
@@ -35,7 +34,6 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
       name: String(formData.get("name") ?? ""),
       description: String(formData.get("description") ?? ""),
       interval: String(formData.get("interval") ?? "monthly"),
-      accountType: String(formData.get("accountType") ?? "individual"),
       priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
       currency: String(formData.get("currency") ?? "usd"),
       stripePriceId: String(formData.get("stripePriceId") ?? ""),
@@ -91,10 +89,6 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
           <option value="monthly">Monthly</option>
           <option value="annual">Annual</option>
         </select>
-        <select name="accountType" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="individual">Individual</option>
-          <option value="family">Family</option>
-        </select>
         <input name="currency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="stripePriceId" placeholder="Stripe price ID" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="discountBadge" placeholder="Discount badge, e.g. Save 20%" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
@@ -118,7 +112,7 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
               <div>
                 <p className="font-bold text-[#111827]">{plan.name}</p>
                 <p className="mt-1 text-xs font-bold uppercase text-[#667085]">
-                  {plan.accountType} / {plan.interval}
+                  {plan.interval}
                 </p>
               </div>
               {plan.discountBadge ? <span className="rounded-sm bg-[#eef2f7] px-2 py-1 text-xs font-black">{plan.discountBadge}</span> : null}

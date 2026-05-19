@@ -20,12 +20,6 @@ const SubscriptionPlanSchema = new Schema(
       required: true,
       index: true,
     },
-    accountType: {
-      type: String,
-      enum: ["individual", "family"],
-      required: true,
-      index: true,
-    },
     priceCents: {
       type: Number,
       required: true,
@@ -75,8 +69,8 @@ const SubscriptionPlanSchema = new Schema(
 );
 
 SubscriptionPlanSchema.index(
-  { interval: 1, accountType: 1, ageTrack: 1, isActive: 1 },
-  { name: "plan_lookup_idx" },
+  { interval: 1, ageTrack: 1, isActive: 1 },
+  { name: "plan_interval_lookup_idx" },
 );
 
 type SubscriptionPlan = InferSchemaType<typeof SubscriptionPlanSchema>;

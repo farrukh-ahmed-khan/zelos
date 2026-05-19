@@ -68,13 +68,6 @@ type DashboardThread = {
   createdAt: string | Date;
 };
 
-type DashboardChild = {
-  id: string;
-  name: string;
-  age: number;
-  ageTrack: string;
-};
-
 type DashboardAdminSummary = {
   usersCount: number;
   forumReportsCount: number;
@@ -86,7 +79,6 @@ type DashboardShellProps = {
   videos: DashboardVideo[];
   events: DashboardEvent[];
   threads: DashboardThread[];
-  childrenAccounts: DashboardChild[];
   subscriptionLabel: string;
   hasVideoLibraryAccess: boolean;
   needsVideoSubscription: boolean;
@@ -384,7 +376,7 @@ function VideoAccessGate({ userRole }: { userRole: string }) {
       </p>
       <p className="mt-1 leading-relaxed">
         {isChild
-          ? "This family member can view lessons after the parent subscriber account has an active plan."
+          ? "This account can view lessons when subscription access is active."
           : "Subscribe to unlock the video library for your age track."}
       </p>
       {!isChild ? (
@@ -404,7 +396,6 @@ export function DashboardShell({
   videos,
   events,
   threads,
-  childrenAccounts,
   subscriptionLabel,
   hasVideoLibraryAccess,
   needsVideoSubscription,
@@ -415,7 +406,6 @@ export function DashboardShell({
     .slice(0, 3);
   const isAdmin = ["forum-moderator", "sub-admin", "super-admin"].includes(user.role);
   const isSchoolUser = ["teacher", "student"].includes(user.role);
-  const canManageFamily = user.role === "subscriber";
 
   return (
     <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
@@ -519,26 +509,6 @@ export function DashboardShell({
               </SectionCard>
             ) : null}
 
-            {canManageFamily ? (
-              <SectionCard title="Family Accounts">
-                {childrenAccounts.length ? (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {childrenAccounts.map((child) => (
-                      <article key={child.id} className="rounded-md bg-white p-4">
-                        <p className="font-bold">{child.name}</p>
-                        <p className="text-sm text-[#666]">
-                          {child.ageTrack} / age {child.age}
-                        </p>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
-                    No family member accounts have been added yet.
-                  </p>
-                )}
-              </SectionCard>
-            ) : null}
           </div>
 
           <aside className="grid content-start gap-6">

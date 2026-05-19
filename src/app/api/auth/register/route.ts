@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
       email: body.email,
       password: await hashPassword(body.password),
       role: body.role,
-      accountType: body.role === "subscriber" ? body.accountType ?? "individual" : "individual",
       age: body.age,
       ageTrack: body.ageTrack ?? deriveAgeTrack(body.age),
       interests: body.interests ?? [],

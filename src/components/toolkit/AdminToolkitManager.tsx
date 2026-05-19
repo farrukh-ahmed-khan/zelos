@@ -64,7 +64,7 @@ export function AdminToolkitManager({ resources }: { resources: Resource[] }) {
           <option value="quiz">Self-Guided Quiz</option>
           <option value="budget-template">Budget Template</option>
           <option value="goal-setting">Goal-Setting Worksheet</option>
-          <option value="family-prompt">Family Discussion Prompt</option>
+          <option value="family-prompt">Discussion Prompt</option>
         </select>
         <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3">
           <option value="">Age track</option>

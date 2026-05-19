@@ -11,7 +11,7 @@ export default function AboutPage() {
         {
           title: "The Mission",
           body: "The platform helps children, teens, young adults, families, and educators build practical money skills with age-aware learning paths and public community support.",
-          points: ["Age-tracked learning", "School and family access", "Scholarships and community support"],
+          points: ["Age-tracked learning", "School access", "Scholarships and community support"],
         },
         {
           title: "How It Works",

@@ -8,7 +8,7 @@ import School from "@/models/School";
 import ContentCategory from "@/models/ContentCategory";
 
 const REQUIRED_COMPLETION_PERCENTAGE = 95;
-const SUBSCRIPTION_VIDEO_ROLES = new Set(["mentee", "subscriber", "child"]);
+const SUBSCRIPTION_VIDEO_ROLES = new Set(["subscriber", "child"]);
 
 export function requiresSubscriptionForVideos(user: UserDocument) {
   return SUBSCRIPTION_VIDEO_ROLES.has(user.role);
@@ -53,6 +53,7 @@ async function getCandidateVideosForUser(user: UserDocument) {
           audience,
           ageTrack: { $in: getAgeTrackAliases(user.ageTrack) },
           releaseDate: { $not: { $gt: new Date() } },
+          ...(user.role === "mentee" ? { isFreePreview: true } : {}),
         };
 
   return Video.find(query).sort({ order: 1, createdAt: 1 });

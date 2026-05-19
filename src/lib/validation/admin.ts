@@ -45,7 +45,6 @@ export const createSubscriptionPlanSchema = z.object({
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().min(5).max(1000),
   interval: z.enum(["monthly", "annual"]),
-  accountType: z.enum(["individual", "family"]),
   priceCents: z.number().int().min(0),
   currency: z.string().trim().length(3).default("usd"),
   ageTrack: z.string().trim().max(60).optional(),

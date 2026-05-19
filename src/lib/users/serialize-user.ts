@@ -7,7 +7,6 @@ export function serializeUser(user: UserDocument) {
     email: user.email,
     pendingEmail: user.pendingEmail ?? null,
     role: user.role,
-    accountType: user.accountType ?? "individual",
     age: user.age,
     ageTrack: user.ageTrack,
     parentId: user.parentId ?? null,

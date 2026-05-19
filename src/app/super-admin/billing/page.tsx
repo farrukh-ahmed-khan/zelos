@@ -25,7 +25,7 @@ export default async function SuperAdminBillingPage() {
   return (
     <SuperAdminChrome title="Billing Control" eyebrow="Super Admin / Billing">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SuperAdminMetric label="Plans" value={data.plans.length} detail="Monthly, annual, individual, family, promo" />
+        <SuperAdminMetric label="Plans" value={data.plans.length} detail="Monthly, annual, promo" />
         {data.subscriptionStatuses.map((status) => (
           <SuperAdminMetric key={status._id ?? "unknown"} label="Subscriptions" value={status.count} detail={status._id ?? "unknown"} />
         ))}
@@ -41,7 +41,7 @@ export default async function SuperAdminBillingPage() {
               <SuperAdminRow
                 key={plan._id.toString()}
                 title={plan.name}
-                meta={`${plan.accountType} / ${plan.interval} / ${plan.isActive ? "active" : "inactive"}`}
+                meta={`${plan.interval} / ${plan.isActive ? "active" : "inactive"}`}
                 value={money(plan.priceCents, plan.currency.toUpperCase())}
               />
             ))}

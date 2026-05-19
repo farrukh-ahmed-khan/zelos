@@ -15,7 +15,7 @@ export default function FinancialLiteracyPage() {
         },
         {
           title: "Money Toolkit",
-          body: "Worksheets, budgeting templates, goal-setting worksheets, quizzes, and family discussion prompts unlock according to completion and subscription status.",
+          body: "Worksheets, budgeting templates, goal-setting worksheets, quizzes, and guided discussion prompts unlock according to completion and subscription status.",
         },
       ]}
     />

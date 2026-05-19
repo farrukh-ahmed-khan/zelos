@@ -8,7 +8,6 @@ import { connectToDatabase } from "@/lib/db";
 import { getEventsWithRsvpStatus } from "@/lib/events/service";
 import { getForumReports, getForumThreads } from "@/lib/forum/service";
 import { getMentorApplications } from "@/lib/mentor-applications/service";
-import { getChildSubscriberAccounts } from "@/lib/subscribers/service";
 import { resolveSubscriptionAccessForUser } from "@/lib/subscriptions/service";
 import { serializeResolvedSubscription } from "@/lib/subscriptions/serialize-subscription";
 import { serializeUser } from "@/lib/users/serialize-user";
@@ -68,7 +67,6 @@ export default async function DashboardPage() {
   const [
     eventsResult,
     threadsResult,
-    childrenResult,
     subscriptionResult,
     usersCountResult,
     reportsResult,
@@ -76,9 +74,6 @@ export default async function DashboardPage() {
   ] = await Promise.allSettled([
     getEventsWithRsvpStatus(userId),
     getForumThreads(),
-    user.role === "subscriber"
-      ? getChildSubscriberAccounts(user)
-      : Promise.resolve([]),
     resolveSubscriptionAccessForUser(user),
     canReadUsers ? User.countDocuments() : Promise.resolve(0),
     canModerateForum ? getForumReports() : Promise.resolve([]),
@@ -87,10 +82,6 @@ export default async function DashboardPage() {
 
   const events = eventsResult.status === "fulfilled" ? eventsResult.value : [];
   const threads = threadsResult.status === "fulfilled" ? threadsResult.value : [];
-  const childrenAccounts =
-    childrenResult.status === "fulfilled"
-      ? childrenResult.value.map((child) => serializeUser(child))
-      : [];
   const subscription =
     subscriptionResult.status === "fulfilled" && subscriptionResult.value
       ? serializeResolvedSubscription(subscriptionResult.value)
@@ -113,7 +104,6 @@ export default async function DashboardPage() {
       videos={videos}
       events={events}
       threads={threads}
-      childrenAccounts={childrenAccounts}
       subscriptionLabel={resolveSubscriptionLabel(subscription)}
       hasVideoLibraryAccess={hasVideoLibraryAccess}
       needsVideoSubscription={needsVideoSubscription}

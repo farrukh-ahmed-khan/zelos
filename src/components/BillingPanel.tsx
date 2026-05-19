@@ -9,7 +9,6 @@ type Plan = {
   name: string;
   description: string;
   interval: string;
-  accountType: string;
   priceCents: number;
   currency: string;
   discountBadge: string | null;
@@ -155,7 +154,7 @@ export function BillingPanel({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-bebas text-3xl uppercase leading-none">{plan.name}</p>
-                <p className="mt-1 text-sm font-bold uppercase text-[#8c0504]">{plan.accountType} / {plan.interval}</p>
+                <p className="mt-1 text-sm font-bold uppercase text-[#8c0504]">{plan.interval}</p>
               </div>
               {plan.discountBadge ? <span className="rounded-sm bg-[#faff8d] px-2 py-1 text-xs font-black">{plan.discountBadge}</span> : null}
             </div>

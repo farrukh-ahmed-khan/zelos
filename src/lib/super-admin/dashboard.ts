@@ -93,7 +93,7 @@ export async function getSuperAdminAccessDashboard() {
 export async function getSuperAdminBillingDashboard() {
   const [plans, subscriptionStatuses, subscriptions, products, orders] =
     await Promise.all([
-      SubscriptionPlan.find().sort({ interval: 1, accountType: 1 }).lean(),
+      SubscriptionPlan.find().sort({ interval: 1, priceCents: 1 }).lean(),
       Subscription.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
       Subscription.find().sort({ createdAt: -1 }).limit(12).lean(),
       Product.find().sort({ isActive: -1, name: 1 }).limit(12).lean(),
