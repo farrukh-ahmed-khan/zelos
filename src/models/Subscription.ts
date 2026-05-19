@@ -23,6 +23,16 @@ const SubscriptionSchema = new Schema(
       enum: SUBSCRIPTION_PLAN_TYPES,
       required: true,
     },
+    planId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    planName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     startDate: {
       type: Date,
       required: true,

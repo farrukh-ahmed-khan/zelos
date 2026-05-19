@@ -79,6 +79,8 @@ export async function POST(request: NextRequest) {
         await Subscription.create({
           userId: user._id.toString(),
           planType: plan.interval,
+          planId: plan._id.toString(),
+          planName: plan.name,
           startDate,
           expiryDate,
           status: "active",

@@ -10,6 +10,8 @@ export function serializeSubscription(subscription: SubscriptionDocument | null)
     id: subscription._id.toString(),
     userId: subscription.userId,
     planType: subscription.planType,
+    planId: subscription.planId ?? null,
+    planName: subscription.planName ?? null,
     startDate: subscription.startDate,
     expiryDate: subscription.expiryDate,
     status: subscription.status,

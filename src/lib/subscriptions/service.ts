@@ -155,6 +155,8 @@ export async function requirePremiumAccess(user: UserDocument) {
 export async function createSubscriptionForUser(params: {
   user: UserDocument;
   planType: SubscriptionPlanType;
+  planId?: string | null;
+  planName?: string | null;
   status?: "active" | "suspended" | "canceled";
 }) {
   const { user, planType, status = "active" } = params;
@@ -179,6 +181,8 @@ export async function createSubscriptionForUser(params: {
   return Subscription.create({
     userId: user._id.toString(),
     planType,
+    planId: params.planId ?? null,
+    planName: params.planName ?? null,
     startDate,
     expiryDate,
     status,
