@@ -81,6 +81,11 @@ const VideoSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    dripDelayMinutes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     isFreePreview: {
       type: Boolean,
       default: false,
@@ -90,6 +95,29 @@ const VideoSchema = new Schema(
       type: Boolean,
       default: false,
       index: true,
+    },
+    attachmentUrl: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 2048,
+    },
+    attachmentS3Key: {
+      type: String,
+      default: null,
+      sparse: true,
+    },
+    attachmentFileName: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 255,
+    },
+    attachmentMimeType: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 180,
     },
     s3Key: {
       type: String,

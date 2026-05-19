@@ -21,8 +21,12 @@ type Video = {
   order: number;
   releaseDate: string | null;
   dripEnabled: boolean;
+  dripDelayMinutes: number;
   isFreePreview: boolean;
   isMissionVideo: boolean;
+  attachmentUrl: string | null;
+  attachmentFileName: string | null;
+  attachmentMimeType: string | null;
 };
 
 type ContentCategory = {
@@ -42,6 +46,7 @@ type School = {
 type SchoolScope = "global" | "all-schools" | "specific-schools" | "district";
 
 const TEACHER_TRACK = "Teachers";
+const formLabelClass = "grid gap-2 text-sm font-bold text-[#202020]";
 const ageTrackOptions = [
   { value: "child", label: "Children" },
   { value: "teen", label: "Teens" },
@@ -77,6 +82,19 @@ function formatDateTime(value: string | null) {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatDelay(minutes: number) {
+  if (!minutes) {
+    return "No delay";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+
+  const hours = minutes / 60;
+  return Number.isInteger(hours) ? `${hours} hr${hours === 1 ? "" : "s"}` : `${minutes} min`;
 }
 
 export function AdminVideosManager({
@@ -148,6 +166,9 @@ export function AdminVideosManager({
         video.category,
         video.playlist ?? "General",
         video.dripEnabled ? "drip locked" : "open order",
+        video.dripEnabled ? formatDelay(video.dripDelayMinutes) : "",
+        video.attachmentFileName ?? "",
+        video.attachmentMimeType ?? "",
         video.isFreePreview ? "free preview" : "",
         video.isMissionVideo ? "mission video" : "",
       ]
@@ -368,8 +389,12 @@ export function AdminVideosManager({
           <Tag color={record.dripEnabled ? "orange" : "default"}>
             {record.dripEnabled ? "DRIP LOCKED" : "OPEN"}
           </Tag>
+          {record.dripEnabled && record.dripDelayMinutes > 0 ? (
+            <Tag color="gold">UNLOCK AFTER {formatDelay(record.dripDelayMinutes).toUpperCase()}</Tag>
+          ) : null}
           {record.isFreePreview ? <Tag color="green">FREE PREVIEW</Tag> : null}
           {record.isMissionVideo ? <Tag color="purple">MISSION</Tag> : null}
+          {record.attachmentUrl ? <Tag color="cyan">ATTACHMENT</Tag> : null}
         </Space>
       ),
     },
@@ -434,119 +459,181 @@ export function AdminVideosManager({
             </div>
           </div>
         ) : null}
-        <input name="title" placeholder="Title" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <textarea name="description" placeholder="Description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
+        <label className={formLabelClass}>
+          Title
+          <input name="title" placeholder="Title" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className={`${formLabelClass} md:col-span-2`}>
+          Description
+          <textarea name="description" placeholder="Description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
         {!isPlaylistLocked && !isTeacherAudience ? (
-          <select
-            name="ageTrack"
-            required
-            value={selectedAgeTrack}
-            onChange={(event) => {
-              setSelectedAgeTrack(event.target.value);
-              setSelectedCategoryId("");
-            }}
-            className="rounded-md border border-[#d8d2c5] px-3 py-3"
-          >
-            <option value="">Age track</option>
-            {ageTrackOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <label className={formLabelClass}>
+            Age track
+            <select
+              name="ageTrack"
+              required
+              value={selectedAgeTrack}
+              onChange={(event) => {
+                setSelectedAgeTrack(event.target.value);
+                setSelectedCategoryId("");
+              }}
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+            >
+              <option value="">Select age track</option>
+              {ageTrackOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
         ) : null}
         {!isPlaylistLocked ? (
-          <select
-            name="audience"
-            value={selectedAudience}
-            onChange={(event) => {
-              setSelectedAudience(event.target.value);
-              if (event.target.value === "teacher") {
-                setSelectedAgeTrack("");
-              }
-              const nextIsSchoolAudience = event.target.value === "teacher" || event.target.value === "student";
-              setSelectedSchoolScope(nextIsSchoolAudience ? "all-schools" : "global");
-              setSelectedSchoolIds([]);
-              setSelectedDistrict("");
-              setSelectedCategoryId("");
-            }}
-            className="rounded-md border border-[#d8d2c5] px-3 py-3"
-          >
-            <option value="subscriber">Subscriber Library</option>
-            <option value="teacher">Teacher Library</option>
-            <option value="student">Student Library</option>
-            <option value="public-preview">Free Preview</option>
-          </select>
+          <label className={formLabelClass}>
+            Library
+            <select
+              name="audience"
+              value={selectedAudience}
+              onChange={(event) => {
+                setSelectedAudience(event.target.value);
+                if (event.target.value === "teacher") {
+                  setSelectedAgeTrack("");
+                }
+                const nextIsSchoolAudience = event.target.value === "teacher" || event.target.value === "student";
+                setSelectedSchoolScope(nextIsSchoolAudience ? "all-schools" : "global");
+                setSelectedSchoolIds([]);
+                setSelectedDistrict("");
+                setSelectedCategoryId("");
+              }}
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+            >
+              <option value="subscriber">Subscriber Library</option>
+              <option value="teacher">Teacher Library</option>
+              <option value="student">Student Library</option>
+              <option value="public-preview">Free Preview</option>
+            </select>
+          </label>
         ) : null}
         {isSchoolAudience ? (
           <>
-            <select
-              value={selectedSchoolScope}
-              onChange={(event) => {
-                setSelectedSchoolScope(event.target.value as "all-schools" | "specific-schools" | "district");
-                setSelectedSchoolIds([]);
-                setSelectedDistrict("");
-              }}
-              className="rounded-md border border-[#d8d2c5] px-3 py-3"
-            >
-              <option value="all-schools">All Schools</option>
-              <option value="specific-schools">Specific Schools</option>
-              <option value="district">District</option>
-            </select>
+            <label className={formLabelClass}>
+              School scope
+              <select
+                value={selectedSchoolScope}
+                onChange={(event) => {
+                  setSelectedSchoolScope(event.target.value as "all-schools" | "specific-schools" | "district");
+                  setSelectedSchoolIds([]);
+                  setSelectedDistrict("");
+                }}
+                className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+              >
+                <option value="all-schools">All Schools</option>
+                <option value="specific-schools">Specific Schools</option>
+                <option value="district">District</option>
+              </select>
+            </label>
             {selectedSchoolScope === "specific-schools" ? (
-              <Select
-                mode="multiple"
-                placeholder="Select schools"
-                value={selectedSchoolIds}
-                onChange={setSelectedSchoolIds}
-                options={schools.map((school) => ({
-                  value: school.id,
-                  label: `${school.name}${school.district ? ` / ${school.district}` : ""}`,
-                }))}
-                className="min-h-[48px]"
-              />
+              <label className={formLabelClass}>
+                Schools
+                <Select
+                  mode="multiple"
+                  placeholder="Select schools"
+                  value={selectedSchoolIds}
+                  onChange={setSelectedSchoolIds}
+                  options={schools.map((school) => ({
+                    value: school.id,
+                    label: `${school.name}${school.district ? ` / ${school.district}` : ""}`,
+                  }))}
+                  className="min-h-[48px] font-normal"
+                />
+              </label>
             ) : null}
             {selectedSchoolScope === "district" ? (
-              <select
-                value={selectedDistrict}
-                onChange={(event) => setSelectedDistrict(event.target.value)}
-                className="rounded-md border border-[#d8d2c5] px-3 py-3"
-              >
-                <option value="">Select district</option>
-                {districtOptions.map((district) => (
-                  <option key={district} value={district}>
-                    {district}
-                  </option>
-                ))}
-              </select>
+              <label className={formLabelClass}>
+                District
+                <select
+                  value={selectedDistrict}
+                  onChange={(event) => setSelectedDistrict(event.target.value)}
+                  className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+                >
+                  <option value="">Select district</option>
+                  {districtOptions.map((district) => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
+              </label>
             ) : null}
           </>
         ) : null}
         {!isPlaylistLocked ? (
-          <select
-            name="categoryPlaylist"
-            required
-            value={selectedCategoryId}
-            onChange={(event) => setSelectedCategoryId(event.target.value)}
-            disabled={!isTeacherAudience && !selectedAgeTrack}
-            className="rounded-md border border-[#d8d2c5] px-3 py-3 disabled:bg-[#f5f5f5] disabled:text-[#999]"
-          >
-            <option value="">
-              {isTeacherAudience || selectedAgeTrack ? "Category playlist" : "Select age track first"}
-            </option>
-            {matchingCategories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name} / {category.playlist}
+          <label className={formLabelClass}>
+            Category playlist
+            <select
+              name="categoryPlaylist"
+              required
+              value={selectedCategoryId}
+              onChange={(event) => setSelectedCategoryId(event.target.value)}
+              disabled={!isTeacherAudience && !selectedAgeTrack}
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal disabled:bg-[#f5f5f5] disabled:text-[#999]"
+            >
+              <option value="">
+                {isTeacherAudience || selectedAgeTrack ? "Select category playlist" : "Select age track first"}
               </option>
-            ))}
-          </select>
+              {matchingCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name} / {category.playlist}
+                </option>
+              ))}
+            </select>
+          </label>
         ) : null}
-        <input name="order" type="number" min={1} placeholder="Sequence order" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="video" type="file" accept="video/*" required className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 md:col-span-2" />
+        <label className={formLabelClass}>
+          Sequence order
+          <input name="order" type="number" min={1} placeholder="Sequence order" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className={formLabelClass}>
+          Release date
+          <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className={`${formLabelClass} md:col-span-2`}>
+          Video file
+          <input name="video" type="file" accept="video/*" required className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold md:col-span-2">
+          Optional lesson file
+          <input
+            name="attachment"
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 font-normal"
+          />
+        </label>
         <label className="flex items-center gap-2 text-sm font-bold">
           <input name="dripEnabled" type="checkbox" value="true" defaultChecked />
           Sequential drip lock
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Drip unlock delay in minutes
+          <input
+            name="dripDelayMinutes"
+            type="number"
+            min={0}
+            max={10080}
+            step={1}
+            list="drip-delay-options"
+            defaultValue={0}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          />
+          <datalist id="drip-delay-options">
+            <option value="0" label="Immediately" />
+            <option value="10" label="10 minutes" />
+            <option value="30" label="30 minutes" />
+            <option value="120" label="2 hours" />
+            <option value="1440" label="1 day" />
+          </datalist>
         </label>
         <label className="flex items-center gap-2 text-sm font-bold">
           <input name="isFreePreview" type="checkbox" value="true" />
@@ -620,6 +707,16 @@ export function AdminVideosManager({
                         </a>
                       ) : (
                         <span className="text-[#667085]">Not available</span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#202020]">Attachment</div>
+                      {record.attachmentUrl ? (
+                        <a href={record.attachmentUrl} target="_blank" rel="noreferrer" className="break-all !text-[#8c0504]">
+                          {record.attachmentFileName ?? record.attachmentUrl}
+                        </a>
+                      ) : (
+                        <span className="text-[#667085]">No attachment</span>
                       )}
                     </div>
                   </div>

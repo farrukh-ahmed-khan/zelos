@@ -37,6 +37,11 @@ type DashboardVideo = {
   schoolIds?: string[];
   district?: string | null;
   order: number;
+  dripDelayMinutes?: number;
+  dripUnlocksAt?: string | Date | null;
+  attachmentUrl?: string | null;
+  attachmentFileName?: string | null;
+  attachmentMimeType?: string | null;
   completed: boolean;
   locked: boolean;
 };
@@ -102,6 +107,19 @@ function formatDate(value: string | Date) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function formatUnlockStatus(value: string | Date | null | undefined) {
+  if (!value) {
+    return "Locked";
+  }
+
+  return `Unlocks ${new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value))}`;
 }
 
 function formatSchoolScope(video: DashboardVideo) {
@@ -297,6 +315,16 @@ function VideoPanel({
           <p className="mt-2 text-sm leading-relaxed text-[#4a4a4a]">
             {nextVideo.description}
           </p>
+          {nextVideo.attachmentUrl ? (
+            <a
+              href={nextVideo.attachmentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+            >
+              Open {nextVideo.attachmentFileName ?? "lesson file"}
+            </a>
+          ) : null}
         </div>
       </div>
 
@@ -349,7 +377,7 @@ function VideoPanel({
                             : video.completed
                               ? "Completed / replay"
                               : video.locked
-                                ? "Locked"
+                                ? formatUnlockStatus(video.dripUnlocksAt)
                                 : "Unlocked"}
                         </p>
                       </div>

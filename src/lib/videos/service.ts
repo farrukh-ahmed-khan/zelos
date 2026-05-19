@@ -172,26 +172,62 @@ export async function getCompletedVideoIds(userId: string) {
   const progress = await VideoProgress.find({
     userId,
     completed: true,
-  }).select("videoId");
+  }).select("videoId completedAt updatedAt createdAt");
 
   return new Set(progress.map((entry) => entry.videoId));
 }
 
+async function getCompletedVideoProgress(userId: string) {
+  await connectToDatabase();
+
+  const progress = await VideoProgress.find({
+    userId,
+    completed: true,
+  }).select("videoId completedAt updatedAt createdAt");
+
+  return new Map(
+    progress.map((entry) => [
+      entry.videoId,
+      {
+        completedAt:
+          entry.completedAt ??
+          (entry as unknown as { updatedAt?: Date }).updatedAt ??
+          (entry as unknown as { createdAt?: Date }).createdAt ??
+          null,
+      },
+    ]),
+  );
+}
+
+function getUnlockTime(completedAt: Date | null, delayMinutes: number) {
+  if (!completedAt || delayMinutes <= 0) {
+    return completedAt;
+  }
+
+  return new Date(completedAt.getTime() + delayMinutes * 60 * 1000);
+}
+
 export async function buildVideoAvailability(user: UserDocument) {
   let videos = await getCandidateVideosForUser(user);
-  const completedVideoIds = await getCompletedVideoIds(user._id.toString());
+  const completedProgress = await getCompletedVideoProgress(user._id.toString());
   videos = await filterSchoolScopedVideos(user, videos);
   videos = await sortVideosForProgression(videos);
 
-  let unlocked = true;
-
-  return videos.map((video) => {
-    const completed = completedVideoIds.has(video._id.toString());
-    const isLocked = video.dripEnabled ? !unlocked : false;
-
-    if (video.dripEnabled && !completed) {
-      unlocked = false;
-    }
+  return videos.map((video, index) => {
+    const completed = completedProgress.has(video._id.toString());
+    const previousVideo = index > 0 ? videos[index - 1] : null;
+    const previousProgress = previousVideo
+      ? completedProgress.get(previousVideo._id.toString())
+      : null;
+    const dripDelayMinutes = video.dripDelayMinutes ?? 0;
+    const unlocksAt = previousProgress
+      ? getUnlockTime(previousProgress.completedAt, dripDelayMinutes)
+      : null;
+    const isLocked =
+      !completed &&
+      Boolean(video.dripEnabled) &&
+      index > 0 &&
+      (!previousProgress || (unlocksAt ? unlocksAt > new Date() : false));
 
     return {
       id: video._id.toString(),
@@ -208,8 +244,13 @@ export async function buildVideoAvailability(user: UserDocument) {
       order: video.order,
       releaseDate: video.releaseDate,
       dripEnabled: video.dripEnabled,
+      dripDelayMinutes,
+      dripUnlocksAt: isLocked ? unlocksAt : null,
       isFreePreview: video.isFreePreview,
       isMissionVideo: video.isMissionVideo,
+      attachmentUrl: isLocked ? null : video.attachmentUrl ?? null,
+      attachmentFileName: isLocked ? null : video.attachmentFileName ?? null,
+      attachmentMimeType: isLocked ? null : video.attachmentMimeType ?? null,
       completed,
       locked: isLocked,
     };
@@ -270,6 +311,20 @@ export async function resolveCompletableVideo(params: {
     );
   }
 
+  const completedAt =
+    previousProgress.completedAt ??
+    (previousProgress as unknown as { updatedAt?: Date }).updatedAt ??
+    (previousProgress as unknown as { createdAt?: Date }).createdAt ??
+    null;
+  const unlocksAt = getUnlockTime(completedAt, video.dripDelayMinutes ?? 0);
+
+  if (unlocksAt && unlocksAt > new Date()) {
+    throw new ApiError(
+      403,
+      `This video unlocks at ${unlocksAt.toLocaleString()}.`,
+    );
+  }
+
   return video;
 }
 
@@ -289,20 +344,22 @@ export async function markVideoAsCompleted(params: {
 
   await connectToDatabase();
 
-  return VideoProgress.findOneAndUpdate(
-    {
-      userId: user._id.toString(),
-      videoId: video._id.toString(),
-    },
-    {
-      $set: {
-        completed: true,
-      },
-    },
-    {
-      new: true,
-      upsert: true,
-      setDefaultsOnInsert: true,
-    },
-  );
+  const progress = await VideoProgress.findOne({
+    userId: user._id.toString(),
+    videoId: video._id.toString(),
+  });
+
+  if (progress) {
+    progress.completedAt = progress.completedAt ?? new Date();
+    progress.completed = true;
+    await progress.save();
+    return progress;
+  }
+
+  return VideoProgress.create({
+    userId: user._id.toString(),
+    videoId: video._id.toString(),
+    completed: true,
+    completedAt: new Date(),
+  });
 }

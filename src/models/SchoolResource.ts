@@ -16,7 +16,7 @@ const SchoolResourceSchema = new Schema(
     },
     resourceType: {
       type: String,
-      enum: ["teacher-training-video", "lesson-plan", "teacher-guide", "student-worksheet"],
+      enum: ["lesson-plan", "teacher-guide", "student-worksheet", "image", "document", "spreadsheet", "presentation"],
       required: true,
       index: true,
     },
@@ -25,6 +25,23 @@ const SchoolResourceSchema = new Schema(
       required: true,
       trim: true,
       maxlength: 2048,
+    },
+    s3Key: {
+      type: String,
+      default: null,
+      sparse: true,
+    },
+    fileName: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 255,
+    },
+    mimeType: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 180,
     },
     audience: {
       type: String,

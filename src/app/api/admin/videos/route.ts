@@ -46,8 +46,12 @@ export async function GET(request: NextRequest) {
         order: video.order,
         releaseDate: video.releaseDate,
         dripEnabled: video.dripEnabled,
+        dripDelayMinutes: video.dripDelayMinutes ?? 0,
         isFreePreview: video.isFreePreview,
         isMissionVideo: video.isMissionVideo,
+        attachmentUrl: video.attachmentUrl ?? null,
+        attachmentFileName: video.attachmentFileName ?? null,
+        attachmentMimeType: video.attachmentMimeType ?? null,
         createdAt: video.createdAt,
         updatedAt: video.updatedAt,
       })),
@@ -80,6 +84,9 @@ export async function POST(request: NextRequest) {
       order: fields.order ? parseInt(fields.order, 10) : undefined,
       releaseDate: fields.releaseDate || undefined,
       dripEnabled: fields.dripEnabled ? fields.dripEnabled === "true" : undefined,
+      dripDelayMinutes: fields.dripDelayMinutes
+        ? parseInt(fields.dripDelayMinutes, 10)
+        : undefined,
       isFreePreview: fields.isFreePreview ? fields.isFreePreview === "true" : undefined,
       isMissionVideo: fields.isMissionVideo ? fields.isMissionVideo === "true" : undefined,
     });
@@ -112,6 +119,13 @@ export async function POST(request: NextRequest) {
       throw new ApiError(400, "File size exceeds maximum limit of 500MB");
     }
 
+    const attachmentFile = files.attachment;
+    const MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024; // 50MB
+
+    if (attachmentFile && attachmentFile.buffer.length > MAX_ATTACHMENT_SIZE) {
+      throw new ApiError(400, "Attachment size exceeds maximum limit of 50MB");
+    }
+
     // Create video with S3 upload
     const video = await createVideoByAdminWithUpload({
       title: parsedFields.title,
@@ -126,8 +140,12 @@ export async function POST(request: NextRequest) {
       order: parsedFields.order,
       releaseDate: parseOptionalDate(parsedFields.releaseDate),
       dripEnabled: parsedFields.dripEnabled,
+      dripDelayMinutes: parsedFields.dripDelayMinutes,
       isFreePreview: parsedFields.isFreePreview,
       isMissionVideo: parsedFields.isMissionVideo,
+      attachmentFile: attachmentFile?.buffer,
+      attachmentFileName: attachmentFile?.filename,
+      attachmentMimeType: attachmentFile?.mimetype,
       file: videoFile.buffer,
       fileName: videoFile.filename,
       mimeType: videoFile.mimetype,
@@ -151,8 +169,12 @@ export async function POST(request: NextRequest) {
           order: video.order,
           releaseDate: video.releaseDate,
           dripEnabled: video.dripEnabled,
+          dripDelayMinutes: video.dripDelayMinutes ?? 0,
           isFreePreview: video.isFreePreview,
           isMissionVideo: video.isMissionVideo,
+          attachmentUrl: video.attachmentUrl ?? null,
+          attachmentFileName: video.attachmentFileName ?? null,
+          attachmentMimeType: video.attachmentMimeType ?? null,
           createdAt: video.createdAt,
           updatedAt: video.updatedAt,
         },

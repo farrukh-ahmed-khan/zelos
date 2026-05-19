@@ -17,6 +17,11 @@ const VideoProgressSchema = new Schema(
       required: true,
       default: true,
     },
+    completedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,

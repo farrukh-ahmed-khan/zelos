@@ -4,6 +4,7 @@ import SchoolResource, {
 } from "@/models/SchoolResource";
 import School from "@/models/School";
 import { type UserDocument } from "@/models/User";
+import { uploadToS3 } from "@/lib/aws/s3";
 
 export function serializeSchoolResource(resource: SchoolResourceDocument) {
   return {
@@ -12,6 +13,8 @@ export function serializeSchoolResource(resource: SchoolResourceDocument) {
     description: resource.description ?? null,
     resourceType: resource.resourceType,
     url: resource.url,
+    fileName: resource.fileName ?? null,
+    mimeType: resource.mimeType ?? null,
     audience: resource.audience,
     ageTrack: resource.ageTrack,
     schoolScope: resource.schoolScope,
@@ -27,8 +30,10 @@ export function serializeSchoolResource(resource: SchoolResourceDocument) {
 export async function createSchoolResource(params: {
   title: string;
   description?: string;
-  resourceType: "teacher-training-video" | "lesson-plan" | "teacher-guide" | "student-worksheet";
-  url: string;
+  resourceType: "lesson-plan" | "teacher-guide" | "student-worksheet" | "image" | "document" | "spreadsheet" | "presentation";
+  file: Buffer;
+  fileName: string;
+  mimeType: string;
   audience: "teacher" | "student";
   ageTrack: string;
   schoolScope: "all-schools" | "specific-schools" | "district";
@@ -38,10 +43,23 @@ export async function createSchoolResource(params: {
   order?: number;
 }) {
   await connectToDatabase();
+  const upload = await uploadToS3({
+    file: params.file,
+    fileName: params.fileName,
+    mimeType: params.mimeType,
+  });
 
   return SchoolResource.create({
-    ...params,
+    title: params.title,
     description: params.description || null,
+    resourceType: params.resourceType,
+    url: upload.url,
+    s3Key: upload.key,
+    fileName: params.fileName,
+    mimeType: params.mimeType,
+    audience: params.audience,
+    ageTrack: params.ageTrack,
+    schoolScope: params.schoolScope,
     schoolIds: params.schoolIds ?? [],
     district: params.district || null,
     releaseDate: params.releaseDate ? new Date(params.releaseDate) : null,

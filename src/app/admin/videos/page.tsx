@@ -56,8 +56,12 @@ export default async function AdminVideosPage() {
           order: video.order,
           releaseDate: video.releaseDate,
           dripEnabled: video.dripEnabled,
+          dripDelayMinutes: video.dripDelayMinutes ?? 0,
           isFreePreview: video.isFreePreview,
           isMissionVideo: video.isMissionVideo,
+          attachmentUrl: video.attachmentUrl ?? null,
+          attachmentFileName: video.attachmentFileName ?? null,
+          attachmentMimeType: video.attachmentMimeType ?? null,
         }))))}
         categories={JSON.parse(JSON.stringify(categories.map((category) => ({
           id: category._id.toString(),

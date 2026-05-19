@@ -9,6 +9,8 @@ type Resource = {
   description: string | null;
   resourceType: string;
   url: string;
+  fileName: string | null;
+  mimeType: string | null;
   audience: string;
   ageTrack: string;
   schoolScope: string;
@@ -22,6 +24,7 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
   const [items, setItems] = useState(resources);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,29 +32,23 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
     setError("");
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await api.post("/api/admin/school-resources", {
-      title: String(formData.get("title") ?? ""),
-      description: String(formData.get("description") ?? ""),
-      resourceType: String(formData.get("resourceType") ?? "lesson-plan"),
-      url: String(formData.get("url") ?? ""),
-      audience: String(formData.get("audience") ?? "teacher"),
-      ageTrack: String(formData.get("ageTrack") ?? ""),
-      schoolScope: String(formData.get("schoolScope") ?? "all-schools"),
-      schoolIds: String(formData.get("schoolIds") ?? "").split(",").map((id) => id.trim()).filter(Boolean),
-      district: String(formData.get("district") ?? ""),
-      releaseDate: String(formData.get("releaseDate") ?? "") || undefined,
-      order: Number(formData.get("order") ?? 1),
-    });
-    const result = response.data;
+    setIsSubmitting(true);
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to create resource.");
-      return;
+    try {
+      const response = await api.post("/api/admin/school-resources", formData);
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to create resource.");
+        return;
+      }
+
+      setItems((current) => [result.data.resource, ...current]);
+      setMessage("School resource created.");
+      form.reset();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setItems((current) => [result.data.resource, ...current]);
-    setMessage("School resource created.");
-    form.reset();
   }
 
   return (
@@ -60,35 +57,79 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
-        <input name="title" placeholder="Resource title" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="url" type="url" placeholder="File or video URL" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <textarea name="description" placeholder="Description" className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <select name="resourceType" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="teacher-training-video">Teacher Training Video</option>
+        <label className="grid gap-2 text-sm font-bold">
+          Resource title
+          <input name="title" placeholder="Resource title" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Resource file
+          <input
+            name="resource"
+            type="file"
+            required
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 font-normal"
+          />
+        </label>
+        <label className="grid gap-2 text-sm font-bold md:col-span-2">
+          Description
+          <textarea name="description" placeholder="Description" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Resource type
+          <select name="resourceType" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
           <option value="lesson-plan">Lesson Plan PDF</option>
           <option value="teacher-guide">Teacher Guide PDF</option>
           <option value="student-worksheet">Student Worksheet</option>
-        </select>
-        <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3">
+          <option value="image">Image</option>
+          <option value="document">Document</option>
+          <option value="spreadsheet">Spreadsheet</option>
+          <option value="presentation">Presentation</option>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Audience
+          <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
           <option value="teacher">Teacher</option>
           <option value="student">Student</option>
-        </select>
-        <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3">
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Age track
+          <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
           <option value="">Age track</option>
           <option>Children</option>
           <option>Teens</option>
           <option>Young Adults</option>
-        </select>
-        <select name="schoolScope" className="rounded-md border border-[#d8d2c5] px-3 py-3">
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          School scope
+          <select name="schoolScope" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
           <option value="all-schools">All Schools</option>
           <option value="specific-schools">Specific Schools</option>
           <option value="district">District</option>
-        </select>
-        <input name="schoolIds" placeholder="School IDs, comma separated" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="district" placeholder="District tag" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="order" type="number" min={1} defaultValue={1} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Add Resource</button>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          School IDs
+          <input name="schoolIds" placeholder="School IDs, comma separated" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          District tag
+          <input name="district" placeholder="District tag" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Release date
+          <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Order
+          <input name="order" type="number" min={1} defaultValue={1} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <button disabled={isSubmitting} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+          {isSubmitting ? "Uploading..." : "Add Resource"}
+        </button>
       </form>
 
       <section className="grid gap-3">
@@ -96,7 +137,9 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
           <article key={resource.id} className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <p className="font-bold">{resource.title}</p>
             <p className="text-sm text-[#555]">{resource.resourceType} / {resource.audience} / {resource.ageTrack} / {resource.schoolScope}</p>
-            <p className="mt-1 truncate text-xs text-[#667085]">{resource.url}</p>
+            <a href={resource.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-xs font-bold !text-[#8c0504]">
+              {resource.fileName ?? resource.url}
+            </a>
           </article>
         ))}
       </section>

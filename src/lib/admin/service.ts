@@ -138,6 +138,7 @@ export async function createVideoByAdmin(params: {
   order: number;
   releaseDate?: Date | null;
   dripEnabled?: boolean;
+  dripDelayMinutes?: number;
   isFreePreview?: boolean;
   isMissionVideo?: boolean;
 }) {
@@ -168,8 +169,13 @@ export async function updateVideoByAdmin(params: {
     order: number;
     releaseDate: Date | null;
     dripEnabled: boolean;
+    dripDelayMinutes: number;
     isFreePreview: boolean;
     isMissionVideo: boolean;
+    attachmentUrl: string | null;
+    attachmentS3Key: string | null;
+    attachmentFileName: string | null;
+    attachmentMimeType: string | null;
     s3Key: string | null;
   }>;
 }) {
@@ -205,6 +211,10 @@ export async function deleteVideoByAdmin(videoId: string) {
 
   if (video.s3Key) {
     await deleteFromS3(video.s3Key);
+  }
+
+  if (video.attachmentS3Key) {
+    await deleteFromS3(video.attachmentS3Key);
   }
 
   await Video.deleteOne({ _id: video._id });
@@ -243,8 +253,12 @@ export async function createVideoByAdminWithUpload(params: {
   order: number;
   releaseDate?: Date | null;
   dripEnabled?: boolean;
+  dripDelayMinutes?: number;
   isFreePreview?: boolean;
   isMissionVideo?: boolean;
+  attachmentFile?: Buffer;
+  attachmentFileName?: string;
+  attachmentMimeType?: string;
   file: Buffer;
   fileName: string;
   mimeType: string;
@@ -258,6 +272,14 @@ export async function createVideoByAdminWithUpload(params: {
     fileName: params.fileName,
     mimeType: params.mimeType,
   });
+  const attachment =
+    params.attachmentFile && params.attachmentFileName && params.attachmentMimeType
+      ? await uploadToS3({
+          file: params.attachmentFile,
+          fileName: params.attachmentFileName,
+          mimeType: params.attachmentMimeType,
+        })
+      : null;
 
   // Create video record with S3 URL
   const video = await Video.create({
@@ -274,8 +296,13 @@ export async function createVideoByAdminWithUpload(params: {
     order: params.order,
     releaseDate: params.releaseDate ?? null,
     dripEnabled: params.dripEnabled ?? true,
+    dripDelayMinutes: params.dripDelayMinutes ?? 0,
     isFreePreview: params.isFreePreview ?? false,
     isMissionVideo: params.isMissionVideo ?? false,
+    attachmentUrl: attachment?.url ?? null,
+    attachmentS3Key: attachment?.key ?? null,
+    attachmentFileName: params.attachmentFileName ?? null,
+    attachmentMimeType: params.attachmentMimeType ?? null,
     s3Key: key, // Store the S3 key for future deletion if needed
   });
 

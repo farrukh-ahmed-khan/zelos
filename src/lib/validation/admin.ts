@@ -19,6 +19,7 @@ export const createVideoSchema = z.object({
   order: z.number().int().min(1),
   releaseDate: z.string().trim().min(1).optional(),
   dripEnabled: z.boolean().optional(),
+  dripDelayMinutes: z.number().int().min(0).max(10080).optional(),
   isFreePreview: z.boolean().optional(),
   isMissionVideo: z.boolean().optional(),
 });
