@@ -9,6 +9,42 @@ type TokenActionFormProps = {
   mode: "verify-email" | "reset-password" | "forgot-password";
 };
 
+function getApiErrorMessage(result: unknown) {
+  if (
+    typeof result === "object" &&
+    result !== null &&
+    "error" in result &&
+    typeof result.error === "object" &&
+    result.error !== null
+  ) {
+    const error = result.error as {
+      message?: unknown;
+      details?: {
+        fieldErrors?: Record<string, string[] | undefined>;
+        formErrors?: string[];
+      };
+    };
+    const fieldErrors = error.details?.fieldErrors;
+    const firstFieldError = fieldErrors
+      ? Object.values(fieldErrors).flat().find(Boolean)
+      : null;
+
+    if (firstFieldError) {
+      return firstFieldError;
+    }
+
+    if (error.details?.formErrors?.[0]) {
+      return error.details.formErrors[0];
+    }
+
+    if (typeof error.message === "string") {
+      return error.message;
+    }
+  }
+
+  return "Request failed.";
+}
+
 export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormProps) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -40,7 +76,7 @@ export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormP
       const result = response.data;
 
       if (!isApiSuccess(response.status)) {
-        setError(result?.error?.message ?? "Request failed.");
+        setError(getApiErrorMessage(result));
         return;
       }
 
