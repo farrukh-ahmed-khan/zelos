@@ -91,7 +91,15 @@ export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormP
       {mode === "forgot-password" ? (
         <input name="email" type="email" placeholder="Email" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
       ) : (
-        <input name="token" defaultValue={token} placeholder="Token" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <>
+          <input type="hidden" name="token" value={token} />
+          <input
+            value={token}
+            placeholder="Token"
+            disabled
+            className="rounded-md border border-[#d8d2c5] bg-[#f7f2e8] px-3 py-3 text-[#555] disabled:cursor-not-allowed"
+          />
+        </>
       )}
       {mode === "reset-password" ? (
         <input name="password" type="password" placeholder="New password" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
