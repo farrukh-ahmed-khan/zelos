@@ -7,6 +7,14 @@ import ForumThread from "@/models/ForumThread";
 import User from "@/models/User";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 
+function stripForumMarkdown(content: string) {
+  return content
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "[Photo]")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1");
+}
+
 export async function requireForumPostingEligibility(user: UserDocument) {
   if (user.age < 16) {
     throw new ApiError(403, "Users under 16 cannot create forum posts.");
@@ -56,6 +64,7 @@ export async function getForumThreads() {
     id: thread._id.toString(),
     title: thread.title,
     content: thread.content,
+    excerpt: stripForumMarkdown(thread.content),
     category: thread.category,
     authorId: thread.authorId,
     isHidden: thread.isHidden,
