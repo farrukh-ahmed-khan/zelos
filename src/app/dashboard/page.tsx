@@ -8,6 +8,7 @@ import { connectToDatabase } from "@/lib/db";
 import { getEventsWithRsvpStatus } from "@/lib/events/service";
 import { getForumReports, getForumThreads } from "@/lib/forum/service";
 import { getMentorApplications } from "@/lib/mentor-applications/service";
+import { getSchoolResourcesForUser, serializeSchoolResource } from "@/lib/school-resources/service";
 import { resolveSubscriptionAccessForUser } from "@/lib/subscriptions/service";
 import { serializeResolvedSubscription } from "@/lib/subscriptions/serialize-subscription";
 import { serializeUser } from "@/lib/users/serialize-user";
@@ -68,6 +69,7 @@ export default async function DashboardPage() {
     eventsResult,
     threadsResult,
     subscriptionResult,
+    schoolResourcesResult,
     usersCountResult,
     reportsResult,
     mentorApplicationsResult,
@@ -75,6 +77,7 @@ export default async function DashboardPage() {
     getEventsWithRsvpStatus(userId),
     getForumThreads(),
     resolveSubscriptionAccessForUser(user),
+    ["teacher", "student"].includes(user.role) ? getSchoolResourcesForUser(user) : Promise.resolve([]),
     canReadUsers ? User.countDocuments() : Promise.resolve(0),
     canModerateForum ? getForumReports() : Promise.resolve([]),
     canReadUsers ? getMentorApplications() : Promise.resolve([]),
@@ -90,6 +93,10 @@ export default async function DashboardPage() {
   const hasVideoLibraryAccess =
     !needsVideoSubscription || Boolean(subscription?.hasPremiumAccess);
   const videos = hasVideoLibraryAccess ? await buildVideoAvailability(user) : [];
+  const schoolResources =
+    schoolResourcesResult.status === "fulfilled"
+      ? schoolResourcesResult.value.map(serializeSchoolResource)
+      : [];
   const usersCount =
     usersCountResult.status === "fulfilled" ? usersCountResult.value : 0;
   const reports = reportsResult.status === "fulfilled" ? reportsResult.value : [];
@@ -104,6 +111,7 @@ export default async function DashboardPage() {
       videos={videos}
       events={events}
       threads={threads}
+      schoolResources={JSON.parse(JSON.stringify(schoolResources))}
       subscriptionLabel={resolveSubscriptionLabel(subscription)}
       hasVideoLibraryAccess={hasVideoLibraryAccess}
       needsVideoSubscription={needsVideoSubscription}

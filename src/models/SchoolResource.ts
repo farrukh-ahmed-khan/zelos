@@ -1,5 +1,15 @@
 import mongoose, { HydratedDocument, InferSchemaType, Model, Schema } from "mongoose";
 
+const SCHOOL_RESOURCE_TYPES = [
+  "lesson-plan",
+  "teacher-guide",
+  "student-worksheet",
+  "image",
+  "document",
+  "spreadsheet",
+  "presentation",
+];
+
 const SchoolResourceSchema = new Schema(
   {
     title: {
@@ -16,7 +26,7 @@ const SchoolResourceSchema = new Schema(
     },
     resourceType: {
       type: String,
-      enum: ["lesson-plan", "teacher-guide", "student-worksheet", "image", "document", "spreadsheet", "presentation"],
+      enum: SCHOOL_RESOURCE_TYPES,
       required: true,
       index: true,
     },
@@ -93,6 +103,10 @@ const SchoolResourceSchema = new Schema(
 type SchoolResource = InferSchemaType<typeof SchoolResourceSchema>;
 export type SchoolResourceDocument = HydratedDocument<SchoolResource>;
 type SchoolResourceModel = Model<SchoolResource>;
+
+if (process.env.NODE_ENV === "development" && mongoose.models.SchoolResource) {
+  mongoose.deleteModel("SchoolResource");
+}
 
 const SchoolResource =
   (mongoose.models.SchoolResource as SchoolResourceModel | undefined) ||

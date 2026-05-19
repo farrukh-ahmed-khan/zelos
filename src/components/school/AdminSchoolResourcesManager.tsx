@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { Input, Select, Table, Tag } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import type { TableColumnsType, TablePaginationConfig } from "antd";
 import { api, isApiSuccess } from "@/lib/api/client";
 
 type Resource = {
@@ -20,11 +23,188 @@ type Resource = {
   order: number;
 };
 
-export function AdminSchoolResourcesManager({ resources }: { resources: Resource[] }) {
+type School = {
+  id: string;
+  name: string;
+  district: string | null;
+  licenseStatus: string;
+};
+
+function formatResourceType(value: string) {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "Available now";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatSchoolScope(resource: Resource) {
+  if (resource.schoolScope === "specific-schools") {
+    const count = resource.schoolIds.length;
+    return count === 1 ? "1 school" : `${count} schools`;
+  }
+
+  if (resource.schoolScope === "district") {
+    return resource.district || "District";
+  }
+
+  return "All schools";
+}
+
+export function AdminSchoolResourcesManager({
+  resources,
+  schools,
+}: {
+  resources: Resource[];
+  schools: School[];
+}) {
   const [items, setItems] = useState(resources);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
+  const [selectedSchoolScope, setSelectedSchoolScope] = useState("all-schools");
+  const [selectedAudience, setSelectedAudience] = useState("teacher");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const filteredItems = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return items;
+
+    return items.filter((resource) =>
+      [
+        resource.title,
+        resource.description ?? "",
+        resource.resourceType,
+        resource.fileName ?? "",
+        resource.mimeType ?? "",
+        resource.audience,
+        resource.ageTrack,
+        resource.schoolScope,
+        resource.district ?? "",
+        formatSchoolScope(resource),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [items, searchTerm]);
+
+  const columns: TableColumnsType<Resource> = [
+    {
+      title: "Resource",
+      dataIndex: "title",
+      key: "title",
+      width: 340,
+      render: (_: string, resource) => (
+        <div>
+          <div className="font-bold text-[#202020]">{resource.order}. {resource.title}</div>
+          {resource.description ? (
+            <div className="line-clamp-2 text-xs text-[#667085]">{resource.description}</div>
+          ) : null}
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 inline-flex text-xs font-bold !text-[#8c0504]"
+          >
+            Open resource
+          </a>
+        </div>
+      ),
+    },
+    {
+      title: "Type",
+      dataIndex: "resourceType",
+      key: "resourceType",
+      width: 170,
+      render: (resourceType: string) => <Tag color="blue">{formatResourceType(resourceType)}</Tag>,
+    },
+    {
+      title: "Audience",
+      dataIndex: "audience",
+      key: "audience",
+      width: 170,
+      render: (audience: string, resource) => (
+        <div>
+          <Tag color={audience === "teacher" ? "purple" : "green"}>
+            {audience.toUpperCase()}
+          </Tag>
+          <div className="mt-1 text-xs text-[#667085]">
+            {audience === "teacher" ? "No age track" : resource.ageTrack}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "School Scope",
+      dataIndex: "schoolScope",
+      key: "schoolScope",
+      width: 210,
+      render: (_: string, resource) => (
+        <div>
+          <div className="font-bold capitalize text-[#202020]">
+            {resource.schoolScope.replace("-", " ")}
+          </div>
+          <div className="text-xs text-[#667085]">{formatSchoolScope(resource)}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Schedule",
+      dataIndex: "releaseDate",
+      key: "releaseDate",
+      width: 180,
+      render: (releaseDate: string | null) => (
+        <div>
+          <div className="font-bold text-[#202020]">{releaseDate ? "Scheduled" : "Available now"}</div>
+          <div className="text-xs text-[#667085]">{formatDateTime(releaseDate)}</div>
+        </div>
+      ),
+    },
+    {
+      title: "File",
+      dataIndex: "fileName",
+      key: "fileName",
+      width: 280,
+      render: (fileName: string | null, resource) => (
+        <div>
+          <a href={resource.url} target="_blank" rel="noreferrer" className="block truncate text-sm font-bold !text-[#8c0504]">
+            {fileName ?? "Open uploaded file"}
+          </a>
+          <div className="truncate text-xs text-[#667085]">{resource.mimeType ?? "File"}</div>
+        </div>
+      ),
+    },
+  ];
+
+  const pagination: TablePaginationConfig = {
+    current: currentPage,
+    pageSize,
+    total: filteredItems.length,
+    pageSizeOptions: [10, 20, 50],
+    showSizeChanger: true,
+    showTotal: (total) => `Total ${total} resource${total === 1 ? "" : "s"}`,
+    onChange: (page, nextPageSize) => {
+      setCurrentPage(page);
+      setPageSize(nextPageSize);
+    },
+  };
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,6 +226,10 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
       setItems((current) => [result.data.resource, ...current]);
       setMessage("School resource created.");
       form.reset();
+      setSelectedSchoolIds([]);
+      setSelectedSchoolScope("all-schools");
+      setSelectedAudience("teacher");
+      setCurrentPage(1);
     } finally {
       setIsSubmitting(false);
     }
@@ -89,36 +273,68 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
         </label>
         <label className="grid gap-2 text-sm font-bold">
           Audience
-          <select name="audience" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+          <select
+            name="audience"
+            value={selectedAudience}
+            onChange={(event) => {
+              setSelectedAudience(event.target.value);
+            }}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          >
           <option value="teacher">Teacher</option>
           <option value="student">Student</option>
           </select>
         </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Age track
-          <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
-          <option value="">Age track</option>
-          <option>Children</option>
-          <option>Teens</option>
-          <option>Young Adults</option>
-          </select>
-        </label>
+        {selectedAudience === "student" ? (
+          <label className="grid gap-2 text-sm font-bold">
+            Age track
+            <select name="ageTrack" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="">Age track</option>
+            <option>Children</option>
+            <option>Teens</option>
+            <option>Young Adults</option>
+            </select>
+          </label>
+        ) : null}
         <label className="grid gap-2 text-sm font-bold">
           School scope
-          <select name="schoolScope" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+          <select
+            name="schoolScope"
+            value={selectedSchoolScope}
+            onChange={(event) => {
+              setSelectedSchoolScope(event.target.value);
+              setSelectedSchoolIds([]);
+            }}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          >
           <option value="all-schools">All Schools</option>
           <option value="specific-schools">Specific Schools</option>
           <option value="district">District</option>
           </select>
         </label>
-        <label className="grid gap-2 text-sm font-bold">
-          School IDs
-          <input name="schoolIds" placeholder="School IDs, comma separated" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
-        <label className="grid gap-2 text-sm font-bold">
-          District tag
-          <input name="district" placeholder="District tag" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
+        {selectedSchoolScope === "specific-schools" ? (
+          <label className="grid gap-2 text-sm font-bold">
+            Schools
+            <input type="hidden" name="schoolIds" value={selectedSchoolIds.join(",")} />
+            <Select
+              mode="multiple"
+              placeholder="Select schools"
+              value={selectedSchoolIds}
+              onChange={setSelectedSchoolIds}
+              options={schools.map((school) => ({
+                value: school.id,
+                label: `${school.name}${school.district ? ` / ${school.district}` : ""}${school.licenseStatus !== "active" ? ` / ${school.licenseStatus}` : ""}`,
+              }))}
+              className="min-h-[48px] font-normal"
+            />
+          </label>
+        ) : null}
+        {selectedSchoolScope === "district" ? (
+          <label className="grid gap-2 text-sm font-bold">
+            District tag
+            <input name="district" placeholder="District tag" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          </label>
+        ) : null}
         <label className="grid gap-2 text-sm font-bold">
           Release date
           <input name="releaseDate" type="datetime-local" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
@@ -127,22 +343,38 @@ export function AdminSchoolResourcesManager({ resources }: { resources: Resource
           Order
           <input name="order" type="number" min={1} defaultValue={1} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <button disabled={isSubmitting} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
-          {isSubmitting ? "Uploading..." : "Add Resource"}
-        </button>
+        <div className="flex items-end md:col-span-2">
+          <button
+            disabled={isSubmitting}
+            className="h-12 rounded-md bg-[#202020] px-8 text-sm font-bold text-white shadow-[0_3px_0_#111] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Uploading..." : "Add Resource"}
+          </button>
+        </div>
       </form>
 
-      <section className="grid gap-3">
-        {items.map((resource) => (
-          <article key={resource.id} className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
-            <p className="font-bold">{resource.title}</p>
-            <p className="text-sm text-[#555]">{resource.resourceType} / {resource.audience} / {resource.ageTrack} / {resource.schoolScope}</p>
-            <a href={resource.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-xs font-bold !text-[#8c0504]">
-              {resource.fileName ?? resource.url}
-            </a>
-          </article>
-        ))}
-      </section>
+      <div className="grid gap-3 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <Input
+          allowClear
+          prefix={<SearchOutlined />}
+          placeholder="Search resources by title, type, audience, school scope, or file"
+          value={searchTerm}
+          onChange={(event) => {
+            setSearchTerm(event.target.value);
+            setCurrentPage(1);
+          }}
+          className="max-w-xl"
+        />
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={filteredItems}
+          pagination={pagination}
+          scroll={{ x: 1350 }}
+          bordered
+          locale={{ emptyText: "No school resources found" }}
+        />
+      </div>
     </div>
   );
 }

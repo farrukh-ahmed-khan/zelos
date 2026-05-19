@@ -13,6 +13,18 @@ import Video from "@/models/Video";
 
 export const dynamic = "force-dynamic";
 
+function formatResourceScope(resource: ReturnType<typeof serializeSchoolResource>) {
+  if (resource.schoolScope === "specific-schools") {
+    return "Your School";
+  }
+
+  if (resource.schoolScope === "district") {
+    return resource.district ? `District: ${resource.district}` : "District";
+  }
+
+  return "All Schools";
+}
+
 export default async function EducatorPage() {
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   if (!token) redirect("/login");
@@ -85,16 +97,38 @@ export default async function EducatorPage() {
 
         <section className="mt-6 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
           <h2 className="font-bold">Teacher Resources</h2>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {resources.map((resource) => {
-              const item = serializeSchoolResource(resource);
-              return (
-                <a key={item.id} href={item.url} className="rounded-md bg-[#f8fafc] p-3 !text-[#202020]">
-                  <p className="font-bold">{item.title}</p>
-                  <p className="text-sm text-[#555]">{item.resourceType} / {item.ageTrack}</p>
-                </a>
-              );
-            })}
+          <div className="mt-3 grid gap-4">
+            {[
+              {
+                title: "Specific To Your School",
+                items: resources.map(serializeSchoolResource).filter((resource) => resource.schoolScope !== "all-schools"),
+              },
+              {
+                title: "All Schools",
+                items: resources.map(serializeSchoolResource).filter((resource) => resource.schoolScope === "all-schools"),
+              },
+            ].map((group) => (
+              <div key={group.title}>
+                <p className="text-xs font-black uppercase text-[#8c0504]">{group.title}</p>
+                <div className="mt-2 grid gap-3 md:grid-cols-2">
+                  {group.items.length ? (
+                    group.items.map((item) => (
+                      <a key={item.id} href={item.url} target="_blank" rel="noreferrer" className="rounded-md bg-[#f8fafc] p-3 !text-[#202020]">
+                        <span className="rounded-sm bg-[#eaf3ff] px-2 py-1 text-[11px] font-black uppercase text-[#175cd3]">
+                          {formatResourceScope(item)}
+                        </span>
+                        <p className="mt-2 font-bold">{item.title}</p>
+                        <p className="text-sm text-[#555]">{item.resourceType} / Teacher</p>
+                      </a>
+                    ))
+                  ) : (
+                    <p className="rounded-md bg-[#f8fafc] px-3 py-2 text-sm text-[#555]">
+                      No resources available.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       </section>

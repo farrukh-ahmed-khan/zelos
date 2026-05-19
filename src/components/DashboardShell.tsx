@@ -7,6 +7,7 @@ import {
   CheckCircleOutlined,
   CreditCardOutlined,
   LockOutlined,
+  PaperClipOutlined,
   PlayCircleFilled,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -73,6 +74,20 @@ type DashboardThread = {
   createdAt: string | Date;
 };
 
+type DashboardSchoolResource = {
+  id: string;
+  title: string;
+  description: string | null;
+  resourceType: string;
+  url: string;
+  fileName: string | null;
+  audience: string;
+  ageTrack: string;
+  schoolScope: string;
+  schoolIds: string[];
+  district: string | null;
+};
+
 type DashboardAdminSummary = {
   usersCount: number;
   forumReportsCount: number;
@@ -84,6 +99,7 @@ type DashboardShellProps = {
   videos: DashboardVideo[];
   events: DashboardEvent[];
   threads: DashboardThread[];
+  schoolResources: DashboardSchoolResource[];
   subscriptionLabel: string;
   hasVideoLibraryAccess: boolean;
   needsVideoSubscription: boolean;
@@ -137,6 +153,26 @@ function formatSchoolScope(video: DashboardVideo) {
   }
 
   return "All Schools";
+}
+
+function formatResourceScope(resource: DashboardSchoolResource) {
+  if (resource.schoolScope === "specific-schools") {
+    return "Your School";
+  }
+
+  if (resource.schoolScope === "district") {
+    return resource.district ? `District: ${resource.district}` : "District";
+  }
+
+  return "All Schools";
+}
+
+function formatResourceAudience(resource: DashboardSchoolResource) {
+  if (resource.audience === "teacher") {
+    return "Teacher";
+  }
+
+  return `Student / ${resource.ageTrack}`;
 }
 
 function StatCard({
@@ -315,16 +351,24 @@ function VideoPanel({
           <p className="mt-2 text-sm leading-relaxed text-[#4a4a4a]">
             {nextVideo.description}
           </p>
-          {nextVideo.attachmentUrl ? (
-            <a
-              href={nextVideo.attachmentUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
-            >
-              Open {nextVideo.attachmentFileName ?? "lesson file"}
-            </a>
-          ) : null}
+          <div className="mt-4 rounded-md border border-[#e4ded1] bg-[#fbf7ef] p-3">
+            <p className="flex items-center gap-2 text-xs font-black uppercase text-[#8c0504]">
+              <PaperClipOutlined />
+              Lesson Document
+            </p>
+            {nextVideo.attachmentUrl ? (
+              <a
+                href={nextVideo.attachmentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+              >
+                Open {nextVideo.attachmentFileName ?? "attached file"}
+              </a>
+            ) : (
+              <p className="mt-1 text-sm text-[#666]">No document is attached to this lesson.</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -380,6 +424,12 @@ function VideoPanel({
                                 ? formatUnlockStatus(video.dripUnlocksAt)
                                 : "Unlocked"}
                         </p>
+                        {video.attachmentUrl ? (
+                          <p className="mt-1 flex items-center gap-1 text-xs font-bold text-[#8c0504]">
+                            <PaperClipOutlined />
+                            Document attached
+                          </p>
+                        ) : null}
                       </div>
                     </button>
                   ))}
@@ -419,11 +469,78 @@ function VideoAccessGate({ userRole }: { userRole: string }) {
   );
 }
 
+function SchoolResourcesPanel({
+  resources,
+}: {
+  resources: DashboardSchoolResource[];
+}) {
+  const allSchoolResources = resources.filter((resource) => resource.schoolScope === "all-schools");
+  const targetedResources = resources.filter((resource) => resource.schoolScope !== "all-schools");
+
+  function renderResources(items: DashboardSchoolResource[], emptyMessage: string) {
+    if (!items.length) {
+      return (
+        <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
+          {emptyMessage}
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid gap-3 md:grid-cols-2">
+        {items.map((resource) => (
+          <a
+            key={resource.id}
+            href={resource.url}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-[#e4ded1] bg-white p-4 !text-[#202020] transition hover:-translate-y-0.5 hover:shadow-[0_3px_0_#111]"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-sm bg-[#eaf3ff] px-2 py-1 text-[11px] font-black uppercase text-[#175cd3]">
+                {formatResourceScope(resource)}
+              </span>
+              <span className="rounded-sm bg-[#fff3cd] px-2 py-1 text-[11px] font-black uppercase text-[#8c0504]">
+                {formatResourceAudience(resource)}
+              </span>
+            </div>
+            <p className="mt-3 font-bold">{resource.title}</p>
+            {resource.description ? (
+              <p className="mt-1 line-clamp-2 text-sm text-[#555]">{resource.description}</p>
+            ) : null}
+            <p className="mt-3 truncate text-xs font-black uppercase text-[#8c0504]">
+              {resource.fileName ?? resource.resourceType}
+            </p>
+          </a>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-5">
+      <div>
+        <h3 className="mb-3 text-sm font-black uppercase text-[#8c0504]">
+          Specific To Your School
+        </h3>
+        {renderResources(targetedResources, "No school-specific resources are available yet.")}
+      </div>
+      <div>
+        <h3 className="mb-3 text-sm font-black uppercase text-[#8c0504]">
+          All Schools
+        </h3>
+        {renderResources(allSchoolResources, "No all-school resources are available yet.")}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardShell({
   user,
   videos,
   events,
   threads,
+  schoolResources,
   subscriptionLabel,
   hasVideoLibraryAccess,
   needsVideoSubscription,
@@ -508,6 +625,12 @@ export function DashboardShell({
                 <VideoPanel videos={videos} userRole={user.role} />
               )}
             </SectionCard>
+
+            {isSchoolUser ? (
+              <SectionCard title={user.role === "teacher" ? "Teacher Resources" : "Student Resources"}>
+                <SchoolResourcesPanel resources={schoolResources} />
+              </SectionCard>
+            ) : null}
 
             {isAdmin ? (
               <SectionCard title="Admin Control Room">

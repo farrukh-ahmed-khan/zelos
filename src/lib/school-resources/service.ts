@@ -6,6 +6,8 @@ import School from "@/models/School";
 import { type UserDocument } from "@/models/User";
 import { uploadToS3 } from "@/lib/aws/s3";
 
+const TEACHER_TRACK = "teacher";
+
 export function serializeSchoolResource(resource: SchoolResourceDocument) {
   return {
     id: resource._id.toString(),
@@ -35,7 +37,7 @@ export async function createSchoolResource(params: {
   fileName: string;
   mimeType: string;
   audience: "teacher" | "student";
-  ageTrack: string;
+  ageTrack?: string;
   schoolScope: "all-schools" | "specific-schools" | "district";
   schoolIds?: string[];
   district?: string;
@@ -58,7 +60,7 @@ export async function createSchoolResource(params: {
     fileName: params.fileName,
     mimeType: params.mimeType,
     audience: params.audience,
-    ageTrack: params.ageTrack,
+    ageTrack: params.audience === "teacher" ? TEACHER_TRACK : params.ageTrack,
     schoolScope: params.schoolScope,
     schoolIds: params.schoolIds ?? [],
     district: params.district || null,
@@ -79,7 +81,7 @@ export async function getSchoolResourcesForUser(user: UserDocument) {
 
   return SchoolResource.find({
     audience: user.role,
-    ageTrack: user.ageTrack,
+    ...(user.role === "student" ? { ageTrack: user.ageTrack } : {}),
     $or: [
       { releaseDate: null },
       { releaseDate: { $lte: now } },
