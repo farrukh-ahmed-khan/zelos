@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api, isApiSuccess } from "@/lib/api/client";
 
 type TokenActionFormProps = {
@@ -46,6 +47,7 @@ function getApiErrorMessage(result: unknown) {
 }
 
 export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormProps) {
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +83,10 @@ export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormP
       }
 
       setMessage(result?.data?.message ?? "Done.");
+      if (mode === "reset-password") {
+        router.push("/login");
+        router.refresh();
+      }
     } finally {
       setIsSubmitting(false);
     }
