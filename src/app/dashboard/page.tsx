@@ -48,7 +48,7 @@ export default async function DashboardPage() {
 
   const user = await User.findById(payload.sub);
 
-  if (!user || user.isBanned || user.status === "banned") {
+  if (!user || user.isBanned || user.status === "banned" || !user.emailVerifiedAt) {
     redirect("/login");
   }
 

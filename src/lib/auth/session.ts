@@ -64,6 +64,10 @@ export async function requireUser(
     throw new ApiError(403, "This account is currently suspended.");
   }
 
+  if (!user.emailVerifiedAt) {
+    throw new ApiError(403, "Please verify your email before continuing.");
+  }
+
   if (["teacher", "student"].includes(user.role) && user.schoolId) {
     const school = await syncSchoolLicenseStatus(user.schoolId);
 

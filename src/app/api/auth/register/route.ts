@@ -5,8 +5,6 @@ import { registerSchema } from "@/lib/validation/auth";
 import User from "@/models/User";
 import { deriveAgeTrack } from "@/lib/users/age-track";
 import { serializeUser } from "@/lib/users/serialize-user";
-import { signAuthToken } from "@/lib/auth/jwt";
-import { setAuthCookie } from "@/lib/auth/cookies";
 import { hashPassword } from "@/lib/auth/password";
 import { queueEmail } from "@/lib/notifications/service";
 import { issueEmailVerification } from "@/lib/auth/email-verification";
@@ -52,24 +50,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const token = await signAuthToken({
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
-
-    const response = successResponse(
+    return successResponse(
       {
-        message: "Registration successful.",
+        message: "Registration successful. Please verify your email before signing in.",
         user: serializeUser(user),
         ...(process.env.NODE_ENV !== "production" ? verification : {}),
       },
       { status: 201 },
     );
-
-    setAuthCookie(response, token);
-    return response;
   } catch (error) {
     return handleApiError(error);
   }

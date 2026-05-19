@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
       throw new ApiError(401, "Invalid email or password.");
     }
 
+    if (!user.emailVerifiedAt) {
+      throw new ApiError(403, "Please verify your email before signing in.");
+    }
+
     user.lastLoginAt = new Date();
     await user.save();
 

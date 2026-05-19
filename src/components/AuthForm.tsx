@@ -112,19 +112,13 @@ export function AuthForm({ mode }: AuthFormProps) {
         throw new Error(result?.error?.message ?? "Something went wrong.");
       }
 
-      if (isPaidSignup) {
-        const checkoutResponse = await api.post("/api/billing/checkout", {
-          planId: selectedPlanId,
-        });
-        const checkoutResult = checkoutResponse.data;
-
-        if (!isApiSuccess(checkoutResponse.status)) {
-          throw new Error(
-            checkoutResult?.error?.message ?? "Account created, but checkout could not be started.",
-          );
-        }
-
-        window.location.assign(checkoutResult.data.checkoutUrl);
+      if (isSignup) {
+        setSubmitState("idle");
+        setMessage(
+          isPaidSignup
+            ? "Account created. Please verify your email, then sign in to complete checkout from Billing."
+            : "Account created. Please verify your email before signing in.",
+        );
         return;
       }
 
@@ -336,7 +330,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       ) : null}
 
       {message ? (
-        <p className="rounded-md bg-[#ffe8e6] px-3 py-2 text-sm font-semibold text-[#8c0504]">
+        <p
+          className={
+            submitState === "error"
+              ? "rounded-md bg-[#ffe8e6] px-3 py-2 text-sm font-semibold text-[#8c0504]"
+              : "rounded-md bg-[#eef8e8] px-3 py-2 text-sm font-semibold text-[#24551f]"
+          }
+        >
           {message}
         </p>
       ) : null}

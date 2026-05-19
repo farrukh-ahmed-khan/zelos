@@ -23,6 +23,7 @@ export default async function BillingPage() {
   await connectToDatabase();
   const user = await User.findById(payload.sub);
   if (!user) redirect("/login");
+  if (!user.emailVerifiedAt) redirect("/login");
   if (user.role === "child") redirect("/dashboard");
 
   const [plans, currentSubscription, history] = await Promise.all([
