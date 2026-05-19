@@ -24,15 +24,6 @@ type AuthFormProps = {
   mode: AuthMode;
 };
 
-const interestOptions = [
-  "Budgeting",
-  "Investing",
-  "College Prep",
-  "Career Guidance",
-  "Entrepreneurship",
-  "Scholarships",
-];
-
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -42,7 +33,6 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState("");
-  const [interests, setInterests] = useState<string[]>(["Budgeting"]);
 
   const isSignup = mode === "signup";
   const paidPlans = useMemo(
@@ -79,14 +69,6 @@ export function AuthForm({ mode }: AuthFormProps) {
     };
   }, [isSignup]);
 
-  function toggleInterest(value: string) {
-    setInterests((current) =>
-      current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value],
-    );
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -114,7 +96,6 @@ export function AuthForm({ mode }: AuthFormProps) {
           password: String(formData.get("password") ?? ""),
           role: isPaidSignup ? "subscriber" : "mentee",
           age: Number(formData.get("age") ?? 0),
-          interests,
           termsAccepted: formData.get("termsAccepted") === "on",
           termsVersion: "v1",
         }
@@ -336,26 +317,6 @@ export function AuthForm({ mode }: AuthFormProps) {
               </button>
             </div>
           </div>
-
-          <fieldset className="grid gap-3">
-            <legend className="text-sm font-bold">Interests</legend>
-            <div className="flex flex-wrap gap-2">
-              {interestOptions.map((option) => (
-                <label
-                  key={option}
-                  className="flex items-center gap-2 rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={interests.includes(option)}
-                    onChange={() => toggleInterest(option)}
-                    className="accent-[#b22222]"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </fieldset>
 
           <label className="flex items-start gap-3 rounded-md border border-[#d8d2c5] bg-[#f7f2e8] px-3 py-3 text-sm font-semibold">
             <input
