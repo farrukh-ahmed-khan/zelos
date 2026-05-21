@@ -15,8 +15,11 @@ export const dynamic = "force-dynamic";
 type ForumSearchParams = {
   category?: string | string[];
   q?: string | string[];
+  page?: string | string[];
   sort?: string | string[];
 };
+
+const THREADS_PER_PAGE = 5;
 
 function getParamValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -24,17 +27,24 @@ function getParamValue(value: string | string[] | undefined) {
 
 function buildForumHref(params: {
   category?: string;
+  page?: number;
   q?: string;
   sort?: string;
 }) {
   const searchParams = new URLSearchParams();
 
   if (params.category) searchParams.set("category", params.category);
+  if (params.page && params.page > 1) searchParams.set("page", String(params.page));
   if (params.q) searchParams.set("q", params.q);
   if (params.sort && params.sort !== "latest") searchParams.set("sort", params.sort);
 
   const query = searchParams.toString();
   return query ? `/forum?${query}` : "/forum";
+}
+
+function parsePage(value: string | string[] | undefined) {
+  const parsed = Number(getParamValue(value));
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
 export default async function ForumPage({
@@ -48,6 +58,7 @@ export default async function ForumPage({
     ? activeCategoryParam
     : "";
   const searchQuery = (getParamValue(resolvedSearchParams.q) ?? "").trim();
+  const requestedPage = parsePage(resolvedSearchParams.page);
   const sort = getParamValue(resolvedSearchParams.sort) === "most-replied" ? "most-replied" : "latest";
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
@@ -90,6 +101,15 @@ export default async function ForumPage({
 
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
+  const totalPages = Math.max(1, Math.ceil(filteredThreads.length / THREADS_PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const pageStartIndex = (currentPage - 1) * THREADS_PER_PAGE;
+  const paginatedThreads = filteredThreads.slice(pageStartIndex, pageStartIndex + THREADS_PER_PAGE);
+  const pageRangeStart = filteredThreads.length ? pageStartIndex + 1 : 0;
+  const pageRangeEnd = Math.min(pageStartIndex + THREADS_PER_PAGE, filteredThreads.length);
+  const visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1).filter((page) => {
+    return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+  });
 
   return (
     <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
@@ -163,7 +183,7 @@ export default async function ForumPage({
                 <h2 className="font-bebas text-4xl uppercase leading-none">Community Board</h2>
               </div>
               <p className="text-sm font-bold text-[#667085]">
-                {filteredThreads.length} of {threads.length} public thread{threads.length === 1 ? "" : "s"}
+                {pageRangeStart}-{pageRangeEnd} of {filteredThreads.length} matched / {threads.length} public thread{threads.length === 1 ? "" : "s"}
               </p>
             </div>
             <form action="/forum" className="mb-4 grid gap-3 rounded-md border border-[#e4ded1] bg-[#fbf7ef] p-3 md:grid-cols-[1fr_220px_160px_auto]">
@@ -214,7 +234,7 @@ export default async function ForumPage({
               </div>
             </form>
             <div className="grid gap-3">
-            {filteredThreads.map((thread) => (
+            {paginatedThreads.map((thread) => (
               <Link key={thread.id} href={`/forum/${thread.id}`} className="grid gap-4 rounded-md border border-[#e4ded1] bg-[#fbf7ef] p-4 !text-[#202020] transition hover:border-[#8c0504] hover:bg-[#fff8d9] md:grid-cols-[1fr_auto] md:items-center">
                 <div>
                   <p className="text-xs font-black uppercase text-[#b22222]">{thread.category}</p>
@@ -234,6 +254,50 @@ export default async function ForumPage({
               </p>
             ) : null}
             </div>
+            {totalPages > 1 ? (
+              <nav className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4ded1] pt-4" aria-label="Thread pagination">
+                <p className="text-sm font-bold text-[#667085]">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {currentPage > 1 ? (
+                    <Link
+                      href={buildForumHref({ category: activeCategory, q: searchQuery, sort, page: currentPage - 1 })}
+                      className="grid min-h-10 place-items-center rounded-md border-2 border-[#212121] bg-white px-3 py-2 text-sm font-black !text-[#202020] shadow-[0_3px_0_#111]"
+                    >
+                      Previous
+                    </Link>
+                  ) : null}
+                  {visiblePages.map((page, index) => {
+                    const previousPage = visiblePages[index - 1];
+                    const showGap = previousPage && page - previousPage > 1;
+
+                    return (
+                      <div key={page} className="flex items-center gap-2">
+                        {showGap ? <span className="px-1 text-sm font-black text-[#667085]">...</span> : null}
+                        <Link
+                          href={buildForumHref({ category: activeCategory, q: searchQuery, sort, page })}
+                          aria-current={page === currentPage ? "page" : undefined}
+                          className={`grid min-h-10 min-w-10 place-items-center rounded-md border-2 border-[#212121] px-3 py-2 text-sm font-black shadow-[0_3px_0_#111] ${
+                            page === currentPage ? "bg-[#faff8d] !text-[#202020]" : "bg-white !text-[#202020]"
+                          }`}
+                        >
+                          {page}
+                        </Link>
+                      </div>
+                    );
+                  })}
+                  {currentPage < totalPages ? (
+                    <Link
+                      href={buildForumHref({ category: activeCategory, q: searchQuery, sort, page: currentPage + 1 })}
+                      className="grid min-h-10 place-items-center rounded-md border-2 border-[#212121] bg-white px-3 py-2 text-sm font-black !text-[#202020] shadow-[0_3px_0_#111]"
+                    >
+                      Next
+                    </Link>
+                  ) : null}
+                </div>
+              </nav>
+            ) : null}
           </div>
         </div>
       </section>

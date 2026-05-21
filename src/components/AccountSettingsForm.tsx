@@ -55,7 +55,6 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
 
   async function handleEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    
     const formData = new FormData(event.currentTarget);
 
     try {
