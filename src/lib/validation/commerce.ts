@@ -19,11 +19,18 @@ export const createScholarshipSchema = z.object({
   eligibility: z.string().trim().min(10).max(3000),
   field: z.string().trim().min(2).max(120),
   awardAmountCents: z.number().int().min(0),
-  targetInstitution: z.string().trim().max(180).optional(),
-  initialFundCents: z.number().int().min(0).optional(),
-  status: z.enum(["draft", "active", "shortlisting", "awarded", "archived"]).optional(),
+  numberOfRecipients: z.number().int().min(1).max(100).optional(),
+  applicationDeadline: z.string().datetime(),
+  selectionCriteria: z.string().trim().min(10).max(3000),
+  applicationRequiresDocument: z.boolean().optional(),
+  applicationDocumentLabel: z.string().trim().max(120).optional(),
+  ownerName: z.string().trim().max(160).optional(),
+  ownerEmail: z.email().trim().toLowerCase().optional().or(z.literal("")),
+  status: z.enum(["draft", "active", "closed", "archived"]).optional(),
   featured: z.boolean().optional(),
 });
+
+export const updateScholarshipSchema = createScholarshipSchema.partial();
 
 export const scholarshipApplicationSchema = z.object({
   name: z.string().trim().min(2).max(120),

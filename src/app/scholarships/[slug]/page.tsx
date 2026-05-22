@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { JsonPostForm } from "@/components/JsonPostForm";
+import { ScholarshipApplicationForm } from "@/components/ScholarshipApplicationForm";
 import { getScholarshipBySlug, serializeScholarship } from "@/lib/scholarships/service";
 
 export const dynamic = "force-dynamic";
@@ -23,30 +23,28 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{scholarship.description}</p>
             <h2 className="mt-5 font-bebas text-3xl uppercase">Eligibility</h2>
             <p className="text-sm leading-relaxed">{scholarship.eligibility}</p>
-            <div className="mt-5 h-4 rounded-full bg-[#eee6d6]"><div className="h-full rounded-full bg-[#b22222]" style={{ width: `${scholarship.progressPercent}%` }} /></div>
-            <p className="mt-2 font-bold">${(scholarship.liveFundCents / 100).toLocaleString()} live fund total</p>
+            <h2 className="mt-5 font-bebas text-3xl uppercase">Selection Criteria</h2>
+            <p className="text-sm leading-relaxed">{scholarship.selectionCriteria}</p>
+            <dl className="mt-5 grid gap-3 rounded-md bg-[#f7f1e7] p-4 text-sm sm:grid-cols-3">
+              <div>
+                <dt className="font-black uppercase text-[#8c0504]">Award</dt>
+                <dd>${(scholarship.awardAmountCents / 100).toLocaleString()}</dd>
+              </div>
+              <div>
+                <dt className="font-black uppercase text-[#8c0504]">Recipients</dt>
+                <dd>{scholarship.numberOfRecipients}</dd>
+              </div>
+              <div>
+                <dt className="font-black uppercase text-[#8c0504]">Deadline</dt>
+                <dd>{new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(scholarship.applicationDeadline))}</dd>
+              </div>
+            </dl>
           </article>
           <div className="grid gap-5">
-            <JsonPostForm
+            <ScholarshipApplicationForm
               endpoint={`/api/scholarships/${scholarship.id}/apply`}
-              submitLabel="Apply"
-              fields={[
-                { name: "name", label: "Full name" },
-                { name: "email", label: "Email", type: "email" },
-                { name: "school", label: "School" },
-                { name: "fieldOfStudy", label: "Field of study" },
-                { name: "gpa", label: "GPA", type: "number" },
-                { name: "personalStatement", label: "Personal statement", textarea: true },
-              ]}
-            />
-            <JsonPostForm
-              endpoint={`/api/scholarships/${scholarship.id}/donate`}
-              submitLabel="Donate"
-              fields={[
-                { name: "donorName", label: "Donor name" },
-                { name: "donorEmail", label: "Email", type: "email" },
-                { name: "amountCents", label: "Amount in cents", type: "number", value: "2500" },
-              ]}
+              requiresDocument={scholarship.applicationRequiresDocument}
+              documentLabel={scholarship.applicationDocumentLabel}
             />
           </div>
         </div>

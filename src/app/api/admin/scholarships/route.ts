@@ -2,15 +2,24 @@ import { NextRequest } from "next/server";
 import { requireAdminPermission } from "@/lib/auth/session";
 import { handleApiError, successResponse } from "@/lib/http";
 import { createScholarshipSchema } from "@/lib/validation/commerce";
-import { createScholarship, getScholarshipApplications, serializeScholarship } from "@/lib/scholarships/service";
+import {
+  createScholarship,
+  getAdminScholarships,
+  getScholarshipApplicationsByListing,
+  serializeScholarship,
+} from "@/lib/scholarships/service";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdminPermission(request, "users.manage-limited");
-    const applications = await getScholarshipApplications();
-    return successResponse({ applications });
+    const scholarshipId = request.nextUrl.searchParams.get("scholarshipId") ?? undefined;
+    const [scholarships, applications] = await Promise.all([
+      getAdminScholarships(),
+      getScholarshipApplicationsByListing(scholarshipId),
+    ]);
+    return successResponse({ scholarships, applications });
   } catch (error) {
     return handleApiError(error);
   }
@@ -20,7 +29,12 @@ export async function POST(request: NextRequest) {
   try {
     await requireAdminPermission(request, "users.manage-limited");
     const body = createScholarshipSchema.parse(await request.json());
-    const scholarship = await createScholarship(body);
+    const scholarship = await createScholarship({
+      ...body,
+      ownerEmail: body.ownerEmail || null,
+      applicationDocumentLabel: body.applicationDocumentLabel || null,
+      applicationDeadline: new Date(body.applicationDeadline),
+    });
     return successResponse(
       {
         message: "Scholarship created successfully.",

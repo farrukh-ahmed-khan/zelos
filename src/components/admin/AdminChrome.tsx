@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import {
   BarChartOutlined,
   CalendarOutlined,
+  DollarOutlined,
   DashboardOutlined,
   FolderOpenOutlined,
   FormOutlined,
@@ -26,14 +27,16 @@ const navItems = [
   { href: "/admin/school-content", label: "School Content", icon: FolderOpenOutlined },
   { href: "/admin/toolkit", label: "Toolkit", icon: FormOutlined },
   { href: "/admin/forum-moderation", label: "Moderation", icon: SafetyCertificateOutlined },
+  { href: "/admin/scholarships", label: "Scholarships", icon: SafetyCertificateOutlined },
 ];
 
 const secondaryItems = [
   { href: "/admin/events", label: "Events", icon: CalendarOutlined },
+  { href: "/admin/donations", label: "Donations", icon: DollarOutlined },
   { href: "/api/admin/forum/reports", label: "Reports API", icon: SafetyCertificateOutlined },
   { href: "/api/admin/analytics/overview", label: "Analytics API", icon: BarChartOutlined },
   { href: "/api/admin/emails", label: "Email Outbox", icon: MailOutlined },
-  { href: "/api/admin/forms", label: "Forms API", icon: FormOutlined },
+  { href: "/admin/forms", label: "Forms", icon: FormOutlined },
 ];
 
 export function AdminChrome({

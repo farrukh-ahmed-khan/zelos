@@ -6,6 +6,7 @@ import { queueEmail } from "@/lib/notifications/service";
 import SubscriptionPlan from "@/models/SubscriptionPlan";
 import Subscription from "@/models/Subscription";
 import User from "@/models/User";
+import Donation from "@/models/Donation";
 
 export const runtime = "nodejs";
 
@@ -65,6 +66,28 @@ export async function POST(request: NextRequest) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
+      if (session.metadata?.kind === "donation" && session.metadata?.donationId) {
+        const donation = await Donation.findById(session.metadata.donationId);
+        if (donation) {
+          donation.status = "paid";
+          donation.providerPaymentId = session.payment_intent ?? session.id;
+          await donation.save();
+
+          await queueEmail({
+            template: "donation-receipt",
+            recipient: donation.email,
+            payload: {
+              donorName: `${donation.firstName} ${donation.lastName}`,
+              amountCents: donation.amountCents,
+              donationId: donation._id.toString(),
+              purpose: "Aiding students through Zelos programs",
+            },
+          });
+        }
+
+        return successResponse({ received: true });
+      }
+
       const userId = session.metadata?.userId;
       const planId = session.metadata?.planId;
       const user = userId ? await User.findById(userId).select("+stripeCustomerId") : null;

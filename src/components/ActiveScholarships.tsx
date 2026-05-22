@@ -1,30 +1,20 @@
 import Image from "next/image";
+import Link from "next/link";
+import { getActiveScholarships, serializeScholarship } from "@/lib/scholarships/service";
 
-const scholarships = [
-  {
-    title: "The Future Leaders Scholarship",
-    category: "Engineering & Technology",
-    image: "/assets/future-leader.png",
-    description:
-      "Supporting first-generation college students pursuing careers in engineering, computer science, or technology.",
-  },
-  {
-    title: "The Young Economist Award",
-    category: "Finance & Economics",
-    image: "/assets/young-economist.png",
-    description:
-      "For high school juniors and seniors demonstrating outstanding financial literacy and academic achievement.",
-  },
-  {
-    title: "The Community Builder Grant",
-    category: "Social Work & Public Policy",
-    image: "/assets/community-builder.png",
-    description:
-      "Honoring students committed to public service and community development in underserved areas.",
-  },
+const fallbackImages = [
+  "/assets/future-leader.png",
+  "/assets/young-economist.png",
+  "/assets/community-builder.png",
 ];
 
-export function ActiveScholarships() {
+export async function ActiveScholarships() {
+  const scholarships = (await getActiveScholarships(true)).map(serializeScholarship).slice(0, 3);
+
+  if (!scholarships.length) {
+    return null;
+  }
+
   return (
     <section className="relative overflow-hidden bg-[#8c0504] px-4 py-20 text-white sm:px-6 lg:py-24">
       <div className="absolute inset-x-0 top-0 z-10 h-12 rounded-b-[2rem] bg-[#eee6d6]" />
@@ -33,32 +23,30 @@ export function ActiveScholarships() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(202,27,18,0.8),rgba(63,0,0,0.92)_78%)]" />
 
       <div className="container relative z-20">
-        <div className="mb-7 flex flex-col gap-5 md:flex-row md:items-end justify-between w-full">
+        <div className="mb-7 flex w-full flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow-white mb-1">
-              Our Scholarship
-            </p>
-            <h2 className="text-center font-bebas text-[90px] font-normal uppercase leading-[76px] tracking-[-2px] text-white">
-              Active Scholarships
+            <p className="eyebrow-white mb-1">Our Scholarship</p>
+            <h2 className="font-bebas text-[clamp(3rem,7vw,5.625rem)] font-normal uppercase leading-[0.86] text-white">
+              Featured Scholarships
             </h2>
           </div>
 
-          <a
-            href="#"
+          <Link
+            href="/scholarships"
             className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-2.5 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] transition hover:bg-[#fff176]"
           >
             View all active scholarships
-          </a>
+          </Link>
         </div>
 
         <div className="row g-4 mx-auto max-w-[1320px]">
-          {scholarships.map((scholarship) => (
-            <div className="col-12 col-md-6 col-lg-4" key={scholarship.title}>
-              <article className="h-full overflow-hidden rounded-md bg-white p-3 text-[#202020] shadow-[0_5px_0_rgba(0,0,0,0.18)]">
+          {scholarships.map((scholarship, index) => (
+            <div className="col-12 col-md-6 col-lg-4" key={scholarship.id}>
+              <Link href={`/scholarships/${scholarship.slug}`} className="block h-full overflow-hidden rounded-md bg-white p-3 !text-[#202020] shadow-[0_5px_0_rgba(0,0,0,0.18)]">
                 <div className="relative h-[384px] w-full overflow-hidden rounded-md bg-[#eee6d6] lg:max-w-[410px]">
                   <Image
-                    src={scholarship.image}
-                    alt={scholarship.title}
+                    src={fallbackImages[index % fallbackImages.length]}
+                    alt={scholarship.name}
                     fill
                     sizes="(min-width: 992px) 410px, (min-width: 768px) 48vw, 100vw"
                     className="object-cover"
@@ -66,17 +54,17 @@ export function ActiveScholarships() {
                 </div>
 
                 <div className="pt-3">
-                  <h3 className="font-bebas text-[34px] font-normal uppercase leading-[57.2px] text-[#1E1E1E]">
-                    {scholarship.title}
+                  <h3 className="font-bebas text-[34px] font-normal uppercase leading-[1.05] text-[#1E1E1E]">
+                    {scholarship.name}
                   </h3>
-                  <p className="mt-1 font-sans text-[16px] font-normal leading-normal text-[#B22222]">
-                    {scholarship.category}
+                  <p className="mt-2 font-sans text-[16px] font-normal leading-normal text-[#B22222]">
+                    {scholarship.field}
                   </p>
                   <p className="mt-2 font-sans text-[18px] font-normal leading-[26px] text-[#252628]">
-                    {scholarship.description}
+                    ${(scholarship.awardAmountCents / 100).toLocaleString()} award / {scholarship.numberOfRecipients} recipient{scholarship.numberOfRecipients === 1 ? "" : "s"}
                   </p>
                 </div>
-              </article>
+              </Link>
             </div>
           ))}
         </div>

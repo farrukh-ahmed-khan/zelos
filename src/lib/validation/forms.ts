@@ -10,6 +10,17 @@ export const publicFormSchema = z.object({
   companyWebsite: honeypot,
 });
 
+export const scholarshipFunderLeadSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+  email: z.email().trim().toLowerCase(),
+  contact: z.string().trim().min(3).max(180),
+  scholarshipConcept: z.string().trim().min(10).max(2000),
+  intendedAudience: z.string().trim().min(2).max(500),
+  budgetRange: z.string().trim().min(2).max(120),
+  notes: z.string().trim().max(3000).optional(),
+  companyWebsite: honeypot,
+});
+
 export const dataRequestSchema = publicFormSchema.extend({
   requestType: z.enum([
     "data-access",

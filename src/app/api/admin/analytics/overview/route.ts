@@ -7,7 +7,6 @@ import Event from "@/models/Event";
 import EventRsvp from "@/models/EventRsvp";
 import Order from "@/models/Order";
 import Scholarship from "@/models/Scholarship";
-import ScholarshipDonation from "@/models/ScholarshipDonation";
 import School from "@/models/School";
 import Subscription from "@/models/Subscription";
 import Video from "@/models/Video";
@@ -30,7 +29,6 @@ export async function GET(request: NextRequest) {
       eventRsvps,
       events,
       scholarships,
-      scholarshipDonations,
       donations,
     ] = await Promise.all([
       Subscription.aggregate([{ $group: { _id: "$planType", count: { $sum: 1 } } }]),
@@ -41,8 +39,7 @@ export async function GET(request: NextRequest) {
       Order.find().select("totalCents status createdAt").lean(),
       EventRsvp.find().select("eventId").lean(),
       Event.find().select("title status").lean(),
-      Scholarship.find().select("name status initialFundCents communityDonationCents awardAmountCents").lean(),
-      ScholarshipDonation.find().sort({ createdAt: -1 }).limit(100).lean(),
+      Scholarship.find().select("name status awardAmountCents numberOfRecipients applicationDeadline").lean(),
       Donation.find().sort({ createdAt: -1 }).limit(100).lean(),
     ]);
 
@@ -106,14 +103,14 @@ export async function GET(request: NextRequest) {
         status: event.status,
         rsvps: rsvpsByEventId.get(event._id.toString()) ?? 0,
       })),
-      scholarshipFundTotals: scholarships.map((scholarship) => ({
+      scholarshipListings: scholarships.map((scholarship) => ({
         id: scholarship._id.toString(),
         name: scholarship.name,
         status: scholarship.status,
-        fundTotalCents: scholarship.initialFundCents + scholarship.communityDonationCents,
         awardAmountCents: scholarship.awardAmountCents,
+        numberOfRecipients: scholarship.numberOfRecipients,
+        applicationDeadline: scholarship.applicationDeadline,
       })),
-      scholarshipDonationHistory: scholarshipDonations,
       generalDonationHistory: donations,
     });
   } catch (error) {

@@ -13,8 +13,9 @@ const DonationSchema = new Schema(
       default: "pending",
       index: true,
     },
-    paymentProvider: { type: String, default: "manual" },
+    paymentProvider: { type: String, default: "stripe" },
     providerPaymentId: { type: String, default: null },
+    receiptUrl: { type: String, default: null },
   },
   { timestamps: true, versionKey: false },
 );

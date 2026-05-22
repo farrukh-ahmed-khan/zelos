@@ -32,12 +32,13 @@ const modules = [
   { title: "Money Toolkit", href: "/admin/toolkit", permission: "content.manage", detail: "Subscriber worksheets, quizzes, templates, prompts" },
   { title: "Forum Moderation", href: "/admin/forum-moderation", permission: "forum.moderate", detail: "Reports, post removal, thread removal, user actions" },
   { title: "Events", href: "/admin/events", permission: "events.manage", detail: "Create, edit, cancel, RSVP lists, online links" },
-  { title: "Scholarships", href: "/api/admin/scholarships", permission: "content.manage", detail: "Listings, escrow, applicants, awards" },
+  { title: "Scholarships", href: "/admin/scholarships", permission: "users.manage-limited", detail: "Listings, applicant review queue, archive workflow" },
   { title: "Mentor Applications", href: "/api/admin/mentor-applications", permission: "users.manage-limited", detail: "Review/contact inbox" },
   { title: "Forum Moderation", href: "/api/admin/forum/reports", permission: "forum.moderate", detail: "Reports, remove, suspend, resolve" },
   { title: "Analytics", href: "/api/admin/analytics/overview", permission: "analytics.read", detail: "Subscribers, video completion, revenue, RSVP, funds" },
   { title: "Email Outbox", href: "/api/admin/emails", permission: "users.manage-limited", detail: "Transactional email queue visibility" },
-  { title: "Public Forms", href: "/api/admin/forms", permission: "users.manage-limited", detail: "Contact, demo, data, scholarship inquiries" },
+  { title: "Donation History", href: "/admin/donations", permission: "billing.read", detail: "One-time donation records and receipts" },
+  { title: "Public Forms", href: "/admin/forms", permission: "users.manage-limited", detail: "Fund a scholarship leads and public inquiries" },
 ] as const;
 
 export default async function AdminPage() {

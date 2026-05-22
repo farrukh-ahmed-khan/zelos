@@ -9,6 +9,14 @@ type StripeCheckoutParams = {
   metadata?: Record<string, string>;
 };
 
+type StripeDonationCheckoutParams = {
+  amountCents: number;
+  donorEmail: string;
+  donationId: string;
+  successUrl: string;
+  cancelUrl: string;
+};
+
 type StripePortalParams = {
   customerId: string;
   returnUrl: string;
@@ -54,6 +62,26 @@ export async function createStripeCheckoutSession(params: StripeCheckoutParams) 
     "subscription_data[metadata][planId]": params.metadata?.planId ?? "",
     "metadata[userId]": params.metadata?.userId ?? "",
     "metadata[planId]": params.metadata?.planId ?? "",
+  };
+
+  return postStripeForm("checkout/sessions", values);
+}
+
+export async function createStripeDonationCheckoutSession(params: StripeDonationCheckoutParams) {
+  const values: Record<string, string> = {
+    mode: "payment",
+    "line_items[0][price_data][currency]": "usd",
+    "line_items[0][price_data][product_data][name]": "Zelos donation",
+    "line_items[0][price_data][product_data][description]": "Aiding students through Zelos programs",
+    "line_items[0][price_data][unit_amount]": String(params.amountCents),
+    "line_items[0][quantity]": "1",
+    customer_email: params.donorEmail,
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    "metadata[kind]": "donation",
+    "metadata[donationId]": params.donationId,
+    "payment_intent_data[metadata][kind]": "donation",
+    "payment_intent_data[metadata][donationId]": params.donationId,
   };
 
   return postStripeForm("checkout/sessions", values);

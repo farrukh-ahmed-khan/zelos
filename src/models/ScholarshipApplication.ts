@@ -10,9 +10,11 @@ const ScholarshipApplicationSchema = new Schema(
     gpa: { type: Number, min: 0, max: 4.5, default: null },
     personalStatement: { type: String, required: true, trim: true, maxlength: 5000 },
     documentUrl: { type: String, trim: true, maxlength: 2048, default: null },
+    forwardedAt: { type: Date, default: null, index: true },
+    forwardedBy: { type: String, trim: true, maxlength: 120, default: null },
     status: {
       type: String,
-      enum: ["submitted", "reviewed", "shortlisted", "finalist", "rejected", "awarded"],
+      enum: ["submitted", "reviewed", "forwarded"],
       default: "submitted",
       index: true,
     },
