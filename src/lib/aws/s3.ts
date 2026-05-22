@@ -16,6 +16,7 @@ export interface S3UploadParams {
   file: Buffer;
   fileName: string;
   mimeType: string;
+  keyPrefix?: string;
 }
 
 export interface S3UploadResult {
@@ -27,7 +28,7 @@ export interface S3UploadResult {
  * Upload a file to S3 and return the public URL
  */
 export async function uploadToS3(params: S3UploadParams): Promise<S3UploadResult> {
-  const { file, fileName, mimeType } = params;
+  const { file, fileName, keyPrefix = "videos", mimeType } = params;
   const bucket = process.env.AWS_S3_BUCKET;
 
   if (!bucket) {
@@ -37,7 +38,7 @@ export async function uploadToS3(params: S3UploadParams): Promise<S3UploadResult
   // Generate a unique key with timestamp
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 8);
-  const key = `videos/${timestamp}-${randomStr}-${fileName}`;
+  const key = `${keyPrefix}/${timestamp}-${randomStr}-${fileName}`;
 
   const command = new PutObjectCommand({
     Bucket: bucket,

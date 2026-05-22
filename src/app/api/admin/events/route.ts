@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
           timezone: event.timezone,
           location: event.location,
           type: event.type,
+          meetingLink: event.meetingLink,
           status: event.status,
           speakers: event.speakers,
           recap: event.recap,

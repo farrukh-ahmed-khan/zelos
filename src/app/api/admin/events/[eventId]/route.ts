@@ -50,6 +50,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         timezone: event.timezone,
         location: event.location,
         type: event.type,
+        meetingLink: event.meetingLink,
         status: event.status,
         speakers: event.speakers,
         recap: event.recap,

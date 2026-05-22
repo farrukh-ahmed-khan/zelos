@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Button, Input, Modal, Space, Table, Tag, message as antMessage } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { DeleteOutlined, SearchOutlined, UploadOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 import { api, isApiSuccess } from "@/lib/api/client";
 
@@ -40,6 +40,8 @@ type Attendee = {
   } | null;
 };
 
+type ImageUploadTarget = "createCover" | "createRecap" | "editCover" | "editRecap";
+
 function toDateInputValue(value: string | Date) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -57,7 +59,12 @@ function parseSpeakers(value: FormDataEntryValue | null) {
     .filter(Boolean)
     .map((line) => {
       const [name, title = "", bio = "", imageUrl = ""] = line.split("|").map((part) => part.trim());
-      return { name, title, bio, imageUrl };
+      return {
+        name,
+        ...(title ? { title } : {}),
+        ...(bio ? { bio } : {}),
+        ...(imageUrl ? { imageUrl } : {}),
+      };
     })
     .filter((speaker) => speaker.name);
 }
@@ -68,9 +75,15 @@ function serializeSpeakers(speakers: EventSpeaker[]) {
     .join("\n");
 }
 
-function eventPayload(form: HTMLFormElement) {
+function optionalTextField(formData: FormData, name: string, clearable: boolean) {
+  const value = String(formData.get(name) ?? "");
+  return value || (clearable ? null : undefined);
+}
+
+function eventPayload(form: HTMLFormElement, options: { clearable?: boolean } = {}) {
   const formData = new FormData(form);
   const type = String(formData.get("type") ?? "physical") as "online" | "physical";
+  const clearable = options.clearable ?? false;
 
   return {
     title: String(formData.get("title") ?? ""),
@@ -79,11 +92,11 @@ function eventPayload(form: HTMLFormElement) {
     timezone: String(formData.get("timezone") ?? "America/New_York"),
     location: type === "online" ? "Online" : String(formData.get("location") ?? ""),
     type,
-    coverImageUrl: String(formData.get("coverImageUrl") ?? "") || undefined,
-    meetingLink: String(formData.get("meetingLink") ?? "") || undefined,
+    coverImageUrl: optionalTextField(formData, "coverImageUrl", clearable),
+    meetingLink: optionalTextField(formData, "meetingLink", clearable),
     speakers: parseSpeakers(formData.get("speakers")),
-    recap: String(formData.get("recap") ?? "") || undefined,
-    recapImageUrl: String(formData.get("recapImageUrl") ?? "") || undefined,
+    recap: optionalTextField(formData, "recap", clearable),
+    recapImageUrl: optionalTextField(formData, "recapImageUrl", clearable),
   };
 }
 
@@ -97,6 +110,72 @@ function formatDate(value: string | Date) {
   }).format(new Date(value));
 }
 
+function ImageUploadField({
+  inputId,
+  isUploading,
+  label,
+  name,
+  onChange,
+  onUpload,
+  value,
+}: {
+  inputId: string;
+  isUploading: boolean;
+  label: string;
+  name: string;
+  onChange: (value: string) => void;
+  onUpload: (file: File) => void;
+  value: string;
+}) {
+  return (
+    <div className="grid gap-2 text-sm font-bold">
+      <span>{label}</span>
+      <input name={name} type="hidden" value={value} />
+      <input
+        id={inputId}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            onUpload(file);
+          }
+          event.target.value = "";
+        }}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          icon={<UploadOutlined />}
+          loading={isUploading}
+          onClick={() => document.getElementById(inputId)?.click()}
+        >
+          {value ? "Replace image" : "Upload image"}
+        </Button>
+        {value ? (
+          <>
+            <Button icon={<DeleteOutlined />} onClick={() => onChange("")}>
+              Remove
+            </Button>
+            <a href={value} target="_blank" rel="noreferrer" className="text-xs font-bold !text-[#8c0504]">
+              Open image
+            </a>
+          </>
+        ) : null}
+      </div>
+      {value ? (
+        <div
+          aria-label={`${label} preview`}
+          className="aspect-video w-full max-w-sm rounded-md border border-[#d8d2c5] bg-cover bg-center"
+          style={{ backgroundImage: `url("${value}")` }}
+        />
+      ) : (
+        <span className="text-xs font-normal text-[#667085]">JPG, PNG, WebP, or GIF up to 10MB.</span>
+      )}
+    </div>
+  );
+}
+
 export function AdminEventsManager({ events }: { events: EventItem[] }) {
   const [items, setItems] = useState(events);
   const [error, setError] = useState("");
@@ -105,6 +184,11 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
   const [pageSize, setPageSize] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
+  const [createCoverImageUrl, setCreateCoverImageUrl] = useState("");
+  const [createRecapImageUrl, setCreateRecapImageUrl] = useState("");
+  const [editCoverImageUrl, setEditCoverImageUrl] = useState("");
+  const [editRecapImageUrl, setEditRecapImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState<ImageUploadTarget | null>(null);
   const [savingEventId, setSavingEventId] = useState<string | null>(null);
   const [attendeesEvent, setAttendeesEvent] = useState<EventItem | null>(null);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
@@ -130,6 +214,46 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
     );
   }, [items, searchTerm]);
 
+  async function uploadEventImage(
+    file: File,
+    target: ImageUploadTarget,
+    setUrl: (value: string) => void,
+  ) {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setUploadingImage(target);
+    setError("");
+
+    try {
+      const response = await api.post("/api/admin/events/images", formData);
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to upload image.");
+        antMessage.error(result?.error?.message ?? "Unable to upload image.");
+        return;
+      }
+
+      setUrl(result.data.image.url);
+      antMessage.success("Image uploaded.");
+    } finally {
+      setUploadingImage(null);
+    }
+  }
+
+  function openEdit(event: EventItem) {
+    setEditingEvent(event);
+    setEditCoverImageUrl(event.coverImageUrl ?? "");
+    setEditRecapImageUrl(event.recapImageUrl ?? "");
+  }
+
+  function closeEdit() {
+    setEditingEvent(null);
+    setEditCoverImageUrl("");
+    setEditRecapImageUrl("");
+  }
+
   async function createEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -148,6 +272,8 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
 
       setItems((current) => [{ ...result.data.event, rsvpCount: 0 }, ...current]);
       form.reset();
+      setCreateCoverImageUrl("");
+      setCreateRecapImageUrl("");
       antMessage.success("Event created.");
     } finally {
       setIsSubmitting(false);
@@ -162,7 +288,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
     setError("");
 
     try {
-      const response = await api.patch(`/api/admin/events/${editingEvent.id}`, eventPayload(event.currentTarget));
+      const response = await api.patch(`/api/admin/events/${editingEvent.id}`, eventPayload(event.currentTarget, { clearable: true }));
       const result = response.data;
 
       if (!isApiSuccess(response.status)) {
@@ -176,7 +302,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
           item.id === editingEvent.id ? { ...item, ...result.data.event } : item,
         ),
       );
-      setEditingEvent(null);
+      closeEdit();
       antMessage.success("Event updated.");
     } finally {
       setSavingEventId(null);
@@ -284,7 +410,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
       width: 250,
       render: (_, event) => (
         <Space size="small" wrap>
-          <Button size="small" onClick={() => setEditingEvent(event)}>Edit</Button>
+          <Button size="small" onClick={() => openEdit(event)}>Edit</Button>
           <Button size="small" onClick={() => openAttendees(event)}>Attendees</Button>
           <Button
             danger
@@ -330,10 +456,15 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
           Event title
           <input name="title" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Cover image URL
-          <input name="coverImageUrl" type="url" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
+        <ImageUploadField
+          inputId="event-create-cover-image"
+          isUploading={uploadingImage === "createCover"}
+          label="Cover image"
+          name="coverImageUrl"
+          onChange={setCreateCoverImageUrl}
+          onUpload={(file) => uploadEventImage(file, "createCover", setCreateCoverImageUrl)}
+          value={createCoverImageUrl}
+        />
         <label className="grid gap-2 text-sm font-bold md:col-span-2">
           Description
           <textarea name="description" required rows={4} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
@@ -358,17 +489,22 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
           <input name="location" placeholder="Full address for physical events" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
         <label className="grid gap-2 text-sm font-bold md:col-span-2">
-          Zoom / Meet link
-          <input name="meetingLink" type="url" placeholder="Only emailed to digital event RSVPs" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          Zoom / Meet link (optional)
+          <input name="meetingLink" type="url" placeholder="Only needed for digital events; physical events can leave this blank" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
         <label className="grid gap-2 text-sm font-bold md:col-span-2">
           Speakers
           <textarea name="speakers" rows={3} placeholder="One per line: Name | Title | Bio | Image URL" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Recap image URL
-          <input name="recapImageUrl" type="url" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
+        <ImageUploadField
+          inputId="event-create-recap-image"
+          isUploading={uploadingImage === "createRecap"}
+          label="Recap image"
+          name="recapImageUrl"
+          onChange={setCreateRecapImageUrl}
+          onUpload={(file) => uploadEventImage(file, "createRecap", setCreateRecapImageUrl)}
+          value={createRecapImageUrl}
+        />
         <label className="grid gap-2 text-sm font-bold">
           Past event recap
           <textarea name="recap" rows={3} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
@@ -403,7 +539,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
       <Modal
         title="Edit event"
         open={Boolean(editingEvent)}
-        onCancel={() => setEditingEvent(null)}
+        onCancel={closeEdit}
         footer={null}
         width={820}
       >
@@ -413,10 +549,15 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
               Event title
               <input name="title" required defaultValue={editingEvent.title} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
             </label>
-            <label className="grid gap-2 text-sm font-bold">
-              Cover image URL
-              <input name="coverImageUrl" type="url" defaultValue={editingEvent.coverImageUrl ?? ""} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-            </label>
+            <ImageUploadField
+              inputId="event-edit-cover-image"
+              isUploading={uploadingImage === "editCover"}
+              label="Cover image"
+              name="coverImageUrl"
+              onChange={setEditCoverImageUrl}
+              onUpload={(file) => uploadEventImage(file, "editCover", setEditCoverImageUrl)}
+              value={editCoverImageUrl}
+            />
             <label className="grid gap-2 text-sm font-bold md:col-span-2">
               Description
               <textarea name="description" required rows={4} defaultValue={editingEvent.description} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
@@ -441,17 +582,22 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
               <input name="location" defaultValue={editingEvent.location} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
             </label>
             <label className="grid gap-2 text-sm font-bold md:col-span-2">
-              Zoom / Meet link
-              <input name="meetingLink" type="url" defaultValue={editingEvent.meetingLink ?? ""} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+              Zoom / Meet link (optional)
+              <input name="meetingLink" type="url" defaultValue={editingEvent.meetingLink ?? ""} placeholder="Only needed for digital events; physical events can leave this blank" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
             </label>
             <label className="grid gap-2 text-sm font-bold md:col-span-2">
               Speakers
               <textarea name="speakers" rows={3} defaultValue={serializeSpeakers(editingEvent.speakers)} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
             </label>
-            <label className="grid gap-2 text-sm font-bold">
-              Recap image URL
-              <input name="recapImageUrl" type="url" defaultValue={editingEvent.recapImageUrl ?? ""} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-            </label>
+            <ImageUploadField
+              inputId="event-edit-recap-image"
+              isUploading={uploadingImage === "editRecap"}
+              label="Recap image"
+              name="recapImageUrl"
+              onChange={setEditRecapImageUrl}
+              onUpload={(file) => uploadEventImage(file, "editRecap", setEditRecapImageUrl)}
+              value={editRecapImageUrl}
+            />
             <label className="grid gap-2 text-sm font-bold">
               Past event recap
               <textarea name="recap" rows={3} defaultValue={editingEvent.recap ?? ""} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
