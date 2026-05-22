@@ -6,7 +6,7 @@ export default function FundScholarshipPage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <Header />
-      <section className="container mt-12 max-w-[980px]">
+      <section className="container mb-24 mt-12 max-w-[980px]">
         <p className="eyebrow-red">Scholarship Funding</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">
           Fund a Scholarship
@@ -22,13 +22,14 @@ export default function FundScholarshipPage() {
           <JsonPostForm
             endpoint="/api/forms/scholarship-inquiry"
             submitLabel="Send scholarship concept"
+            submittingLabel="Sending scholarship concept..."
             fields={[
-              { name: "name", label: "Name" },
-              { name: "email", label: "Email", type: "email" },
-              { name: "contact", label: "Best contact method" },
-              { name: "scholarshipConcept", label: "Scholarship concept", textarea: true },
-              { name: "intendedAudience", label: "Intended audience" },
-              { name: "budgetRange", label: "Budget range" },
+              { name: "name", label: "Full name", required: true },
+              { name: "email", label: "Email address", type: "email", required: true },
+              { name: "contact", label: "Best contact method", required: true },
+              { name: "scholarshipConcept", label: "Scholarship concept", textarea: true, required: true },
+              { name: "intendedAudience", label: "Intended audience", required: true },
+              { name: "budgetRange", label: "Budget range", required: true },
               { name: "notes", label: "Notes", textarea: true },
               { name: "companyWebsite", label: "", type: "hidden" },
             ]}

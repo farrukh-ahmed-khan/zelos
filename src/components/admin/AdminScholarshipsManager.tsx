@@ -41,6 +41,37 @@ type ApplicationItem = {
   scholarship: { name?: string; ownerName?: string | null; ownerEmail?: string | null } | null;
 };
 
+type ApiErrorResult = {
+  error?: {
+    message?: string;
+    details?: {
+      fieldErrors?: Record<string, string[]>;
+    };
+  };
+};
+
+const fieldLabels: Record<string, string> = {
+  slug: "Slug",
+  numberOfRecipients: "Number of recipients",
+  applicationDeadline: "Application deadline",
+  awardAmountCents: "Award amount",
+  selectionCriteria: "Selection criteria",
+};
+
+function formatApiError(result: ApiErrorResult, fallback: string) {
+  const fieldErrors = result.error?.details?.fieldErrors;
+  const firstFieldError = fieldErrors
+    ? Object.entries(fieldErrors).find(([, errors]) => errors.length > 0)
+    : null;
+
+  if (firstFieldError) {
+    const [field, errors] = firstFieldError;
+    return `${fieldLabels[field] ?? field}: ${errors[0]}`;
+  }
+
+  return result.error?.message ?? fallback;
+}
+
 function cents(value: FormDataEntryValue | null) {
   return Math.round(Number(value || 0) * 100);
 }
@@ -105,7 +136,7 @@ export function AdminScholarshipsManager({
       const result = response.data;
 
       if (!isApiSuccess(response.status)) {
-        antMessage.error(result?.error?.message ?? "Unable to create scholarship.");
+        antMessage.error(formatApiError(result, "Unable to create scholarship."));
         return;
       }
 
@@ -122,7 +153,7 @@ export function AdminScholarshipsManager({
     const result = response.data;
 
     if (!isApiSuccess(response.status)) {
-      antMessage.error(result?.error?.message ?? "Unable to update scholarship.");
+      antMessage.error(formatApiError(result, "Unable to update scholarship."));
       return;
     }
 
@@ -137,7 +168,7 @@ export function AdminScholarshipsManager({
     const result = response.data;
 
     if (!isApiSuccess(response.status)) {
-      antMessage.error(result?.error?.message ?? "Unable to mark application forwarded.");
+      antMessage.error(formatApiError(result, "Unable to mark application forwarded."));
       return;
     }
 
@@ -236,13 +267,20 @@ export function AdminScholarshipsManager({
     <div className="grid gap-6">
       <form onSubmit={createScholarship} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
         <input name="name" required placeholder="Scholarship name" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="slug" required placeholder="dynamic-url-slug" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <input
+          name="slug"
+          required
+          pattern="[a-z0-9-]+"
+          title="Use lowercase letters, numbers, and hyphens only."
+          placeholder="dynamic-url-slug"
+          className="rounded-md border border-[#d8d2c5] px-3 py-3"
+        />
         <textarea name="description" required rows={4} placeholder="Description" className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
         <textarea name="eligibility" required rows={3} placeholder="Eligibility" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <textarea name="selectionCriteria" required rows={3} placeholder="Selection criteria" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="field" required placeholder="Field" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="awardAmount" required type="number" min="0" step="1" placeholder="Award amount in dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="numberOfRecipients" required type="number" min="1" defaultValue="1" placeholder="Number of recipients" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <input name="numberOfRecipients" required type="number" min="1" max="100" defaultValue="1" placeholder="Number of recipients" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="applicationDeadline" required type="date" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="ownerName" placeholder="Scholarship owner name" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="ownerEmail" type="email" placeholder="Scholarship owner email" className="rounded-md border border-[#d8d2c5] px-3 py-3" />

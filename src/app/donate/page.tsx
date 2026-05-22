@@ -1,12 +1,34 @@
+import { cookies } from "next/headers";
 import { DonationCheckoutForm } from "@/components/DonationCheckoutForm";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
+import { verifyAuthToken } from "@/lib/auth/jwt";
 
-export default function DonatePage() {
+export const dynamic = "force-dynamic";
+
+function splitName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? "",
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
+export default async function DonatePage() {
+  const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+  const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
+  const donor = payload
+    ? {
+        ...splitName(payload.name),
+        email: payload.email,
+      }
+    : undefined;
+
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <Header />
-      <section className="container mt-12 max-w-[920px]">
+      <section className="container mb-20 mt-12 max-w-[920px]">
         <p className="eyebrow-red">Zelos Mission</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">Donate</h1>
         <div className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
@@ -19,7 +41,7 @@ export default function DonatePage() {
               501(c)(3) tax-deductible nonprofit. EIN: {process.env.NEXT_PUBLIC_NONPROFIT_EIN ?? "pending"}
             </p>
           </div>
-          <DonationCheckoutForm />
+          <DonationCheckoutForm donor={donor} />
         </div>
       </section>
       <Footer />
