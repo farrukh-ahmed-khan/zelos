@@ -7,6 +7,7 @@ import ForumReport from "@/models/ForumReport";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import School from "@/models/School";
+import SubscriberResource from "@/models/SubscriberResource";
 import Subscription from "@/models/Subscription";
 import SubscriptionPlan from "@/models/SubscriptionPlan";
 import User from "@/models/User";
@@ -104,15 +105,16 @@ export async function getSuperAdminBillingDashboard() {
 }
 
 export async function getSuperAdminContentDashboard() {
-  const [videosByAudience, videosByTrack, categories, latestVideos] =
+  const [videosByAudience, videosByTrack, categories, latestVideos, subscriberResources] =
     await Promise.all([
       Video.aggregate([{ $group: { _id: "$audience", count: { $sum: 1 } } }]),
       Video.aggregate([{ $group: { _id: "$ageTrack", count: { $sum: 1 } } }]),
       ContentCategory.find().sort({ audience: 1, ageTrack: 1, order: 1 }).lean(),
       Video.find().sort({ createdAt: -1 }).limit(10).lean(),
+      SubscriberResource.find().sort({ createdAt: -1 }).limit(10).lean(),
     ]);
 
-  return { videosByAudience, videosByTrack, categories, latestVideos };
+  return { videosByAudience, videosByTrack, categories, latestVideos, subscriberResources };
 }
 
 export async function getSuperAdminAnalyticsDashboard() {

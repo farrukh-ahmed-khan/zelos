@@ -88,6 +88,16 @@ type DashboardSchoolResource = {
   district: string | null;
 };
 
+type DashboardSubscriberResource = {
+  id: string;
+  title: string;
+  description: string | null;
+  resourceType: string;
+  url: string;
+  fileName: string | null;
+  ageTrack: string;
+};
+
 type DashboardAdminSummary = {
   usersCount: number;
   forumReportsCount: number;
@@ -100,6 +110,7 @@ type DashboardShellProps = {
   events: DashboardEvent[];
   threads: DashboardThread[];
   schoolResources: DashboardSchoolResource[];
+  subscriberResources: DashboardSubscriberResource[];
   subscriptionLabel: string;
   hasVideoLibraryAccess: boolean;
   needsVideoSubscription: boolean;
@@ -535,12 +546,87 @@ function SchoolResourcesPanel({
   );
 }
 
+function SubscriberResourcesPanel({
+  resources,
+}: {
+  resources: DashboardSubscriberResource[];
+}) {
+  const allTrackResources = resources.filter((resource) => resource.ageTrack === "all");
+  const targetedResources = resources.filter((resource) => resource.ageTrack !== "all");
+
+  function formatSubscriberAgeTrack(value: string) {
+    if (value === "all") return "All tracks";
+    return value
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  function renderResources(items: DashboardSubscriberResource[], emptyMessage: string) {
+    if (!items.length) {
+      return (
+        <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
+          {emptyMessage}
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid gap-3 md:grid-cols-2">
+        {items.map((resource) => (
+          <a
+            key={resource.id}
+            href={resource.url}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-[#e4ded1] bg-white p-4 !text-[#202020] transition hover:-translate-y-0.5 hover:shadow-[0_3px_0_#111]"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-sm bg-[#eaf3ff] px-2 py-1 text-[11px] font-black uppercase text-[#175cd3]">
+                {formatSubscriberAgeTrack(resource.ageTrack)}
+              </span>
+              <span className="rounded-sm bg-[#fff3cd] px-2 py-1 text-[11px] font-black uppercase text-[#8c0504]">
+                {resource.resourceType}
+              </span>
+            </div>
+            <p className="mt-3 font-bold">{resource.title}</p>
+            {resource.description ? (
+              <p className="mt-1 line-clamp-2 text-sm text-[#555]">{resource.description}</p>
+            ) : null}
+            <p className="mt-3 truncate text-xs font-black uppercase text-[#8c0504]">
+              {resource.fileName ?? resource.resourceType}
+            </p>
+          </a>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-5">
+      <div>
+        <h3 className="mb-3 text-sm font-black uppercase text-[#8c0504]">
+          For Your Track
+        </h3>
+        {renderResources(targetedResources, "No track-specific subscriber resources are available yet.")}
+      </div>
+      <div>
+        <h3 className="mb-3 text-sm font-black uppercase text-[#8c0504]">
+          All Subscribers
+        </h3>
+        {renderResources(allTrackResources, "No all-subscriber resources are available yet.")}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardShell({
   user,
   videos,
   events,
   threads,
   schoolResources,
+  subscriberResources,
   subscriptionLabel,
   hasVideoLibraryAccess,
   needsVideoSubscription,
@@ -551,6 +637,7 @@ export function DashboardShell({
     .slice(0, 3);
   const isAdmin = ["forum-moderator", "sub-admin", "super-admin"].includes(user.role);
   const isSchoolUser = ["teacher", "student"].includes(user.role);
+  const isSubscriberUser = ["subscriber", "child"].includes(user.role);
 
   return (
     <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
@@ -629,6 +716,22 @@ export function DashboardShell({
             {isSchoolUser ? (
               <SectionCard title={user.role === "teacher" ? "Teacher Resources" : "Student Resources"}>
                 <SchoolResourcesPanel resources={schoolResources} />
+              </SectionCard>
+            ) : null}
+
+            {isSubscriberUser && hasVideoLibraryAccess ? (
+              <SectionCard
+                title="Subscriber Resources"
+                action={
+                  <Link
+                    href="/subscriber-content"
+                    className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                  >
+                    Open Library
+                  </Link>
+                }
+              >
+                <SubscriberResourcesPanel resources={subscriberResources} />
               </SectionCard>
             ) : null}
 

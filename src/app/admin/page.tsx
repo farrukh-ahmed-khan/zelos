@@ -13,6 +13,7 @@ import ForumReport from "@/models/ForumReport";
 import MentorApplication from "@/models/MentorApplication";
 import Order from "@/models/Order";
 import Scholarship from "@/models/Scholarship";
+import SubscriberResource from "@/models/SubscriberResource";
 import Subscription from "@/models/Subscription";
 import SubscriptionPlan from "@/models/SubscriptionPlan";
 import User from "@/models/User";
@@ -28,6 +29,7 @@ const modules = [
   { title: "Users & Roles", href: "/admin/users", permission: "users.manage-limited", detail: "Statuses, deletion, RBAC scopes" },
   { title: "Admin Invites", href: "/admin/invites", permission: "users.manage-limited", detail: "Moderator and sub-admin invite links" },
   { title: "Schools", href: "/admin/schools", permission: "schools.manage", detail: "School and district onboarding, seats, teacher invites" },
+  { title: "Subscriber Content", href: "/admin/subscriber-content", permission: "content.manage", detail: "Premium subscriber worksheets, guides, templates, and downloads" },
   { title: "School Content", href: "/admin/school-content", permission: "content.manage", detail: "Teacher videos, student lessons, lesson plans, worksheets" },
   { title: "Money Toolkit", href: "/admin/toolkit", permission: "content.manage", detail: "Subscriber worksheets, quizzes, templates, prompts" },
   { title: "Forum Moderation", href: "/admin/forum-moderation", permission: "forum.moderate", detail: "Reports, post removal, thread removal, user actions" },
@@ -70,6 +72,7 @@ export default async function AdminPage() {
     subscriptions,
     events,
     scholarships,
+    subscriberResources,
     mentors,
     reports,
     orders,
@@ -83,6 +86,7 @@ export default async function AdminPage() {
     Subscription.countDocuments(),
     Event.countDocuments(),
     Scholarship.countDocuments(),
+    SubscriberResource.countDocuments(),
     MentorApplication.countDocuments(),
     ForumReport.countDocuments({ status: "open" }),
     Order.countDocuments(),
@@ -108,6 +112,7 @@ export default async function AdminPage() {
         <AdminMetric label="Subscriptions" value={subscriptions} />
         <AdminMetric label="Events" value={events} />
         <AdminMetric label="Scholarships" value={scholarships} />
+        <AdminMetric label="Subscriber Files" value={subscriberResources} />
         <AdminMetric label="Mentors" value={mentors} />
         <AdminMetric label="Open Reports" value={reports} />
         <AdminMetric label="Orders" value={orders} />

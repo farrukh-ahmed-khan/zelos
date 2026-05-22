@@ -24,6 +24,7 @@ const navItems = [
   { href: "/admin/users", label: "Users", icon: TeamOutlined },
   { href: "/admin/invites", label: "Invites", icon: UserAddOutlined },
   { href: "/admin/schools", label: "Schools", icon: SafetyCertificateOutlined },
+  { href: "/admin/subscriber-content", label: "Subscriber Content", icon: FolderOpenOutlined },
   { href: "/admin/school-content", label: "School Content", icon: FolderOpenOutlined },
   { href: "/admin/toolkit", label: "Toolkit", icon: FormOutlined },
   { href: "/admin/forum-moderation", label: "Moderation", icon: SafetyCertificateOutlined },

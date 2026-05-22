@@ -36,6 +36,22 @@ export default async function SuperAdminContentPage() {
         </SuperAdminPanel>
 
         <SuperAdminPanel
+          title="Subscriber Downloads"
+          action={<Link href="/admin/subscriber-content" className="rounded-md border border-[#cfd4dc] bg-white px-3 py-2 text-sm font-bold !text-[#202020] hover:border-[#8c0504]">Manage Subscriber Content</Link>}
+        >
+          <SuperAdminTable>
+            {data.subscriberResources.map((resource) => (
+              <SuperAdminRow
+                key={resource._id.toString()}
+                title={`${resource.order}. ${resource.title}`}
+                meta={`${resource.resourceType} / ${resource.ageTrack}`}
+                value={resource.isActive ? "active" : "inactive"}
+              />
+            ))}
+          </SuperAdminTable>
+        </SuperAdminPanel>
+
+        <SuperAdminPanel
           title="Categories"
           action={<Link href="/admin/content-categories" className="rounded-md border border-[#cfd4dc] bg-white px-3 py-2 text-sm font-bold !text-[#202020] hover:border-[#8c0504]">Manage Categories</Link>}
         >
