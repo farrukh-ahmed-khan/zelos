@@ -107,6 +107,7 @@ type DashboardAdminSummary = {
 type DashboardShellProps = {
   user: DashboardUser;
   videos: DashboardVideo[];
+  freePreviewVideos: DashboardVideo[];
   events: DashboardEvent[];
   threads: DashboardThread[];
   schoolResources: DashboardSchoolResource[];
@@ -480,6 +481,50 @@ function VideoAccessGate({ userRole }: { userRole: string }) {
   );
 }
 
+function UpgradePrompt({ hasPreviewVideos }: { hasPreviewVideos: boolean }) {
+  return (
+    <section className="rounded-md border-2 border-[#212121] bg-[#faff8d] p-5 text-[#202020] shadow-[0_4px_0_#111]">
+      <p className="text-xs font-black uppercase tracking-wide text-[#8c0504]">
+        Upgrade available
+      </p>
+      <h2 className="mt-2 font-bebas text-4xl uppercase leading-none">
+        Unlock the full Zelos video library
+      </h2>
+      <p className="mt-2 max-w-3xl text-sm font-semibold leading-relaxed text-[#343434]">
+        Your free account includes community, events, and
+        {hasPreviewVideos ? " preview lessons." : " access to preview lessons when available."}
+        Upgrade to continue through the full age-track curriculum and download subscriber resources.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          href="/billing"
+          className="rounded-md border-2 border-[#212121] bg-[#8c0504] px-5 py-3 text-sm font-black !text-white shadow-[0_3px_0_#111]"
+        >
+          View Subscription Plans
+        </Link>
+        <Link
+          href="/events"
+          className="rounded-md border-2 border-[#212121] bg-white px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+        >
+          Browse Events
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function FreePreviewPanel({ videos }: { videos: DashboardVideo[] }) {
+  if (!videos.length) {
+    return (
+      <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
+        No free preview video is available for this age track yet.
+      </p>
+    );
+  }
+
+  return <VideoPanel videos={videos} userRole="subscriber" />;
+}
+
 function SchoolResourcesPanel({
   resources,
 }: {
@@ -623,6 +668,7 @@ function SubscriberResourcesPanel({
 export function DashboardShell({
   user,
   videos,
+  freePreviewVideos,
   events,
   threads,
   schoolResources,
@@ -638,6 +684,7 @@ export function DashboardShell({
   const isAdmin = ["forum-moderator", "sub-admin", "super-admin"].includes(user.role);
   const isSchoolUser = ["teacher", "student"].includes(user.role);
   const isSubscriberUser = ["subscriber", "child"].includes(user.role);
+  const isFreeSubscriber = user.role === "subscriber" && needsVideoSubscription && !hasVideoLibraryAccess;
 
   return (
     <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
@@ -686,6 +733,12 @@ export function DashboardShell({
           <StatCard label="Access" value={subscriptionLabel} detail="Resolved from current account state" />
         </div>
 
+        {isFreeSubscriber ? (
+          <div className="mt-6">
+            <UpgradePrompt hasPreviewVideos={freePreviewVideos.length > 0} />
+          </div>
+        ) : null}
+
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
           <div className="grid gap-6">
             <SectionCard
@@ -715,7 +768,11 @@ export function DashboardShell({
               }
             >
               {needsVideoSubscription && !hasVideoLibraryAccess ? (
-                <VideoAccessGate userRole={user.role} />
+                isFreeSubscriber ? (
+                  <FreePreviewPanel videos={freePreviewVideos} />
+                ) : (
+                  <VideoAccessGate userRole={user.role} />
+                )
               ) : (
                 <VideoPanel videos={videos} userRole={user.role} />
               )}

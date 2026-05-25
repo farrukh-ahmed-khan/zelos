@@ -257,6 +257,45 @@ export async function buildVideoAvailability(user: UserDocument) {
   });
 }
 
+export async function buildFreePreviewAvailability(user: UserDocument) {
+  await connectToDatabase();
+
+  const videos = await sortVideosForProgression(
+    await Video.find({
+      audience: "subscriber",
+      isFreePreview: true,
+      ageTrack: { $in: getAgeTrackAliases(user.ageTrack) },
+      releaseDate: { $not: { $gt: new Date() } },
+    }).sort({ order: 1, createdAt: 1 }),
+  );
+
+  return videos.map((video) => ({
+    id: video._id.toString(),
+    title: video.title,
+    description: video.description,
+    url: video.url,
+    ageTrack: video.ageTrack,
+    audience: video.audience,
+    category: video.category ?? "General",
+    playlist: video.playlist ?? "General",
+    schoolScope: video.schoolScope ?? "global",
+    schoolIds: video.schoolIds ?? [],
+    district: video.district ?? null,
+    order: video.order,
+    releaseDate: video.releaseDate,
+    dripEnabled: false,
+    dripDelayMinutes: 0,
+    dripUnlocksAt: null,
+    isFreePreview: true,
+    isMissionVideo: video.isMissionVideo,
+    attachmentUrl: video.attachmentUrl ?? null,
+    attachmentFileName: video.attachmentFileName ?? null,
+    attachmentMimeType: video.attachmentMimeType ?? null,
+    completed: false,
+    locked: false,
+  }));
+}
+
 export async function resolveCompletableVideo(params: {
   user: UserDocument;
   videoId: string;

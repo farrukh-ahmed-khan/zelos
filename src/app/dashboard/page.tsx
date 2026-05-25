@@ -13,7 +13,11 @@ import { getSubscriberResourcesForUser, serializeSubscriberResource } from "@/li
 import { resolveSubscriptionAccessForUser } from "@/lib/subscriptions/service";
 import { serializeResolvedSubscription } from "@/lib/subscriptions/serialize-subscription";
 import { serializeUser } from "@/lib/users/serialize-user";
-import { buildVideoAvailability, requiresSubscriptionForVideos } from "@/lib/videos/service";
+import {
+  buildFreePreviewAvailability,
+  buildVideoAvailability,
+  requiresSubscriptionForVideos,
+} from "@/lib/videos/service";
 import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +100,9 @@ export default async function DashboardPage() {
   const hasVideoLibraryAccess =
     !needsVideoSubscription || Boolean(subscription?.hasPremiumAccess);
   const videos = hasVideoLibraryAccess ? await buildVideoAvailability(user) : [];
+  const freePreviewVideos = hasVideoLibraryAccess
+    ? []
+    : await buildFreePreviewAvailability(user);
   const schoolResources =
     schoolResourcesResult.status === "fulfilled"
       ? schoolResourcesResult.value.map(serializeSchoolResource)
@@ -116,6 +123,7 @@ export default async function DashboardPage() {
     <DashboardShell
       user={serializeUser(user)}
       videos={videos}
+      freePreviewVideos={freePreviewVideos}
       events={events}
       threads={threads}
       schoolResources={JSON.parse(JSON.stringify(schoolResources))}
