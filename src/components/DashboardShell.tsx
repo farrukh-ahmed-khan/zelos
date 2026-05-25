@@ -653,7 +653,15 @@ export function DashboardShell({
             Zelos
           </Link>
 
-          <LogoutButton />
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/account"
+              className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+            >
+              Account Settings
+            </Link>
+            <LogoutButton />
+          </div>
         </header>
 
         <div className="container py-10">
