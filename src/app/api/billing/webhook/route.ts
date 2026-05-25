@@ -7,6 +7,8 @@ import SubscriptionPlan from "@/models/SubscriptionPlan";
 import Subscription from "@/models/Subscription";
 import User from "@/models/User";
 import Donation from "@/models/Donation";
+import { markOrderPaid } from "@/lib/store/service";
+import GiftCard from "@/models/GiftCard";
 
 export const runtime = "nodejs";
 
@@ -88,6 +90,16 @@ export async function POST(request: NextRequest) {
         return successResponse({ received: true });
       }
 
+      if (session.metadata?.kind === "store" && session.metadata?.orderId) {
+        await markOrderPaid({
+          orderId: session.metadata.orderId,
+          providerPaymentId: session.payment_intent ?? session.id,
+          stripeCheckoutSessionId: session.id,
+        });
+
+        return successResponse({ received: true });
+      }
+
       const userId = session.metadata?.userId;
       const planId = session.metadata?.planId;
       const user = userId ? await User.findById(userId).select("+stripeCustomerId") : null;
@@ -114,6 +126,22 @@ export async function POST(request: NextRequest) {
           stripeSubscriptionId: session.subscription ?? null,
           stripeCheckoutSessionId: session.id,
         });
+
+        const giftCardCode = session.metadata?.giftCardCode;
+        const giftCardAppliedCents = Number(session.metadata?.giftCardAppliedCents ?? 0);
+
+        if (giftCardCode && giftCardAppliedCents > 0) {
+          const giftCard = await GiftCard.findOne({ code: giftCardCode });
+
+          if (giftCard) {
+            giftCard.remainingAmountCents = Math.max(
+              0,
+              giftCard.remainingAmountCents - giftCardAppliedCents,
+            );
+            giftCard.status = giftCard.remainingAmountCents > 0 ? "active" : "redeemed";
+            await giftCard.save();
+          }
+        }
 
         await queueEmail({
           template: "subscription-confirmation",

@@ -1,9 +1,13 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth/session";
-import { createStripeCheckoutSession } from "@/lib/billing/stripe";
+import {
+  createStripeAmountOffCoupon,
+  createStripeCheckoutSession,
+} from "@/lib/billing/stripe";
 import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { getLatestSubscriptionByUserId } from "@/lib/subscriptions/service";
 import { createCheckoutSessionSchema } from "@/lib/validation/billing";
+import GiftCard from "@/models/GiftCard";
 import SubscriptionPlan from "@/models/SubscriptionPlan";
 
 export const runtime = "nodejs";
@@ -31,6 +35,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let couponId: string | undefined;
+    let giftCardCode = "";
+    let giftCardAppliedCents = 0;
+
+    if (body.giftCardCode) {
+      const giftCard = await GiftCard.findOne({
+        code: body.giftCardCode.trim().toUpperCase(),
+        status: "active",
+      });
+
+      if (!giftCard || giftCard.remainingAmountCents <= 0) {
+        throw new ApiError(422, "Gift card is invalid or has no remaining balance.");
+      }
+
+      giftCardCode = giftCard.code;
+      giftCardAppliedCents = Math.min(giftCard.remainingAmountCents, plan.priceCents);
+
+      const coupon = await createStripeAmountOffCoupon({
+        amountOffCents: giftCardAppliedCents,
+        name: `Zelos gift card ${giftCard.code}`,
+      });
+      couponId = coupon.id;
+    }
+
     const baseUrl =
       process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
     const session = await createStripeCheckoutSession({
@@ -41,7 +69,10 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId: user._id.toString(),
         planId: plan._id.toString(),
+        giftCardCode,
+        giftCardAppliedCents: String(giftCardAppliedCents),
       },
+      couponId,
     });
 
     return successResponse({

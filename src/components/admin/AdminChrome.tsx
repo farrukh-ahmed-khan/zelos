@@ -33,6 +33,7 @@ const navItems = [
 
 const secondaryItems = [
   { href: "/admin/events", label: "Events", icon: CalendarOutlined },
+  { href: "/admin/orders", label: "Store Orders", icon: DollarOutlined },
   { href: "/admin/donations", label: "Donations", icon: DollarOutlined },
   { href: "/api/admin/forum/reports", label: "Reports API", icon: SafetyCertificateOutlined },
   { href: "/api/admin/analytics/overview", label: "Analytics API", icon: BarChartOutlined },

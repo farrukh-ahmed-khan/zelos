@@ -7,12 +7,21 @@ type StripeCheckoutParams = {
   successUrl: string;
   cancelUrl: string;
   metadata?: Record<string, string>;
+  couponId?: string;
 };
 
 type StripeDonationCheckoutParams = {
   amountCents: number;
   donorEmail: string;
   donationId: string;
+  successUrl: string;
+  cancelUrl: string;
+};
+
+type StripeStoreCheckoutParams = {
+  amountCents: number;
+  customerEmail: string;
+  orderId: string;
   successUrl: string;
   cancelUrl: string;
 };
@@ -64,7 +73,23 @@ export async function createStripeCheckoutSession(params: StripeCheckoutParams) 
     "metadata[planId]": params.metadata?.planId ?? "",
   };
 
+  if (params.couponId) {
+    values["discounts[0][coupon]"] = params.couponId;
+  }
+
   return postStripeForm("checkout/sessions", values);
+}
+
+export async function createStripeAmountOffCoupon(params: {
+  amountOffCents: number;
+  name: string;
+}) {
+  return postStripeForm("coupons", {
+    amount_off: String(params.amountOffCents),
+    currency: "usd",
+    duration: "once",
+    name: params.name,
+  });
 }
 
 export async function createStripeDonationCheckoutSession(params: StripeDonationCheckoutParams) {
@@ -82,6 +107,26 @@ export async function createStripeDonationCheckoutSession(params: StripeDonation
     "metadata[donationId]": params.donationId,
     "payment_intent_data[metadata][kind]": "donation",
     "payment_intent_data[metadata][donationId]": params.donationId,
+  };
+
+  return postStripeForm("checkout/sessions", values);
+}
+
+export async function createStripeStoreCheckoutSession(params: StripeStoreCheckoutParams) {
+  const values: Record<string, string> = {
+    mode: "payment",
+    "line_items[0][price_data][currency]": "usd",
+    "line_items[0][price_data][product_data][name]": "Zelos store order",
+    "line_items[0][price_data][product_data][description]": "Zelos swag store purchase",
+    "line_items[0][price_data][unit_amount]": String(params.amountCents),
+    "line_items[0][quantity]": "1",
+    customer_email: params.customerEmail,
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    "metadata[kind]": "store",
+    "metadata[orderId]": params.orderId,
+    "payment_intent_data[metadata][kind]": "store",
+    "payment_intent_data[metadata][orderId]": params.orderId,
   };
 
   return postStripeForm("checkout/sessions", values);

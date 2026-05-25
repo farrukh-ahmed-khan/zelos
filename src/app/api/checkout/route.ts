@@ -4,7 +4,8 @@ import { verifyAuthToken } from "@/lib/auth/jwt";
 import { handleApiError, successResponse } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { checkoutSchema } from "@/lib/validation/commerce";
-import { createOrder } from "@/lib/store/service";
+import { createStripeStoreCheckoutSession } from "@/lib/billing/stripe";
+import { createOrder, markOrderPaid } from "@/lib/store/service";
 
 export const runtime = "nodejs";
 
@@ -21,10 +22,36 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await createOrder({ ...body, userId });
+
+    if (order.totalCents === 0) {
+      await markOrderPaid({ orderId: order._id.toString(), providerPaymentId: "gift-card" });
+      return successResponse(
+        {
+          message: "Order paid with gift card credit.",
+          orderId: order._id.toString(),
+          checkoutUrl: null,
+        },
+        { status: 201 },
+      );
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+    const checkout = await createStripeStoreCheckoutSession({
+      amountCents: order.totalCents,
+      customerEmail: order.email,
+      orderId: order._id.toString(),
+      successUrl: `${baseUrl}/store?checkout=success`,
+      cancelUrl: `${baseUrl}/store?checkout=cancelled`,
+    });
+
+    order.stripeCheckoutSessionId = checkout.id;
+    await order.save();
+
     return successResponse(
       {
-        message: "Order recorded. Payment processing is pending Stripe setup.",
+        message: "Order recorded. Opening secure checkout.",
         orderId: order._id.toString(),
+        checkoutUrl: checkout.url,
       },
       { status: 201 },
     );

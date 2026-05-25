@@ -82,6 +82,7 @@ export const checkoutSchema = z.object({
         quantity: z.number().int().min(1).max(99),
         size: z.string().trim().max(30).optional(),
         color: z.string().trim().max(40).optional(),
+        giftCardAmountCents: z.number().int().min(100).max(100000).optional(),
       }),
     )
     .min(1)

@@ -40,6 +40,7 @@ const modules = [
   { title: "Analytics", href: "/api/admin/analytics/overview", permission: "analytics.read", detail: "Subscribers, video completion, revenue, RSVP, funds" },
   { title: "Email Outbox", href: "/api/admin/emails", permission: "users.manage-limited", detail: "Transactional email queue visibility" },
   { title: "Donation History", href: "/admin/donations", permission: "billing.read", detail: "One-time donation records and receipts" },
+  { title: "Store Orders", href: "/admin/orders", permission: "billing.read", detail: "Swag orders, statuses, gift-card credits, and revenue" },
   { title: "Public Forms", href: "/admin/forms", permission: "users.manage-limited", detail: "Fund a scholarship leads and public inquiries" },
 ] as const;
 

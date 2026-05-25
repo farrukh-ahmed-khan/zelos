@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { ProductCheckoutForm } from "@/components/ProductCheckoutForm";
+import { StoreCart } from "@/components/StoreCart";
 import { getProductBySlug, serializeProduct } from "@/lib/store/service";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +23,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">{product.name}</h1>
             <p className="mt-3 text-2xl font-black">${(product.priceCents / 100).toFixed(2)}</p>
             <p className="mt-4 text-sm leading-relaxed">{product.description}</p>
-            <div className="mt-6">
-              <ProductCheckoutForm productId={product.id} />
-            </div>
           </div>
+        </div>
+        <div className="mt-8">
+          <StoreCart products={[product]} featuredProduct={product} />
         </div>
       </section>
       <Footer />

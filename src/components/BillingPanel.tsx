@@ -37,6 +37,7 @@ export function BillingPanel({
 }) {
   const [message, setMessage] = useState("");
   const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null);
+  const [giftCardCode, setGiftCardCode] = useState("");
   const [portalAction, setPortalAction] = useState<"portal" | "payment" | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
   const currentPlan = subscription
@@ -53,7 +54,10 @@ export function BillingPanel({
     setCheckoutPlanId(planId);
 
     try {
-      const response = await api.post("/api/billing/checkout", { planId });
+      const response = await api.post("/api/billing/checkout", {
+        planId,
+        giftCardCode: giftCardCode.trim() || undefined,
+      });
       const result = response.data;
 
       if (!isApiSuccess(response.status)) {
@@ -160,6 +164,20 @@ export function BillingPanel({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111] md:col-span-2">
+          <label className="grid gap-2 text-sm font-bold">
+            Gift card code
+            <input
+              value={giftCardCode}
+              onChange={(event) => setGiftCardCode(event.target.value.toUpperCase())}
+              placeholder="ZELOS-XXXX"
+              className="max-w-md rounded-md border border-[#d8d2c5] px-3 py-3 font-normal uppercase"
+            />
+          </label>
+          <p className="mt-2 text-xs text-[#666]">
+            Gift cards can be applied to the first subscription checkout payment.
+          </p>
+        </div>
         {plans.map((plan) => (
           <article key={plan.id} className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
             <div className="flex items-start justify-between gap-3">

@@ -19,6 +19,7 @@ import {
   requiresSubscriptionForVideos,
 } from "@/lib/videos/service";
 import User from "@/models/User";
+import Order from "@/models/Order";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,7 @@ export default async function DashboardPage() {
     usersCountResult,
     reportsResult,
     mentorApplicationsResult,
+    ordersResult,
   ] = await Promise.allSettled([
     getEventsWithRsvpStatus(userId),
     getForumThreads(),
@@ -88,6 +90,12 @@ export default async function DashboardPage() {
     canReadUsers ? User.countDocuments() : Promise.resolve(0),
     canModerateForum ? getForumReports() : Promise.resolve([]),
     canReadUsers ? getMentorApplications() : Promise.resolve([]),
+    Order.find({
+      $or: [{ userId }, { email: user.email }],
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean(),
   ]);
 
   const events = eventsResult.status === "fulfilled" ? eventsResult.value : [];
@@ -118,6 +126,19 @@ export default async function DashboardPage() {
     mentorApplicationsResult.status === "fulfilled"
       ? mentorApplicationsResult.value
       : [];
+  const orders =
+    ordersResult.status === "fulfilled"
+      ? ordersResult.value.map((order) => ({
+          id: order._id.toString(),
+          items: order.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+          })),
+          totalCents: order.totalCents,
+          status: order.status,
+          createdAt: order.createdAt,
+        }))
+      : [];
 
   return (
     <DashboardShell
@@ -128,6 +149,7 @@ export default async function DashboardPage() {
       threads={threads}
       schoolResources={JSON.parse(JSON.stringify(schoolResources))}
       subscriberResources={JSON.parse(JSON.stringify(subscriberResources))}
+      orders={JSON.parse(JSON.stringify(orders))}
       subscriptionLabel={resolveSubscriptionLabel(subscription)}
       hasVideoLibraryAccess={hasVideoLibraryAccess}
       needsVideoSubscription={needsVideoSubscription}

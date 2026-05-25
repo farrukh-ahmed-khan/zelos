@@ -104,6 +104,17 @@ type DashboardAdminSummary = {
   mentorApplicationsCount: number;
 };
 
+type DashboardOrder = {
+  id: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+  }>;
+  totalCents: number;
+  status: string;
+  createdAt: string | Date;
+};
+
 type DashboardShellProps = {
   user: DashboardUser;
   videos: DashboardVideo[];
@@ -112,6 +123,7 @@ type DashboardShellProps = {
   threads: DashboardThread[];
   schoolResources: DashboardSchoolResource[];
   subscriberResources: DashboardSubscriberResource[];
+  orders: DashboardOrder[];
   subscriptionLabel: string;
   hasVideoLibraryAccess: boolean;
   needsVideoSubscription: boolean;
@@ -665,6 +677,42 @@ function SubscriberResourcesPanel({
   );
 }
 
+function OrderHistoryPanel({ orders }: { orders: DashboardOrder[] }) {
+  if (!orders.length) {
+    return (
+      <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
+        No store orders yet.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {orders.map((order) => (
+        <article key={order.id} className="rounded-md bg-white p-4 text-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="font-bold">Order {order.id.slice(-6).toUpperCase()}</p>
+              <p className="text-xs uppercase text-[#b22222]">
+                {new Date(order.createdAt).toLocaleDateString()} / {order.status}
+              </p>
+            </div>
+            <p className="font-black">
+              {(order.totalCents / 100).toLocaleString(undefined, {
+                style: "currency",
+                currency: "USD",
+              })}
+            </p>
+          </div>
+          <p className="mt-2 text-[#555]">
+            {order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}
+          </p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export function DashboardShell({
   user,
   videos,
@@ -673,6 +721,7 @@ export function DashboardShell({
   threads,
   schoolResources,
   subscriberResources,
+  orders,
   subscriptionLabel,
   hasVideoLibraryAccess,
   needsVideoSubscription,
@@ -799,6 +848,20 @@ export function DashboardShell({
                 <SubscriberResourcesPanel resources={subscriberResources} />
               </SectionCard>
             ) : null}
+
+            <SectionCard
+              title="Store Orders"
+              action={
+                <Link
+                  href="/store"
+                  className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                >
+                  Visit Store
+                </Link>
+              }
+            >
+              <OrderHistoryPanel orders={orders} />
+            </SectionCard>
 
             {isAdmin ? (
               <SectionCard title="Admin Control Room">
