@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db";
+import { getSubscriptionPlans, serializeSubscriptionPlan } from "@/lib/subscription-plans/service";
 import User from "@/models/User";
 
 export default async function SignupPage() {
@@ -24,5 +25,7 @@ export default async function SignupPage() {
     }
   }
 
-  return <AuthPageShell mode="signup" />;
+  const plans = (await getSubscriptionPlans(false)).map(serializeSubscriptionPlan);
+
+  return <AuthPageShell mode="signup" plans={JSON.parse(JSON.stringify(plans))} />;
 }

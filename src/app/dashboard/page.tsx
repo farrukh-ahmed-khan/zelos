@@ -15,6 +15,7 @@ import { serializeResolvedSubscription } from "@/lib/subscriptions/serialize-sub
 import { serializeUser } from "@/lib/users/serialize-user";
 import {
   buildFreePreviewAvailability,
+  buildPaidIntroVideo,
   buildVideoAvailability,
   requiresSubscriptionForVideos,
 } from "@/lib/videos/service";
@@ -108,6 +109,10 @@ export default async function DashboardPage() {
   const hasVideoLibraryAccess =
     !needsVideoSubscription || Boolean(subscription?.hasPremiumAccess);
   const videos = hasVideoLibraryAccess ? await buildVideoAvailability(user) : [];
+  const paidIntroVideo =
+    user.role === "subscriber" && hasVideoLibraryAccess && !user.paidIntroVideoSeenAt
+      ? await buildPaidIntroVideo(user)
+      : null;
   const freePreviewVideos = hasVideoLibraryAccess
     ? []
     : await buildFreePreviewAvailability(user);
@@ -144,6 +149,7 @@ export default async function DashboardPage() {
     <DashboardShell
       user={serializeUser(user)}
       videos={videos}
+      paidIntroVideo={paidIntroVideo ? JSON.parse(JSON.stringify(paidIntroVideo)) : null}
       freePreviewVideos={freePreviewVideos}
       events={events}
       threads={threads}

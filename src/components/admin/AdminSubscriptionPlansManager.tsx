@@ -17,8 +17,26 @@ type Plan = {
   isActive: boolean;
 };
 
-export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
+type PromotionCode = {
+  id: string;
+  code: string;
+  name: string;
+  discountType: "percent" | "amount";
+  percentOff: number | null;
+  amountOffCents: number | null;
+  currency: string;
+  isActive: boolean;
+};
+
+export function AdminSubscriptionPlansManager({
+  plans,
+  promotionCodes,
+}: {
+  plans: Plan[];
+  promotionCodes: PromotionCode[];
+}) {
   const [items, setItems] = useState(plans);
+  const [codes, setCodes] = useState(promotionCodes);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [togglingPlanId, setTogglingPlanId] = useState<string | null>(null);
@@ -76,6 +94,38 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
     }
   }
 
+  async function submitPromotionCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setError("");
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const discountType = String(formData.get("discountType") ?? "percent");
+
+    const response = await api.post("/api/admin/promotion-codes", {
+      code: String(formData.get("code") ?? ""),
+      name: String(formData.get("promoName") ?? ""),
+      discountType,
+      percentOff:
+        discountType === "percent" ? Number(formData.get("percentOff") ?? 0) : undefined,
+      amountOffCents:
+        discountType === "amount"
+          ? Math.round(Number(formData.get("amountOffDollars") ?? 0) * 100)
+          : undefined,
+      currency: String(formData.get("promoCurrency") ?? "usd"),
+    });
+    const result = response.data;
+
+    if (!isApiSuccess(response.status)) {
+      setError(result?.error?.message ?? "Unable to create promotion code.");
+      return;
+    }
+
+    setCodes((current) => [result.data.promotionCode, ...current]);
+    setMessage("Promotion code created.");
+    form.reset();
+  }
+
   return (
     <div className="grid gap-6">
       {message ? <p className="rounded-md bg-[#eef8e8] px-4 py-3 text-sm font-bold text-[#24551f]">{message}</p> : null}
@@ -104,6 +154,46 @@ export function AdminSubscriptionPlansManager({ plans }: { plans: Plan[] }) {
           Add Plan
         </button>
       </form>
+
+      <form onSubmit={submitPromotionCode} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
+        <div className="md:col-span-2">
+          <p className="font-bold text-[#111827]">Create Promo Code</p>
+          <p className="mt-1 text-sm text-[#555]">Creates a matching one-time Stripe coupon and promotion code.</p>
+        </div>
+        <input name="code" placeholder="Code, e.g. SAVE20" required className="rounded-md border border-[#d8d2c5] px-3 py-3 uppercase" />
+        <input name="promoName" placeholder="Internal name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <select name="discountType" className="rounded-md border border-[#d8d2c5] px-3 py-3">
+          <option value="percent">Percent off</option>
+          <option value="amount">Amount off</option>
+        </select>
+        <input name="percentOff" type="number" min="1" max="100" placeholder="Percent, e.g. 20" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <input name="amountOffDollars" type="number" min="1" step="0.01" placeholder="Amount dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <input name="promoCurrency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">
+          Create Promo Code
+        </button>
+      </form>
+
+      <section className="grid gap-3 md:grid-cols-2">
+        {codes.map((code) => (
+          <article key={code.id} className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-bold text-[#111827]">{code.code}</p>
+                <p className="mt-1 text-sm text-[#555]">{code.name}</p>
+              </div>
+              <span className="rounded-sm bg-[#eef2f7] px-2 py-1 text-xs font-black">
+                {code.discountType === "percent"
+                  ? `${code.percentOff}% off`
+                  : `${((code.amountOffCents ?? 0) / 100).toLocaleString(undefined, {
+                      style: "currency",
+                      currency: code.currency.toUpperCase(),
+                    })} off`}
+              </span>
+            </div>
+          </article>
+        ))}
+      </section>
 
       <section className="grid gap-3 md:grid-cols-2">
         {items.map((plan) => (

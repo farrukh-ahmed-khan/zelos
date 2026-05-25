@@ -8,6 +8,7 @@ type StripeCheckoutParams = {
   cancelUrl: string;
   metadata?: Record<string, string>;
   couponId?: string;
+  promotionCodeId?: string;
 };
 
 type StripeDonationCheckoutParams = {
@@ -77,6 +78,10 @@ export async function createStripeCheckoutSession(params: StripeCheckoutParams) 
     values["discounts[0][coupon]"] = params.couponId;
   }
 
+  if (params.promotionCodeId) {
+    values["discounts[0][promotion_code]"] = params.promotionCodeId;
+  }
+
   return postStripeForm("checkout/sessions", values);
 }
 
@@ -89,6 +94,45 @@ export async function createStripeAmountOffCoupon(params: {
     currency: "usd",
     duration: "once",
     name: params.name,
+  });
+}
+
+export async function createStripePromotionCode(params: {
+  code: string;
+  name: string;
+  discountType: "percent" | "amount";
+  percentOff?: number | null;
+  amountOffCents?: number | null;
+  currency?: string;
+}) {
+  const couponValues: Record<string, string> = {
+    duration: "once",
+    name: params.name,
+  };
+
+  if (params.discountType === "percent") {
+    couponValues.percent_off = String(params.percentOff ?? 0);
+  } else {
+    couponValues.amount_off = String(params.amountOffCents ?? 0);
+    couponValues.currency = params.currency ?? "usd";
+  }
+
+  const coupon = await postStripeForm("coupons", couponValues);
+  const promotionCode = await postStripeForm("promotion_codes", {
+    coupon: coupon.id,
+    code: params.code.toUpperCase(),
+    active: "true",
+  });
+
+  return {
+    couponId: coupon.id,
+    promotionCodeId: promotionCode.id,
+  };
+}
+
+export async function cancelStripeSubscriptionAtPeriodEnd(subscriptionId: string) {
+  return postStripeForm(`subscriptions/${subscriptionId}`, {
+    cancel_at_period_end: "true",
   });
 }
 

@@ -30,14 +30,18 @@ export function BillingPanel({
   plans,
   subscription,
   history,
+  userAgeTrack,
 }: {
   plans: Plan[];
   subscription: Subscription;
   history: Subscription[];
+  userAgeTrack: string;
 }) {
   const [message, setMessage] = useState("");
   const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null);
   const [giftCardCode, setGiftCardCode] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [ageTrack, setAgeTrack] = useState(userAgeTrack || "teen");
   const [portalAction, setPortalAction] = useState<"portal" | "payment" | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
   const currentPlan = subscription
@@ -57,6 +61,8 @@ export function BillingPanel({
       const response = await api.post("/api/billing/checkout", {
         planId,
         giftCardCode: giftCardCode.trim() || undefined,
+        promoCode: promoCode.trim() || undefined,
+        ageTrack,
       });
       const result = response.data;
 
@@ -164,18 +170,39 @@ export function BillingPanel({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111] md:col-span-2">
+        <div className="grid gap-4 rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111] md:col-span-2 md:grid-cols-3">
+          <label className="grid gap-2 text-sm font-bold">
+            Age track
+            <select
+              value={ageTrack}
+              onChange={(event) => setAgeTrack(event.target.value)}
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+            >
+              <option value="child">Children</option>
+              <option value="teen">Teens</option>
+              <option value="young-adult">Young Adults</option>
+            </select>
+          </label>
           <label className="grid gap-2 text-sm font-bold">
             Gift card code
             <input
               value={giftCardCode}
               onChange={(event) => setGiftCardCode(event.target.value.toUpperCase())}
               placeholder="ZELOS-XXXX"
-              className="max-w-md rounded-md border border-[#d8d2c5] px-3 py-3 font-normal uppercase"
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal uppercase"
             />
           </label>
-          <p className="mt-2 text-xs text-[#666]">
-            Gift cards can be applied to the first subscription checkout payment.
+          <label className="grid gap-2 text-sm font-bold">
+            Promo code
+            <input
+              value={promoCode}
+              onChange={(event) => setPromoCode(event.target.value.toUpperCase())}
+              placeholder="SAVE20"
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal uppercase"
+            />
+          </label>
+          <p className="text-xs text-[#666] md:col-span-3">
+            Gift cards or promo codes can be applied to the first subscription checkout payment. Changing age track deletes prior activity/progress.
           </p>
         </div>
         {plans.map((plan) => (
@@ -199,6 +226,7 @@ export function BillingPanel({
               disabled={
                 !plan.stripePriceId ||
                 Boolean(checkoutPlanId) ||
+                Boolean(giftCardCode.trim() && promoCode.trim()) ||
                 (subscription?.status === "active" &&
                   (subscription.planId === plan.id ||
                     (!subscription.planId && subscription.planType === plan.interval)))

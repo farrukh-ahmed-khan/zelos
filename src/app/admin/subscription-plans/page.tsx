@@ -6,7 +6,12 @@ import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { hasAdminPermission } from "@/lib/auth/roles";
 import { connectToDatabase } from "@/lib/db";
-import { getSubscriptionPlans, serializeSubscriptionPlan } from "@/lib/subscription-plans/service";
+import {
+  getPromotionCodes,
+  getSubscriptionPlans,
+  serializePromotionCode,
+  serializeSubscriptionPlan,
+} from "@/lib/subscription-plans/service";
 import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
@@ -23,11 +28,17 @@ export default async function AdminSubscriptionPlansPage() {
     redirect("/dashboard");
   }
 
-  const plans = (await getSubscriptionPlans(true)).map(serializeSubscriptionPlan);
+  const [plans, promotionCodes] = await Promise.all([
+    getSubscriptionPlans(true),
+    getPromotionCodes(),
+  ]);
 
   return (
     <AdminChrome title="Subscription Plans" eyebrow="Admin / Billing" isSuperAdmin={user.role === "super-admin"}>
-      <AdminSubscriptionPlansManager plans={JSON.parse(JSON.stringify(plans))} />
+      <AdminSubscriptionPlansManager
+        plans={JSON.parse(JSON.stringify(plans.map(serializeSubscriptionPlan)))}
+        promotionCodes={JSON.parse(JSON.stringify(promotionCodes.map(serializePromotionCode)))}
+      />
     </AdminChrome>
   );
 }

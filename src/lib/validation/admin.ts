@@ -57,6 +57,33 @@ export const createSubscriptionPlanSchema = z.object({
 
 export const updateSubscriptionPlanSchema = createSubscriptionPlanSchema.partial();
 
+export const createPromotionCodeSchema = z
+  .object({
+    code: z.string().trim().min(3).max(80).regex(/^[a-zA-Z0-9_-]+$/),
+    name: z.string().trim().min(2).max(120),
+    discountType: z.enum(["percent", "amount"]),
+    percentOff: z.number().int().min(1).max(100).optional(),
+    amountOffCents: z.number().int().min(100).optional(),
+    currency: z.string().trim().length(3).default("usd"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.discountType === "percent" && !data.percentOff) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["percentOff"],
+        message: "Percent discount is required.",
+      });
+    }
+
+    if (data.discountType === "amount" && !data.amountOffCents) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["amountOffCents"],
+        message: "Amount discount is required.",
+      });
+    }
+  });
+
 export const createAdminInviteSchema = z.object({
   email: z.email().trim().toLowerCase(),
   role: z.enum(["forum-moderator", "sub-admin"]),

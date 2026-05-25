@@ -296,6 +296,47 @@ export async function buildFreePreviewAvailability(user: UserDocument) {
   }));
 }
 
+export async function buildPaidIntroVideo(user: UserDocument) {
+  await connectToDatabase();
+
+  const video = await Video.findOne({
+    audience: "subscriber",
+    isMissionVideo: true,
+    ageTrack: { $in: [...getAgeTrackAliases(user.ageTrack), "all"] },
+    releaseDate: { $not: { $gt: new Date() } },
+  }).sort({ order: 1, createdAt: 1 });
+
+  if (!video) {
+    return null;
+  }
+
+  return {
+    id: video._id.toString(),
+    title: video.title,
+    description: video.description,
+    url: video.url,
+    ageTrack: video.ageTrack,
+    audience: video.audience,
+    category: video.category ?? "General",
+    playlist: video.playlist ?? "General",
+    schoolScope: video.schoolScope ?? "global",
+    schoolIds: video.schoolIds ?? [],
+    district: video.district ?? null,
+    order: video.order,
+    releaseDate: video.releaseDate,
+    dripEnabled: false,
+    dripDelayMinutes: 0,
+    dripUnlocksAt: null,
+    isFreePreview: false,
+    isMissionVideo: true,
+    attachmentUrl: video.attachmentUrl ?? null,
+    attachmentFileName: video.attachmentFileName ?? null,
+    attachmentMimeType: video.attachmentMimeType ?? null,
+    completed: false,
+    locked: false,
+  };
+}
+
 export async function resolveCompletableVideo(params: {
   user: UserDocument;
   videoId: string;

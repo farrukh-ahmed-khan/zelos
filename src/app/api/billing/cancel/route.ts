@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { ApiError, handleApiError, successResponse } from "@/lib/http";
+import { cancelStripeSubscriptionAtPeriodEnd } from "@/lib/billing/stripe";
 import { queueEmail } from "@/lib/notifications/service";
 import { serializeSubscription } from "@/lib/subscriptions/serialize-subscription";
 import { getLatestSubscriptionByUserId } from "@/lib/subscriptions/service";
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
 
     if (!subscription || subscription.status !== "active") {
       throw new ApiError(404, "No active subscription was found.");
+    }
+
+    if (subscription.stripeSubscriptionId) {
+      await cancelStripeSubscriptionAtPeriodEnd(subscription.stripeSubscriptionId);
     }
 
     subscription.status = "canceled";

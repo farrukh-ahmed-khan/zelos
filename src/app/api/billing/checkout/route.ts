@@ -8,7 +8,9 @@ import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { getLatestSubscriptionByUserId } from "@/lib/subscriptions/service";
 import { createCheckoutSessionSchema } from "@/lib/validation/billing";
 import GiftCard from "@/models/GiftCard";
+import PromotionCode from "@/models/PromotionCode";
 import SubscriptionPlan from "@/models/SubscriptionPlan";
+import VideoProgress from "@/models/VideoProgress";
 
 export const runtime = "nodejs";
 
@@ -36,6 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     let couponId: string | undefined;
+    let promotionCodeId: string | undefined;
     let giftCardCode = "";
     let giftCardAppliedCents = 0;
 
@@ -59,6 +62,29 @@ export async function POST(request: NextRequest) {
       couponId = coupon.id;
     }
 
+    if (body.promoCode) {
+      if (couponId) {
+        throw new ApiError(422, "Use either a gift card or a promo code, not both.");
+      }
+
+      const promotionCode = await PromotionCode.findOne({
+        code: body.promoCode.trim().toUpperCase(),
+        isActive: true,
+      });
+
+      if (!promotionCode?.stripePromotionCodeId) {
+        throw new ApiError(422, "Promotion code is invalid or inactive.");
+      }
+
+      promotionCodeId = promotionCode.stripePromotionCodeId;
+    }
+
+    if (user.ageTrack !== body.ageTrack) {
+      await VideoProgress.deleteMany({ userId: user._id.toString() });
+      user.ageTrack = body.ageTrack;
+      await user.save();
+    }
+
     const baseUrl =
       process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
     const session = await createStripeCheckoutSession({
@@ -69,10 +95,12 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId: user._id.toString(),
         planId: plan._id.toString(),
+        ageTrack: body.ageTrack,
         giftCardCode,
         giftCardAppliedCents: String(giftCardAppliedCents),
       },
       couponId,
+      promotionCodeId,
     });
 
     return successResponse({

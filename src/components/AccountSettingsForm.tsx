@@ -35,8 +35,26 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
 
   async function handleProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const nextAgeTrack = String(formData.get("ageTrack") ?? user.ageTrack);
 
+    if (nextAgeTrack !== user.ageTrack) {
+      Modal.confirm({
+        title: "Change age track?",
+        content: "Changing age track deletes prior lesson activity and progress for this account.",
+        okText: "Change Track",
+        okButtonProps: { danger: true },
+        onOk: () => submitProfileForm(form),
+      });
+      return;
+    }
+
+    await submitProfileForm(form);
+  }
+
+  async function submitProfileForm(form: HTMLFormElement) {
+    const formData = new FormData(form);
     try {
       await submitJson("/api/account/profile", {
         name: String(formData.get("name") ?? ""),
@@ -119,7 +137,14 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
         <h2 className="font-bebas text-3xl uppercase leading-none">Profile</h2>
         <input name="name" defaultValue={user.name} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="age" type="number" min={1} max={120} defaultValue={user.age} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="ageTrack" defaultValue={user.ageTrack} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <select name="ageTrack" defaultValue={user.ageTrack} className="rounded-md border border-[#d8d2c5] px-3 py-3">
+          <option value="child">Children</option>
+          <option value="teen">Teens</option>
+          <option value="young-adult">Young Adults</option>
+        </select>
+        <p className="-mt-2 text-xs font-semibold text-[#8c0504]">
+          Changing age track deletes prior lesson activity/progress.
+        </p>
         <input name="interests" defaultValue={user.interests.join(", ")} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <button className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
           Save Profile

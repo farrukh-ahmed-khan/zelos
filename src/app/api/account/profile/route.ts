@@ -4,6 +4,7 @@ import { handleApiError, successResponse } from "@/lib/http";
 import { updateProfileSchema } from "@/lib/validation/auth";
 import { deriveAgeTrack } from "@/lib/users/age-track";
 import { serializeUser } from "@/lib/users/serialize-user";
+import VideoProgress from "@/models/VideoProgress";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,8 @@ export async function PATCH(request: NextRequest) {
       user.name = body.name;
     }
 
+    const previousAgeTrack = user.ageTrack;
+
     if (body.age !== undefined) {
       user.age = body.age;
       user.ageTrack = body.ageTrack ?? deriveAgeTrack(body.age);
@@ -25,6 +28,10 @@ export async function PATCH(request: NextRequest) {
 
     if (body.interests !== undefined) {
       user.interests = body.interests;
+    }
+
+    if (previousAgeTrack !== user.ageTrack) {
+      await VideoProgress.deleteMany({ userId: user._id.toString() });
     }
 
     await user.save();

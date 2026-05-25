@@ -3,6 +3,8 @@ import { ApiError } from "@/lib/http";
 import SubscriptionPlan, {
   type SubscriptionPlanDocument,
 } from "@/models/SubscriptionPlan";
+import PromotionCode, { type PromotionCodeDocument } from "@/models/PromotionCode";
+import { createStripePromotionCode } from "@/lib/billing/stripe";
 
 export function serializeSubscriptionPlan(plan: SubscriptionPlanDocument) {
   return {
@@ -88,4 +90,66 @@ export async function updateSubscriptionPlan(
 
   await plan.save();
   return plan;
+}
+
+export function serializePromotionCode(promotionCode: PromotionCodeDocument) {
+  return {
+    id: promotionCode._id.toString(),
+    code: promotionCode.code,
+    name: promotionCode.name,
+    discountType: promotionCode.discountType,
+    percentOff: promotionCode.percentOff ?? null,
+    amountOffCents: promotionCode.amountOffCents ?? null,
+    currency: promotionCode.currency,
+    stripeCouponId: promotionCode.stripeCouponId ?? null,
+    stripePromotionCodeId: promotionCode.stripePromotionCodeId ?? null,
+    isActive: promotionCode.isActive,
+    createdAt: promotionCode.createdAt,
+    updatedAt: promotionCode.updatedAt,
+  };
+}
+
+export async function getPromotionCodes() {
+  await connectToDatabase();
+
+  return PromotionCode.find().sort({ createdAt: -1 }).limit(100);
+}
+
+export async function createPromotionCode(params: {
+  code: string;
+  name: string;
+  discountType: "percent" | "amount";
+  percentOff?: number;
+  amountOffCents?: number;
+  currency?: string;
+}) {
+  await connectToDatabase();
+
+  const code = params.code.trim().toUpperCase();
+  const existing = await PromotionCode.findOne({ code });
+
+  if (existing) {
+    throw new ApiError(409, "A promotion code with this code already exists.");
+  }
+
+  const stripePromotion = await createStripePromotionCode({
+    code,
+    name: params.name,
+    discountType: params.discountType,
+    percentOff: params.percentOff ?? null,
+    amountOffCents: params.amountOffCents ?? null,
+    currency: params.currency ?? "usd",
+  });
+
+  return PromotionCode.create({
+    code,
+    name: params.name,
+    discountType: params.discountType,
+    percentOff: params.discountType === "percent" ? params.percentOff : null,
+    amountOffCents: params.discountType === "amount" ? params.amountOffCents : null,
+    currency: params.currency ?? "usd",
+    stripeCouponId: stripePromotion.couponId,
+    stripePromotionCodeId: stripePromotion.promotionCodeId,
+    isActive: true,
+  });
 }

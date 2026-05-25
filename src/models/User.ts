@@ -142,6 +142,10 @@ const UserSchema = new Schema(
       index: true,
       select: false,
     },
+    paidIntroVideoSeenAt: {
+      type: Date,
+      default: null,
+    },
     isBanned: {
       type: Boolean,
       default: false,

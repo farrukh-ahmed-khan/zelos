@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CalendarOutlined,
   CheckCircleOutlined,
@@ -118,6 +118,7 @@ type DashboardOrder = {
 type DashboardShellProps = {
   user: DashboardUser;
   videos: DashboardVideo[];
+  paidIntroVideo: DashboardVideo | null;
   freePreviewVideos: DashboardVideo[];
   events: DashboardEvent[];
   threads: DashboardThread[];
@@ -537,6 +538,51 @@ function FreePreviewPanel({ videos }: { videos: DashboardVideo[] }) {
   return <VideoPanel videos={videos} userRole="subscriber" />;
 }
 
+function PaidIntroVideoPrompt({ video }: { video: DashboardVideo }) {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    void api.post("/api/account/paid-intro-video", {});
+  }, []);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <section className="mt-6 rounded-md border-2 border-[#212121] bg-white p-5 text-[#202020] shadow-[0_4px_0_#111]">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-[#8c0504]">
+            Welcome to Premium
+          </p>
+          <h2 className="font-bebas text-4xl uppercase leading-none">{video.title}</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => setVisible(false)}
+          className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black shadow-[0_3px_0_#111]"
+        >
+          Dismiss
+        </button>
+      </div>
+      <div className="overflow-hidden rounded-md bg-black">
+        <video
+          className="aspect-video w-full"
+          autoPlay
+          muted
+          playsInline
+          controls
+          controlsList="nodownload noplaybackrate"
+        >
+          <source src={video.url ?? ""} />
+        </video>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-[#555]">{video.description}</p>
+    </section>
+  );
+}
+
 function SchoolResourcesPanel({
   resources,
 }: {
@@ -716,6 +762,7 @@ function OrderHistoryPanel({ orders }: { orders: DashboardOrder[] }) {
 export function DashboardShell({
   user,
   videos,
+  paidIntroVideo,
   freePreviewVideos,
   events,
   threads,
@@ -787,6 +834,8 @@ export function DashboardShell({
             <UpgradePrompt hasPreviewVideos={freePreviewVideos.length > 0} />
           </div>
         ) : null}
+
+        {paidIntroVideo?.url ? <PaidIntroVideoPrompt video={paidIntroVideo} /> : null}
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
           <div className="grid gap-6">
