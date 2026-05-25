@@ -9,7 +9,11 @@ type EmailContent = {
   html: string;
 };
 
-type TemplateName = TransactionalEmailTemplate | "school-teacher-invite";
+export type TransactionalMailerTemplate =
+  | TransactionalEmailTemplate
+  | "school-teacher-invite"
+  | "event-updated"
+  | "event-cancelled";
 
 type EmailAction = {
   label: string;
@@ -925,7 +929,7 @@ function fallbackContent(template: string, payload: EmailPayload): EmailContent 
   };
 }
 
-export function buildTransactionalEmail(template: TemplateName, payload: EmailPayload): EmailContent {
+export function buildTransactionalEmail(template: TransactionalMailerTemplate, payload: EmailPayload): EmailContent {
   if (template === "teacher-invite" || template === "school-teacher-invite") {
     return schoolInviteEmailContent(payload, "teacher");
   }
@@ -971,7 +975,7 @@ export function buildTransactionalEmail(template: TemplateName, payload: EmailPa
 }
 
 export async function sendTransactionalEmail(params: {
-  template: TemplateName;
+  template: TransactionalMailerTemplate;
   recipient: string;
   payload: EmailPayload;
 }) {

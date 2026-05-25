@@ -164,8 +164,6 @@ const UserSchema = new Schema(
   },
 );
 
-UserSchema.index({ email: 1 }, { unique: true });
-
 UserSchema.methods.comparePassword = function (candidatePassword: string) {
   return verifyPassword(candidatePassword, this.password);
 };

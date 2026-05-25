@@ -126,7 +126,6 @@ const MentorApplicationSchema = new Schema(
   },
 );
 
-MentorApplicationSchema.index({ email: 1 }, { unique: true });
 MentorApplicationSchema.index({ status: 1, createdAt: -1 });
 
 type MentorApplication = InferSchemaType<typeof MentorApplicationSchema>;

@@ -302,6 +302,7 @@ export async function acceptSchoolInvite(params: {
       age: params.age,
       ageTrack: params.ageTrack ?? deriveAgeTrack(params.age),
       schoolId: invite.schoolId,
+      emailVerifiedAt: new Date(),
     });
 
     invite.used = true;

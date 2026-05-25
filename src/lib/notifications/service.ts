@@ -1,9 +1,13 @@
 import { connectToDatabase } from "@/lib/db";
 import Notification from "@/models/Notification";
-import EmailOutbox from "@/models/EmailOutbox";
+import EmailOutbox, { type EmailOutboxDocument } from "@/models/EmailOutbox";
 import User from "@/models/User";
-import { sendTransactionalEmail } from "@/lib/notifications/mailer";
-import type { TransactionalEmailTemplate } from "@/lib/notifications/templates";
+import {
+  sendTransactionalEmail,
+  type TransactionalMailerTemplate,
+} from "@/lib/notifications/mailer";
+
+type QueuedEmailTemplate = TransactionalMailerTemplate;
 
 export async function createNotification(params: {
   userId: string;
@@ -24,7 +28,7 @@ export async function createNotification(params: {
 }
 
 export async function queueEmail(params: {
-  template: TransactionalEmailTemplate | "school-teacher-invite";
+  template: QueuedEmailTemplate;
   recipient: string;
   payload: Record<string, unknown>;
 }) {
@@ -84,7 +88,7 @@ export async function notifyUsers(params: {
 
 export async function queueEmailsForUserIds(params: {
   userIds: string[];
-  template: string;
+  template: QueuedEmailTemplate;
   payloadBuilder: (user: { id: string; email: string; name: string }) => Record<string, unknown>;
 }) {
   await connectToDatabase();
@@ -101,7 +105,7 @@ export async function queueEmailsForUserIds(params: {
     return [];
   }
 
-  return EmailOutbox.insertMany(
+  const emails = (await EmailOutbox.insertMany(
     users.map((user) => ({
       template: params.template,
       recipient: user.email,
@@ -112,5 +116,28 @@ export async function queueEmailsForUserIds(params: {
       }),
       status: "pending",
     })),
+  )) as EmailOutboxDocument[];
+
+  await Promise.all(
+    emails.map(async (email) => {
+      try {
+        await sendTransactionalEmail({
+          template: params.template,
+          recipient: email.recipient,
+          payload: email.payload,
+        });
+
+        email.status = "sent";
+        email.sentAt = new Date();
+        email.error = null;
+        await email.save();
+      } catch (error) {
+        email.status = "failed";
+        email.error = error instanceof Error ? error.message : "Unknown email delivery error.";
+        await email.save();
+      }
+    }),
   );
+
+  return emails;
 }
