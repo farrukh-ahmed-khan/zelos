@@ -66,6 +66,19 @@ export const createProductSchema = z.object({
   images: z.array(z.url().trim().max(2048)).max(12).optional(),
   sizes: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
   colors: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+  variants: z
+    .array(
+      z.object({
+        sku: z.string().trim().max(80).optional().or(z.literal("")),
+        size: z.string().trim().max(30).optional().or(z.literal("")),
+        color: z.string().trim().max(40).optional().or(z.literal("")),
+        inventoryCount: z.number().int().min(0),
+        priceAdjustmentCents: z.number().int().min(-100000).max(100000).optional(),
+        isActive: z.boolean().optional(),
+      }),
+    )
+    .max(200)
+    .optional(),
   inventoryCount: z.number().int().min(0),
   limitedEdition: z.boolean().optional(),
   isActive: z.boolean().optional(),

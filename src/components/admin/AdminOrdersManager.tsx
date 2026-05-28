@@ -1,7 +1,19 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Button, Select, Table, Tag, message as antMessage } from "antd";
+import {
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Switch,
+  Table,
+  Tag,
+  message as antMessage,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { api, isApiSuccess } from "@/lib/api/client";
 
@@ -37,10 +49,34 @@ type Product = {
   images: string[];
   sizes: string[];
   colors: string[];
+  variants?: ProductVariant[];
   inventoryCount: number;
   limitedEdition: boolean;
   isActive: boolean;
   isGiftCard: boolean;
+};
+
+type ProductVariant = {
+  sku?: string | null;
+  size?: string | null;
+  color?: string | null;
+  inventoryCount: number;
+  priceAdjustmentCents?: number;
+  isActive?: boolean;
+};
+
+type ProductFormValues = {
+  name: string;
+  slug: string;
+  description: string;
+  priceDollars: number;
+  inventoryCount?: number;
+  images?: string[];
+  sizes?: string[];
+  colors?: string[];
+  limitedEdition?: boolean;
+  isGiftCard?: boolean;
+  isActive?: boolean;
 };
 
 const statuses = ["paid", "processing", "shipped", "delivered", "cancelled"] as const;
@@ -62,6 +98,8 @@ export function AdminOrdersManager({
   const [items, setItems] = useState(orders);
   const [productItems, setProductItems] = useState(products);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [form] = Form.useForm<ProductFormValues>();
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
   const productTypeFilters = [
     { text: "Gift card", value: "gift-card" },
     { text: "Swag", value: "swag" },
@@ -96,31 +134,84 @@ export function AdminOrdersManager({
     }
   }
 
-  async function createProduct(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
+  function updateVariant(index: number, updates: Partial<ProductVariant>) {
+    setVariants((current) =>
+      current.map((variant, variantIndex) =>
+        variantIndex === index ? { ...variant, ...updates } : variant,
+      ),
+    );
+  }
+
+  function removeVariant(index: number) {
+    setVariants((current) => current.filter((_, variantIndex) => variantIndex !== index));
+  }
+
+  function addVariant() {
+    setVariants((current) => [
+      ...current,
+      {
+        sku: "",
+        size: "",
+        color: "",
+        inventoryCount: 0,
+        priceAdjustmentCents: 0,
+        isActive: true,
+      },
+    ]);
+  }
+
+  function generateVariants() {
+    const sizes = form.getFieldValue("sizes") ?? [];
+    const colors = form.getFieldValue("colors") ?? [];
+    const baseSlug = form.getFieldValue("slug") || "SKU";
+    const normalizedSizes = sizes.length ? sizes : [""];
+    const normalizedColors = colors.length ? colors : [""];
+
+    const nextVariants = normalizedSizes.flatMap((size: string) =>
+      normalizedColors.map((color: string) => ({
+        sku: [baseSlug, size, color]
+          .filter(Boolean)
+          .join("-")
+          .replace(/\s+/g, "-")
+          .toUpperCase(),
+        size,
+        color,
+        inventoryCount: 0,
+        priceAdjustmentCents: 0,
+        isActive: true,
+      })),
+    );
+
+    setVariants(nextVariants);
+  }
+
+  async function createProduct(values: ProductFormValues) {
+    const cleanVariants = variants
+      .filter((variant) => variant.size || variant.color || variant.sku)
+      .map((variant) => ({
+        sku: variant.sku ?? "",
+        size: variant.size ?? "",
+        color: variant.color ?? "",
+        inventoryCount: variant.inventoryCount,
+        priceAdjustmentCents: variant.priceAdjustmentCents ?? 0,
+        isActive: variant.isActive ?? true,
+      }));
+    const inventoryCount = cleanVariants.length
+      ? cleanVariants.reduce((sum, variant) => sum + variant.inventoryCount, 0)
+      : Number(values.inventoryCount ?? 0);
     const response = await api.post("/api/admin/products", {
-      name: String(formData.get("name") ?? ""),
-      slug: String(formData.get("slug") ?? ""),
-      description: String(formData.get("description") ?? ""),
-      priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
-      images: String(formData.get("images") ?? "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-      sizes: String(formData.get("sizes") ?? "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-      colors: String(formData.get("colors") ?? "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-      inventoryCount: Number(formData.get("inventoryCount") ?? 0),
-      limitedEdition: formData.get("limitedEdition") === "on",
-      isActive: formData.get("isActive") === "on",
-      isGiftCard: formData.get("isGiftCard") === "on",
+      name: values.name,
+      slug: values.slug,
+      description: values.description,
+      priceCents: Math.round(Number(values.priceDollars ?? 0) * 100),
+      images: values.images ?? [],
+      sizes: values.sizes ?? [],
+      colors: values.colors ?? [],
+      variants: cleanVariants,
+      inventoryCount,
+      limitedEdition: Boolean(values.limitedEdition),
+      isActive: values.isActive !== false,
+      isGiftCard: Boolean(values.isGiftCard),
     });
     const result = response.data;
 
@@ -131,7 +222,8 @@ export function AdminOrdersManager({
 
     setProductItems((current) => [result.data.product, ...current]);
     antMessage.success("Product created.");
-    form.reset();
+    form.resetFields();
+    setVariants([]);
   }
 
   async function toggleProduct(product: Product) {
@@ -209,6 +301,17 @@ export function AdminOrdersManager({
       key: "inventoryCount",
       width: 130,
       sorter: (a, b) => a.inventoryCount - b.inventoryCount,
+    },
+    {
+      title: "Variants",
+      key: "variants",
+      width: 150,
+      sorter: (a, b) => (a.variants?.length ?? 0) - (b.variants?.length ?? 0),
+      render: (_, product) => (
+        <Tag color={(product.variants?.length ?? 0) ? "cyan" : "default"}>
+          {product.variants?.length ?? 0} variants
+        </Tag>
+      ),
     },
     {
       title: "Type",
@@ -340,23 +443,190 @@ export function AdminOrdersManager({
     },
   ];
 
+  const variantColumns: ColumnsType<ProductVariant & { key: number }> = [
+    {
+      title: "SKU",
+      dataIndex: "sku",
+      key: "sku",
+      width: 180,
+      render: (_, variant, index) => (
+        <Input
+          value={variant.sku ?? ""}
+          onChange={(event) => updateVariant(index, { sku: event.target.value })}
+          placeholder="SKU"
+        />
+      ),
+    },
+    {
+      title: "Size",
+      dataIndex: "size",
+      key: "size",
+      width: 130,
+      render: (_, variant, index) => (
+        <Input
+          value={variant.size ?? ""}
+          onChange={(event) => updateVariant(index, { size: event.target.value })}
+          placeholder="Size"
+        />
+      ),
+    },
+    {
+      title: "Color",
+      dataIndex: "color",
+      key: "color",
+      width: 150,
+      render: (_, variant, index) => (
+        <Input
+          value={variant.color ?? ""}
+          onChange={(event) => updateVariant(index, { color: event.target.value })}
+          placeholder="Color"
+        />
+      ),
+    },
+    {
+      title: "Stock",
+      dataIndex: "inventoryCount",
+      key: "inventoryCount",
+      width: 120,
+      render: (_, variant, index) => (
+        <InputNumber
+          min={0}
+          value={variant.inventoryCount}
+          onChange={(value) => updateVariant(index, { inventoryCount: Number(value ?? 0) })}
+          className="w-full"
+        />
+      ),
+    },
+    {
+      title: "Price +/-",
+      dataIndex: "priceAdjustmentCents",
+      key: "priceAdjustmentCents",
+      width: 140,
+      render: (_, variant, index) => (
+        <InputNumber
+          value={(variant.priceAdjustmentCents ?? 0) / 100}
+          step={0.01}
+          formatter={(value) => `$ ${value}`}
+          parser={(value) => Number(value?.replace(/\$\s?/g, "") ?? 0)}
+          onChange={(value) => updateVariant(index, { priceAdjustmentCents: Math.round(Number(value ?? 0) * 100) })}
+          className="w-full"
+        />
+      ),
+    },
+    {
+      title: "Active",
+      dataIndex: "isActive",
+      key: "isActive",
+      width: 100,
+      render: (_, variant, index) => (
+        <Switch
+          checked={variant.isActive !== false}
+          onChange={(checked) => updateVariant(index, { isActive: checked })}
+        />
+      ),
+    },
+    {
+      title: "",
+      key: "actions",
+      width: 90,
+      render: (_, __, index) => (
+        <Button size="small" danger onClick={() => removeVariant(index)}>
+          Remove
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div className="grid gap-6">
-      <form onSubmit={createProduct} className="grid gap-3 rounded-md border border-[#edf0f3] bg-[#f8fafc] p-4 md:grid-cols-2">
-        <h3 className="text-base font-black md:col-span-2">Create Product / Gift Card Product</h3>
-        <input name="name" required placeholder="Name" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="slug" required placeholder="slug" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="priceDollars" required type="number" min="0" step="0.01" placeholder="Price dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="inventoryCount" required type="number" min="0" placeholder="Inventory" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="images" placeholder="Image URLs, comma separated" className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <input name="sizes" placeholder="Sizes, comma separated" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="colors" placeholder="Colors, comma separated" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <textarea name="description" required placeholder="Description" className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <label className="flex items-center gap-2 text-sm font-bold"><input name="limitedEdition" type="checkbox" /> Limited edition</label>
-        <label className="flex items-center gap-2 text-sm font-bold"><input name="isGiftCard" type="checkbox" /> Gift card product</label>
-        <label className="flex items-center gap-2 text-sm font-bold"><input name="isActive" type="checkbox" defaultChecked /> Active</label>
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Create Product</button>
-      </form>
+      <Card
+        title="Create Product"
+        className="rounded-md border-[#d9dde3]"
+        extra={<Tag color="red">Ecommerce Catalog</Tag>}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{ isActive: true, limitedEdition: false, isGiftCard: false }}
+          onFinish={createProduct}
+        >
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <Card size="small" title="Product Details" className="rounded-md">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Form.Item name="name" label="Product Name" rules={[{ required: true }]}>
+                  <Input placeholder="Zelos Hoodie" />
+                </Form.Item>
+                <Form.Item name="slug" label="URL Slug" rules={[{ required: true }]}>
+                  <Input placeholder="zelos-hoodie" />
+                </Form.Item>
+                <Form.Item name="priceDollars" label="Base Price" rules={[{ required: true }]}>
+                  <InputNumber min={0} step={0.01} prefix="$" className="w-full" placeholder="49.00" />
+                </Form.Item>
+                <Form.Item name="inventoryCount" label="Default Stock" tooltip="Used when no variants are generated. Variant stock is summed automatically.">
+                  <InputNumber min={0} className="w-full" placeholder="25" />
+                </Form.Item>
+                <Form.Item name="description" label="Description" rules={[{ required: true }]} className="md:col-span-2">
+                  <Input.TextArea rows={5} placeholder="Describe the product, fit, materials, and customer-facing details." />
+                </Form.Item>
+              </div>
+            </Card>
+
+            <Card size="small" title="Media & Publishing" className="rounded-md">
+              <Form.Item name="images" label="Image URLs">
+                <Select mode="tags" tokenSeparators={[",", "\n"]} placeholder="Paste image URLs and press Enter" />
+              </Form.Item>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Form.Item name="limitedEdition" label="Limited Edition" valuePropName="checked">
+                  <Switch />
+                </Form.Item>
+                <Form.Item name="isGiftCard" label="Gift Card" valuePropName="checked">
+                  <Switch />
+                </Form.Item>
+                <Form.Item name="isActive" label="Published" valuePropName="checked">
+                  <Switch />
+                </Form.Item>
+              </div>
+            </Card>
+          </div>
+
+          <Divider />
+
+          <Card size="small" title="Options & Variations" className="rounded-md">
+            <div className="grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
+              <Form.Item name="sizes" label="Sizes">
+                <Select mode="tags" tokenSeparators={[","]} placeholder="S, M, L, XL" />
+              </Form.Item>
+              <Form.Item name="colors" label="Colors">
+                <Select mode="tags" tokenSeparators={[","]} placeholder="Black, White, Red" />
+              </Form.Item>
+              <div className="flex flex-wrap items-end gap-2 pb-6">
+                <Button onClick={generateVariants}>Generate Variants</Button>
+                <Button onClick={addVariant}>Add Variant</Button>
+              </div>
+            </div>
+            <Table
+              columns={variantColumns}
+              dataSource={variants.map((variant, index) => ({ ...variant, key: index }))}
+              rowKey="key"
+              pagination={false}
+              scroll={{ x: 900 }}
+              locale={{ emptyText: "Add sizes/colors, then generate variants. Gift cards can be created without variants." }}
+            />
+          </Card>
+
+          <div className="mt-5 flex flex-wrap justify-end gap-3">
+            <Button onClick={() => {
+              form.resetFields();
+              setVariants([]);
+            }}>
+              Clear
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Create Product
+            </Button>
+          </div>
+        </Form>
+      </Card>
 
       <form onSubmit={createGiftCard} className="grid gap-3 rounded-md border border-[#edf0f3] bg-[#f8fafc] p-4 md:grid-cols-3">
         <h3 className="text-base font-black md:col-span-3">Manual Gift Card</h3>

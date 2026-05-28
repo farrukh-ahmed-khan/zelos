@@ -12,6 +12,14 @@ export type StoreProduct = {
   images: string[];
   sizes: string[];
   colors: string[];
+  variants?: Array<{
+    sku?: string | null;
+    size?: string | null;
+    color?: string | null;
+    inventoryCount: number;
+    priceAdjustmentCents?: number;
+    isActive?: boolean;
+  }>;
   inventoryCount: number;
   limitedEdition: boolean;
   isActive: boolean;
@@ -36,6 +44,20 @@ function money(cents: number) {
     style: "currency",
     currency: "USD",
   });
+}
+
+function getActiveVariants(product: StoreProduct) {
+  return (product.variants ?? []).filter((variant) => variant.isActive !== false);
+}
+
+function getSelectedVariant(product: StoreProduct, size: string, color: string) {
+  return getActiveVariants(product).find(
+    (variant) => (variant.size ?? "") === size && (variant.color ?? "") === color,
+  );
+}
+
+function uniqueTextOptions(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
 }
 
 function loadCart() {
@@ -81,9 +103,12 @@ export function StoreCart({
   );
 
   function addToCart(product: StoreProduct, formData?: FormData) {
-    const size = String(formData?.get("size") ?? product.sizes[0] ?? "");
-    const color = String(formData?.get("color") ?? product.colors[0] ?? "");
+    const activeVariants = getActiveVariants(product);
+    const fallbackVariant = activeVariants[0];
+    const size = String(formData?.get("size") ?? fallbackVariant?.size ?? product.sizes[0] ?? "");
+    const color = String(formData?.get("color") ?? fallbackVariant?.color ?? product.colors[0] ?? "");
     const quantity = Number(formData?.get("quantity") ?? 1);
+    const selectedVariant = getSelectedVariant(product, size, color);
 
     setCart((current) => {
       const existingIndex = current.findIndex(
@@ -103,7 +128,7 @@ export function StoreCart({
         {
           productId: product.id,
           name: product.name,
-          priceCents: product.priceCents,
+          priceCents: product.priceCents + (selectedVariant?.priceAdjustmentCents ?? 0),
           quantity,
           size,
           color,
@@ -195,6 +220,17 @@ export function StoreCart({
   }
 
   function productForm(product: StoreProduct) {
+    const activeVariants = getActiveVariants(product);
+    const optionSizes = activeVariants.length
+      ? uniqueTextOptions(activeVariants.map((variant) => variant.size))
+      : product.sizes;
+    const optionColors = activeVariants.length
+      ? uniqueTextOptions(activeVariants.map((variant) => variant.color))
+      : product.colors;
+    const visibleInventory = activeVariants.length
+      ? activeVariants.reduce((total, variant) => total + variant.inventoryCount, 0)
+      : product.inventoryCount;
+
     return (
       <form
         key={product.id}
@@ -215,18 +251,18 @@ export function StoreCart({
         <h2 className="font-bebas text-3xl uppercase leading-none">{product.name}</h2>
         <p className="text-sm leading-relaxed text-[#555]">{product.description}</p>
         <p className="font-black">{money(product.priceCents)}</p>
-        {product.sizes.length ? (
+        {optionSizes.length ? (
           <select name="size" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-            {product.sizes.map((size) => (
+            {optionSizes.map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>
             ))}
           </select>
         ) : null}
-        {product.colors.length ? (
+        {optionColors.length ? (
           <select name="color" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-            {product.colors.map((color) => (
+            {optionColors.map((color) => (
               <option key={color} value={color}>
                 {color}
               </option>
@@ -237,15 +273,15 @@ export function StoreCart({
           name="quantity"
           type="number"
           min={1}
-          max={product.inventoryCount || 99}
+          max={visibleInventory || 99}
           defaultValue={1}
           className="rounded-md border border-[#d8d2c5] px-3 py-3"
         />
         <button
-          disabled={!product.isGiftCard && product.inventoryCount <= 0}
+          disabled={!product.isGiftCard && visibleInventory <= 0}
           className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:opacity-50"
         >
-          {product.inventoryCount <= 0 && !product.isGiftCard ? "Out of Stock" : "Add to Cart"}
+          {visibleInventory <= 0 && !product.isGiftCard ? "Out of Stock" : "Add to Cart"}
         </button>
       </form>
     );

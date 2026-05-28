@@ -16,6 +16,7 @@ export function serializeProduct(product: ProductDocument) {
     images: product.images ?? [],
     sizes: product.sizes ?? [],
     colors: product.colors ?? [],
+    variants: product.variants ?? [],
     inventoryCount: product.inventoryCount,
     limitedEdition: product.limitedEdition,
     isActive: product.isActive,
@@ -112,14 +113,29 @@ export async function createOrder(params: {
     if (!product) {
       throw new ApiError(404, "One or more products were not found.");
     }
-    if (!product.isGiftCard && product.inventoryCount < item.quantity) {
+    const variant = product.variants?.find(
+      (entry) =>
+        (entry.size ?? "") === (item.size ?? "") &&
+        (entry.color ?? "") === (item.color ?? "") &&
+        entry.isActive !== false,
+    );
+
+    if (!product.isGiftCard && product.variants?.length && !variant) {
+      throw new ApiError(404, `${product.name} variation was not found.`);
+    }
+
+    if (!product.isGiftCard && variant && variant.inventoryCount < item.quantity) {
+      throw new ApiError(409, `${product.name} variation is out of stock.`);
+    }
+
+    if (!product.isGiftCard && !variant && product.inventoryCount < item.quantity) {
       throw new ApiError(409, `${product.name} is out of stock.`);
     }
     return {
       productId: product._id.toString(),
       name: product.name,
       quantity: item.quantity,
-      unitPriceCents: product.priceCents,
+      unitPriceCents: product.priceCents + (variant?.priceAdjustmentCents ?? 0),
       size: item.size || null,
       color: item.color || null,
     };
@@ -195,6 +211,26 @@ export async function markOrderPaid(params: {
     }
 
     if (!product.isGiftCard) {
+      const variantIndex = product.variants?.findIndex(
+        (entry) =>
+          (entry.size ?? "") === (item.size ?? "") &&
+          (entry.color ?? "") === (item.color ?? "") &&
+          entry.isActive !== false,
+      );
+
+      if (variantIndex !== undefined && variantIndex >= 0) {
+        const variant = product.variants[variantIndex];
+
+        if (variant.inventoryCount < item.quantity) {
+          throw new ApiError(409, `${product.name} variation is out of stock.`);
+        }
+
+        variant.inventoryCount -= item.quantity;
+        product.inventoryCount = Math.max(0, product.inventoryCount - item.quantity);
+        await product.save();
+        continue;
+      }
+
       if (product.inventoryCount < item.quantity) {
         throw new ApiError(409, `${product.name} is out of stock.`);
       }

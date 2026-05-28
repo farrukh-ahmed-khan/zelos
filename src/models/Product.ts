@@ -1,5 +1,17 @@
 import mongoose, { HydratedDocument, InferSchemaType, Model, Schema } from "mongoose";
 
+const ProductVariantSchema = new Schema(
+  {
+    sku: { type: String, trim: true, maxlength: 80, default: null },
+    size: { type: String, trim: true, maxlength: 30, default: null },
+    color: { type: String, trim: true, maxlength: 40, default: null },
+    inventoryCount: { type: Number, required: true, default: 0, min: 0 },
+    priceAdjustmentCents: { type: Number, required: true, default: 0 },
+    isActive: { type: Boolean, default: true, index: true },
+  },
+  { _id: false },
+);
+
 const ProductSchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 160 },
@@ -9,6 +21,7 @@ const ProductSchema = new Schema(
     images: { type: [String], default: [] },
     sizes: { type: [String], default: [] },
     colors: { type: [String], default: [] },
+    variants: { type: [ProductVariantSchema], default: [] },
     inventoryCount: { type: Number, required: true, default: 0, min: 0 },
     limitedEdition: { type: Boolean, default: false, index: true },
     isActive: { type: Boolean, default: true, index: true },
