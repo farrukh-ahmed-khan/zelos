@@ -1,15 +1,16 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 import { api, isApiSuccess } from "@/lib/api/client";
 import { ForumComposer } from "@/components/forum/ForumComposer";
 
 export function ForumThreadForm({
   canPost,
+  categories,
   readOnlyReason,
 }: {
   canPost: boolean;
+  categories: string[];
   readOnlyReason: string;
 }) {
   const [message, setMessage] = useState("");
@@ -54,7 +55,7 @@ export function ForumThreadForm({
       ) : null}
       <input name="title" placeholder="Thread title" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
       <select name="category" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-        {FORUM_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <option key={category}>{category}</option>
         ))}
       </select>

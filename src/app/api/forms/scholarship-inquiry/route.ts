@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { handleApiError, successResponse } from "@/lib/http";
 import { createFormSubmission } from "@/lib/forms/service";
+import { verifyCaptchaToken } from "@/lib/captcha";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { scholarshipFunderLeadSchema } from "@/lib/validation/forms";
 
@@ -10,6 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     enforceRateLimit(`scholarship-inquiry:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = scholarshipFunderLeadSchema.parse(await request.json());
+    await verifyCaptchaToken(body.captchaToken);
     const submission = await createFormSubmission({
       type: "scholarship-inquiry",
       name: body.name,

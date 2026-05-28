@@ -5,10 +5,12 @@ import { handleApiError, successResponse } from "@/lib/http";
 import Donation from "@/models/Donation";
 import Event from "@/models/Event";
 import EventRsvp from "@/models/EventRsvp";
+import FormSubmission from "@/models/FormSubmission";
 import Order from "@/models/Order";
 import Scholarship from "@/models/Scholarship";
 import School from "@/models/School";
 import Subscription from "@/models/Subscription";
+import User from "@/models/User";
 import Video from "@/models/Video";
 import VideoProgress from "@/models/VideoProgress";
 
@@ -30,6 +32,10 @@ export async function GET(request: NextRequest) {
       events,
       scholarships,
       donations,
+      fundScholarshipLeadStats,
+      usersByRole,
+      subscriptionsByCadenceAndStatus,
+      recentEngagement,
     ] = await Promise.all([
       Subscription.aggregate([{ $group: { _id: "$planType", count: { $sum: 1 } } }]),
       Subscription.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
@@ -41,6 +47,24 @@ export async function GET(request: NextRequest) {
       Event.find().select("title status").lean(),
       Scholarship.find().select("name status awardAmountCents numberOfRecipients applicationDeadline").lean(),
       Donation.find().sort({ createdAt: -1 }).limit(100).lean(),
+      FormSubmission.aggregate([
+        { $match: { type: "scholarship-inquiry" } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      User.aggregate([{ $group: { _id: "$role", count: { $sum: 1 } } }]),
+      Subscription.aggregate([
+        {
+          $group: {
+            _id: { planType: "$planType", status: "$status", billingStatus: "$billingStatus" },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Promise.all([
+        User.countDocuments({ lastLoginAt: { $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) } }),
+        VideoProgress.countDocuments({ completed: true }),
+        EventRsvp.countDocuments(),
+      ]),
     ]);
 
     const completionsByVideo = new Map<string, number>();
@@ -81,6 +105,16 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       subscribersByPlan,
+      subscribersByTier: {
+        free: usersByRole
+          .filter((entry) => ["mentee"].includes(entry._id))
+          .reduce((sum, entry) => sum + entry.count, 0),
+        paidRoleAccounts: usersByRole
+          .filter((entry) => entry._id === "subscriber")
+          .reduce((sum, entry) => sum + entry.count, 0),
+        byRole: usersByRole,
+      },
+      subscriptionsByCadenceAndStatus,
       subscriptionsByStatus,
       videoCompletionByTrack,
       videoCompletionByLesson,
@@ -111,6 +145,15 @@ export async function GET(request: NextRequest) {
         numberOfRecipients: scholarship.numberOfRecipients,
         applicationDeadline: scholarship.applicationDeadline,
       })),
+      fundScholarshipLeadVolume: {
+        total: fundScholarshipLeadStats.reduce((sum, entry) => sum + entry.count, 0),
+        byStatus: fundScholarshipLeadStats,
+      },
+      engagement: {
+        activeUsersLast30Days: recentEngagement[0],
+        completedLessons: recentEngagement[1],
+        totalEventRsvps: recentEngagement[2],
+      },
       generalDonationHistory: donations,
     });
   } catch (error) {

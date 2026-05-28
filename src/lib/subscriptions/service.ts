@@ -174,6 +174,30 @@ export async function createSubscriptionForUser(params: {
 
   await connectToDatabase();
 
+  const latestSubscription = await getLatestSubscriptionByUserId(user._id.toString());
+  const now = new Date();
+
+  if (
+    latestSubscription &&
+    latestSubscription.status !== "expired" &&
+    latestSubscription.expiryDate > now
+  ) {
+    throw new ApiError(
+      409,
+      "Plan changes are available only after the current paid period expires.",
+    );
+  }
+
+  if (
+    latestSubscription?.renewalEligibleAt &&
+    latestSubscription.renewalEligibleAt > now
+  ) {
+    throw new ApiError(
+      409,
+      "Plan changes are locked until the current paid period ends.",
+    );
+  }
+
   const startDate = new Date();
   const expiryDate = calculateExpiryDate(startDate, planType);
   const graceEndsAt = addGracePeriod(expiryDate);

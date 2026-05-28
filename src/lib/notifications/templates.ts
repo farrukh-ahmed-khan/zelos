@@ -28,6 +28,7 @@ export const TRANSACTIONAL_EMAIL_TEMPLATES = [
   "data-access-confirmation",
   "data-deletion-confirmation",
   "admin-broadcast",
+  "account-deactivation-confirmation",
 ] as const;
 
 export type TransactionalEmailTemplate =

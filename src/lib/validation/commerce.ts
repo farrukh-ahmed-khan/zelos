@@ -40,6 +40,7 @@ export const scholarshipApplicationSchema = z.object({
   gpa: z.number().min(0).max(4.5).optional(),
   personalStatement: z.string().trim().min(20).max(5000),
   documentUrl: z.url().trim().max(2048).optional(),
+  captchaToken: z.string().trim().max(4000).optional(),
 });
 
 export const scholarshipDonationSchema = z.object({
@@ -54,6 +55,7 @@ export const donationSchema = z.object({
   lastName: z.string().trim().min(1).max(80),
   email: z.email().trim().toLowerCase(),
   dedication: z.string().trim().max(300).optional(),
+  captchaToken: z.string().trim().max(4000).optional(),
 });
 
 export const createProductSchema = z.object({
@@ -75,6 +77,7 @@ export const checkoutSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   giftCardCode: z.string().trim().max(80).optional(),
+  captchaToken: z.string().trim().max(4000).optional(),
   items: z
     .array(
       z.object({

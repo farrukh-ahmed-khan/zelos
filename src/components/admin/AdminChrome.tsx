@@ -20,6 +20,7 @@ const navItems = [
   { href: "/admin", label: "Overview", icon: DashboardOutlined },
   { href: "/admin/videos", label: "Videos", icon: PlaySquareOutlined },
   { href: "/admin/content-categories", label: "Categories", icon: FolderOpenOutlined },
+  { href: "/admin/static-pages", label: "Static Pages", icon: FormOutlined },
   { href: "/admin/subscription-plans", label: "Plans", icon: TagsOutlined },
   { href: "/admin/users", label: "Users", icon: TeamOutlined },
   { href: "/admin/invites", label: "Invites", icon: UserAddOutlined },

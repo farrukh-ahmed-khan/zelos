@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const honeypot = z.string().max(0).optional();
+const captchaToken = z.string().trim().max(4000).optional();
 
 export const publicFormSchema = z.object({
   name: z.string().trim().min(2).max(160),
@@ -8,6 +9,7 @@ export const publicFormSchema = z.object({
   category: z.string().trim().max(120).optional(),
   message: z.string().trim().min(10).max(5000),
   companyWebsite: honeypot,
+  captchaToken,
 });
 
 export const scholarshipFunderLeadSchema = z.object({
@@ -19,6 +21,7 @@ export const scholarshipFunderLeadSchema = z.object({
   budgetRange: z.string().trim().min(2).max(120),
   notes: z.string().trim().max(3000).optional(),
   companyWebsite: honeypot,
+  captchaToken,
 });
 
 export const dataRequestSchema = publicFormSchema.extend({

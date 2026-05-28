@@ -52,10 +52,6 @@ export async function requireUser(
 
   const effectiveStatus = user.status ?? (user.isBanned ? "banned" : "active");
 
-  if (effectiveStatus === "banned" || user.isBanned) {
-    throw new ApiError(403, "This account has been banned.");
-  }
-
   if (effectiveStatus === "deactivated") {
     throw new ApiError(403, "This account is deactivated.");
   }
@@ -90,7 +86,15 @@ export async function requireAdminPermission(
   request: NextRequest,
   permission: AdminPermission,
 ) {
-  const user = await requireUser(request, ["sub-admin", "super-admin"]);
+  const allowedRoles: UserRole[] =
+    permission === "forum.moderate"
+      ? ["forum-moderator", "sub-admin", "super-admin"]
+      : ["sub-admin", "super-admin"];
+  const user = await requireUser(request, allowedRoles);
+
+  if (user.status === "banned" || user.isBanned) {
+    throw new ApiError(403, "This account has been banned.");
+  }
 
   if (!hasAdminPermission(user.role, user.adminPermissions, permission)) {
     throw new ApiError(403, "You do not have permission to access this admin area.");

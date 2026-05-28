@@ -6,6 +6,7 @@ import {
   serializeMentorApplication,
 } from "@/lib/mentor-applications/service";
 import { queueEmail } from "@/lib/notifications/service";
+import { verifyCaptchaToken } from "@/lib/captcha";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     enforceRateLimit(`mentor:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = mentorApplicationSchema.parse(await request.json());
+    await verifyCaptchaToken(body.captchaToken);
 
     const application = await createMentorApplication({
       ...body,

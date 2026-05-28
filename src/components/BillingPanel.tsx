@@ -52,6 +52,13 @@ export function BillingPanel({
     subscription?.planName ??
     currentPlan?.name ??
     (subscription ? `${subscription.planType} subscription` : null);
+  const currentPeriodEndsAt = subscription?.expiryDate
+    ? new Date(subscription.expiryDate)
+    : null;
+  const planChangesLocked =
+    Boolean(subscription) &&
+    subscription?.status !== "expired" &&
+    Boolean(currentPeriodEndsAt && currentPeriodEndsAt > new Date());
 
   async function checkout(planId: string) {
     setMessage("");
@@ -203,6 +210,7 @@ export function BillingPanel({
           </label>
           <p className="text-xs text-[#666] md:col-span-3">
             Gift cards or promo codes can be applied to the first subscription checkout payment. Changing age track deletes prior activity/progress.
+            {planChangesLocked ? ` Plan changes unlock after ${currentPeriodEndsAt?.toLocaleDateString()}.` : ""}
           </p>
         </div>
         {plans.map((plan) => (
@@ -227,6 +235,7 @@ export function BillingPanel({
                 !plan.stripePriceId ||
                 Boolean(checkoutPlanId) ||
                 Boolean(giftCardCode.trim() && promoCode.trim()) ||
+                planChangesLocked ||
                 (subscription?.status === "active" &&
                   (subscription.planId === plan.id ||
                     (!subscription.planId && subscription.planType === plan.interval)))
@@ -237,6 +246,8 @@ export function BillingPanel({
               (subscription.planId === plan.id ||
                 (!subscription.planId && subscription.planType === plan.interval))
                 ? "Current Active Plan"
+                : planChangesLocked
+                  ? "Available After Current Period"
                 : checkoutPlanId === plan.id
                   ? "Opening Checkout..."
                   : "Checkout"}

@@ -30,10 +30,26 @@ export async function POST(request: NextRequest) {
 
     const latestSubscription = await getLatestSubscriptionByUserId(user._id.toString());
 
-    if (latestSubscription && latestSubscription.expiryDate > new Date()) {
+    const now = new Date();
+
+    if (
+      latestSubscription &&
+      latestSubscription.status !== "expired" &&
+      latestSubscription.expiryDate > now
+    ) {
       throw new ApiError(
         409,
         "Plan changes are available after the current paid period expires.",
+      );
+    }
+
+    if (
+      latestSubscription?.renewalEligibleAt &&
+      latestSubscription.renewalEligibleAt > now
+    ) {
+      throw new ApiError(
+        409,
+        "Plan changes are locked until the current paid period ends.",
       );
     }
 

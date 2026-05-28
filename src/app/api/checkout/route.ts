@@ -4,6 +4,7 @@ import { verifyAuthToken } from "@/lib/auth/jwt";
 import { handleApiError, successResponse } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { checkoutSchema } from "@/lib/validation/commerce";
+import { verifyCaptchaToken } from "@/lib/captcha";
 import { createStripeStoreCheckoutSession } from "@/lib/billing/stripe";
 import { createOrder, markOrderPaid } from "@/lib/store/service";
 
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     enforceRateLimit(`checkout:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = checkoutSchema.parse(await request.json());
+    await verifyCaptchaToken(body.captchaToken);
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
     let userId: string | null = null;
 
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
       orderId: order._id.toString(),
       successUrl: `${baseUrl}/store?checkout=success`,
       cancelUrl: `${baseUrl}/store?checkout=cancelled`,
+      orderDescription: order.items.map((item) => `${item.quantity}x ${item.name}`).join(", "),
     });
 
     order.stripeCheckoutSessionId = checkout.id;

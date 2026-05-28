@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
+import { getPublishedStaticPage } from "@/lib/static-pages/service";
 
 type FormConfig = {
   endpoint: string;
@@ -15,13 +16,21 @@ type FormConfig = {
   }[];
 };
 
-export function StaticInfoPage({
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export async function StaticInfoPage({
   eyebrow,
   title,
   intro,
   sections,
   form,
   actions,
+  cmsSlug,
 }: {
   eyebrow: string;
   title: string;
@@ -29,20 +38,27 @@ export function StaticInfoPage({
   sections: { title: string; body: string; points?: string[] }[];
   form?: FormConfig;
   actions?: { href: string; label: string }[];
+  cmsSlug?: string;
 }) {
+  const cmsPage = await getPublishedStaticPage(cmsSlug ?? slugify(title)).catch(() => null);
+  const pageEyebrow = cmsPage?.eyebrow ?? eyebrow;
+  const pageTitle = cmsPage?.title ?? title;
+  const pageIntro = cmsPage?.intro ?? intro;
+  const pageSections = cmsPage?.sections?.length ? cmsPage.sections : sections;
+
   return (
     <main className="min-h-screen bg-[#eee6d6] text-[#202020]">
       <section className="rounded-b-[2rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.35)] sm:px-6">
         <Header />
         <div className="container py-14">
           <p className="eyebrow-white">
-            {eyebrow}
+            {pageEyebrow}
           </p>
           <h1 className="max-w-4xl font-bebas text-[clamp(3.5rem,8vw,7rem)] uppercase leading-[0.86]">
-            {title}
+            {pageTitle}
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-white/90">
-            {intro}
+            {pageIntro}
           </p>
           {actions?.length ? (
             <div className="mt-7 flex flex-wrap gap-3">
@@ -62,7 +78,7 @@ export function StaticInfoPage({
 
       <section className="container grid gap-5 py-10 lg:grid-cols-3">
         <div className="grid gap-5 lg:col-span-2">
-          {sections.map((section) => (
+          {pageSections.map((section) => (
             <article
               key={section.title}
               className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]"

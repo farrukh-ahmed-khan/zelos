@@ -308,6 +308,19 @@ const GENERIC_TEMPLATE_COPY: Record<string, Omit<TemplateCopy, "action"> & { act
     actionPath: "/dashboard",
     actionLabel: "Open dashboard",
   },
+  "account-deactivation-confirmation": {
+    subject: "Your Zelos account was deactivated",
+    preheader: "Your Zelos account deactivation is confirmed.",
+    headerLabel: "Account",
+    eyebrow: "Account deactivated",
+    heading: "Your account was deactivated",
+    body: [
+      "Your Zelos account has been deactivated.",
+      "You have been signed out and access is paused unless an administrator reactivates the account.",
+    ],
+    actionPath: "/contact",
+    actionLabel: "Contact support",
+  },
   "event-updated": {
     subject: "A Zelos event was updated",
     preheader: "There are updated details for a Zelos event.",

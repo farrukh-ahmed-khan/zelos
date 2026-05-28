@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/http";
 import { type UserDocument } from "@/models/User";
 import ForumReply from "@/models/ForumReply";
 import ForumReport from "@/models/ForumReport";
+import ForumCategory from "@/models/ForumCategory";
 import ForumThread from "@/models/ForumThread";
 import User from "@/models/User";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
@@ -16,6 +17,10 @@ function stripForumMarkdown(content: string) {
 }
 
 export async function requireForumPostingEligibility(user: UserDocument) {
+  if (user.status === "banned" || user.isBanned) {
+    throw new ApiError(403, "Banned accounts can read the forum but cannot post or reply.");
+  }
+
   if (user.age < 16) {
     throw new ApiError(403, "Users under 16 cannot create forum posts.");
   }
@@ -23,6 +28,29 @@ export async function requireForumPostingEligibility(user: UserDocument) {
   if (user.forumPostingRevoked) {
     throw new ApiError(403, "Your forum posting access has been revoked.");
   }
+}
+
+export async function getActiveForumCategories() {
+  await connectToDatabase();
+
+  const categories = await ForumCategory.find({ isActive: true })
+    .sort({ order: 1, name: 1 })
+    .lean();
+
+  if (categories.length) {
+    return categories.map((category) => category.name);
+  }
+
+  await ForumCategory.insertMany(
+    FORUM_CATEGORIES.map((name, index) => ({
+      name,
+      order: index + 1,
+      isActive: true,
+    })),
+    { ordered: false },
+  ).catch(() => null);
+
+  return [...FORUM_CATEGORIES];
 }
 
 export async function getForumThreads() {
@@ -90,12 +118,15 @@ export async function getForumThreads() {
 export async function getForumCategorySummary() {
   await connectToDatabase();
 
-  const threads = await ForumThread.find({ isHidden: false })
-    .select("category updatedAt createdAt")
-    .sort({ updatedAt: -1 })
-    .lean();
+  const [categoryNames, threads] = await Promise.all([
+    getActiveForumCategories(),
+    ForumThread.find({ isHidden: false })
+      .select("category updatedAt createdAt")
+      .sort({ updatedAt: -1 })
+      .lean(),
+  ]);
 
-  return FORUM_CATEGORIES.map((category) => {
+  return categoryNames.map((category) => {
     const categoryThreads = threads.filter((thread) => thread.category === category);
     const lastThread = categoryThreads[0];
 
@@ -115,11 +146,65 @@ export async function createForumThread(params: {
 }) {
   await connectToDatabase();
 
-  if (!FORUM_CATEGORIES.includes(params.category as (typeof FORUM_CATEGORIES)[number])) {
+  const categories = await getActiveForumCategories();
+
+  if (!categories.includes(params.category)) {
     throw new ApiError(422, "Invalid forum category.");
   }
 
   return ForumThread.create(params);
+}
+
+export async function getAdminForumCategories() {
+  await connectToDatabase();
+
+  const categories = await ForumCategory.find().sort({ order: 1, name: 1 }).lean();
+
+  if (categories.length) {
+    return categories;
+  }
+
+  await getActiveForumCategories();
+  return ForumCategory.find().sort({ order: 1, name: 1 }).lean();
+}
+
+export async function createForumCategory(params: {
+  name: string;
+  description?: string | null;
+  order?: number;
+}) {
+  await connectToDatabase();
+
+  return ForumCategory.create({
+    name: params.name,
+    description: params.description ?? null,
+    order: params.order ?? 1,
+    isActive: true,
+  });
+}
+
+export async function updateForumCategory(
+  categoryId: string,
+  updates: {
+    name?: string;
+    description?: string | null;
+    order?: number;
+    isActive?: boolean;
+  },
+) {
+  await connectToDatabase();
+
+  const category = await ForumCategory.findByIdAndUpdate(
+    categoryId,
+    { $set: updates },
+    { new: true },
+  );
+
+  if (!category) {
+    throw new ApiError(404, "Forum category not found.");
+  }
+
+  return category;
 }
 
 export async function getForumThreadById(threadId: string) {

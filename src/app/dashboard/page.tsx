@@ -21,6 +21,7 @@ import {
 } from "@/lib/videos/service";
 import User from "@/models/User";
 import Order from "@/models/Order";
+import BroadcastMessage from "@/models/BroadcastMessage";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export default async function DashboardPage() {
 
   const user = await User.findById(payload.sub);
 
-  if (!user || user.isBanned || user.status === "banned" || !user.emailVerifiedAt) {
+  if (!user || !user.emailVerifiedAt) {
     redirect("/login");
   }
 
@@ -82,6 +83,7 @@ export default async function DashboardPage() {
     reportsResult,
     mentorApplicationsResult,
     ordersResult,
+    broadcastsResult,
   ] = await Promise.allSettled([
     getEventsWithRsvpStatus(userId),
     getForumThreads(),
@@ -97,6 +99,7 @@ export default async function DashboardPage() {
       .sort({ createdAt: -1 })
       .limit(10)
       .lean(),
+    BroadcastMessage.find().sort({ createdAt: -1 }).limit(5).lean(),
   ]);
 
   const events = eventsResult.status === "fulfilled" ? eventsResult.value : [];
@@ -144,6 +147,15 @@ export default async function DashboardPage() {
           createdAt: order.createdAt,
         }))
       : [];
+  const broadcasts =
+    broadcastsResult.status === "fulfilled"
+      ? broadcastsResult.value.map((broadcast) => ({
+          id: broadcast._id.toString(),
+          title: broadcast.title,
+          content: broadcast.content,
+          createdAt: broadcast.createdAt,
+        }))
+      : [];
 
   return (
     <DashboardShell
@@ -156,6 +168,7 @@ export default async function DashboardPage() {
       schoolResources={JSON.parse(JSON.stringify(schoolResources))}
       subscriberResources={JSON.parse(JSON.stringify(subscriberResources))}
       orders={JSON.parse(JSON.stringify(orders))}
+      broadcasts={JSON.parse(JSON.stringify(broadcasts))}
       subscriptionLabel={resolveSubscriptionLabel(subscription)}
       hasVideoLibraryAccess={hasVideoLibraryAccess}
       needsVideoSubscription={needsVideoSubscription}

@@ -3,6 +3,7 @@ import { createStripeDonationCheckoutSession } from "@/lib/billing/stripe";
 import { connectToDatabase } from "@/lib/db";
 import { handleApiError, successResponse } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { verifyCaptchaToken } from "@/lib/captcha";
 import { donationSchema } from "@/lib/validation/commerce";
 import Donation from "@/models/Donation";
 
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     enforceRateLimit(`donation:${request.headers.get("x-forwarded-for") ?? "local"}`);
     const body = donationSchema.parse(await request.json());
+    await verifyCaptchaToken(body.captchaToken);
     await connectToDatabase();
     const donation = await Donation.create(body);
     const origin = request.nextUrl.origin;

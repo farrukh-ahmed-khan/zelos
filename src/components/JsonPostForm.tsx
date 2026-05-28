@@ -39,6 +39,12 @@ export function JsonPostForm({
         const raw = String(formData.get(field.name) ?? "");
         payload[field.name] = field.type === "number" ? Number(raw) : raw;
       }
+
+      const captchaToken = String(formData.get("captchaToken") ?? "");
+      if (captchaToken) {
+        payload.captchaToken = captchaToken;
+      }
+
       const response = await api.post(endpoint, payload);
       const result = response.data;
       setMessage(isApiSuccess(response.status) ? result?.data?.message ?? "Submitted." : result?.error?.message ?? "Unable to submit.");
@@ -84,6 +90,7 @@ export function JsonPostForm({
           </label>
         ),
       )}
+      <input name="captchaToken" type="hidden" />
       {message ? <p className="text-sm font-bold text-[#b22222]">{message}</p> : null}
       <button disabled={isSubmitting} className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60">
         {isSubmitting ? submittingLabel : submitLabel}

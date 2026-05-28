@@ -17,6 +17,7 @@ export const mentorApplicationSchema = z.object({
   communicationPreferences: z.string().trim().min(2).max(300),
   howHeard: z.string().trim().min(2).max(300),
   whyMentor: z.string().trim().min(20).max(2000),
+  captchaToken: z.string().trim().max(4000).optional(),
 });
 
 export const updateMentorApplicationSchema = z.object({

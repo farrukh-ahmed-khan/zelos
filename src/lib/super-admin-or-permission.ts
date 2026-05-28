@@ -22,7 +22,14 @@ export async function requireSuperOrPermission(permission: AdminPermission) {
   await connectToDatabase();
   const user = await User.findById(payload.sub);
 
-  if (!user || !hasAdminPermission(user.role, user.adminPermissions, permission)) {
+  if (
+    !user ||
+    user.status === "deactivated" ||
+    user.status === "suspended" ||
+    user.status === "banned" ||
+    user.isBanned ||
+    !hasAdminPermission(user.role, user.adminPermissions, permission)
+  ) {
     redirect("/dashboard");
   }
 

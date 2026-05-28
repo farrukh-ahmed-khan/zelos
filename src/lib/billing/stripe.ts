@@ -25,6 +25,7 @@ type StripeStoreCheckoutParams = {
   orderId: string;
   successUrl: string;
   cancelUrl: string;
+  orderDescription?: string;
 };
 
 type StripePortalParams = {
@@ -161,7 +162,7 @@ export async function createStripeStoreCheckoutSession(params: StripeStoreChecko
     mode: "payment",
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][product_data][name]": "Zelos store order",
-    "line_items[0][price_data][product_data][description]": "Zelos swag store purchase",
+    "line_items[0][price_data][product_data][description]": params.orderDescription ?? "Zelos swag store purchase",
     "line_items[0][price_data][unit_amount]": String(params.amountCents),
     "line_items[0][quantity]": "1",
     customer_email: params.customerEmail,

@@ -115,6 +115,13 @@ type DashboardOrder = {
   createdAt: string | Date;
 };
 
+type DashboardBroadcast = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string | Date;
+};
+
 type DashboardShellProps = {
   user: DashboardUser;
   videos: DashboardVideo[];
@@ -125,6 +132,7 @@ type DashboardShellProps = {
   schoolResources: DashboardSchoolResource[];
   subscriberResources: DashboardSubscriberResource[];
   orders: DashboardOrder[];
+  broadcasts: DashboardBroadcast[];
   subscriptionLabel: string;
   hasVideoLibraryAccess: boolean;
   needsVideoSubscription: boolean;
@@ -759,6 +767,30 @@ function OrderHistoryPanel({ orders }: { orders: DashboardOrder[] }) {
   );
 }
 
+function NewsUpdatesPanel({ broadcasts }: { broadcasts: DashboardBroadcast[] }) {
+  if (!broadcasts.length) {
+    return (
+      <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
+        No news updates have been posted yet.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {broadcasts.map((broadcast) => (
+        <article key={broadcast.id} className="rounded-md bg-white p-4">
+          <p className="text-xs font-black uppercase text-[#b22222]">
+            {formatDate(broadcast.createdAt)}
+          </p>
+          <h3 className="mt-1 font-bold">{broadcast.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-[#555]">{broadcast.content}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export function DashboardShell({
   user,
   videos,
@@ -769,6 +801,7 @@ export function DashboardShell({
   schoolResources,
   subscriberResources,
   orders,
+  broadcasts,
   subscriptionLabel,
   hasVideoLibraryAccess,
   needsVideoSubscription,
@@ -829,7 +862,7 @@ export function DashboardShell({
           <StatCard label="Access" value={subscriptionLabel} detail="Resolved from current account state" />
         </div>
 
-        {isFreeSubscriber ? (
+            {isFreeSubscriber ? (
           <div className="mt-6">
             <UpgradePrompt hasPreviewVideos={freePreviewVideos.length > 0} />
           </div>
@@ -897,6 +930,10 @@ export function DashboardShell({
                 <SubscriberResourcesPanel resources={subscriberResources} />
               </SectionCard>
             ) : null}
+
+            <SectionCard title="News & Updates">
+              <NewsUpdatesPanel broadcasts={broadcasts} />
+            </SectionCard>
 
             <SectionCard
               title="Store Orders"

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { FORUM_CATEGORIES } from "@/lib/forum/constants";
-import { getForumCategorySummary, getForumThreads } from "@/lib/forum/service";
+import {
+  getActiveForumCategories,
+  getForumCategorySummary,
+  getForumThreads,
+} from "@/lib/forum/service";
 import { Footer } from "@/components/Footer";
 import { ForumThreadForm } from "@/components/ForumThreadForm";
 import { Header } from "@/components/Header";
@@ -54,7 +57,8 @@ export default async function ForumPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const activeCategoryParam = getParamValue(resolvedSearchParams.category);
-  const activeCategory = FORUM_CATEGORIES.includes(activeCategoryParam as (typeof FORUM_CATEGORIES)[number])
+  const forumCategories = await getActiveForumCategories();
+  const activeCategory = activeCategoryParam && forumCategories.includes(activeCategoryParam)
     ? activeCategoryParam
     : "";
   const searchQuery = (getParamValue(resolvedSearchParams.q) ?? "").trim();
@@ -67,9 +71,11 @@ export default async function ForumPage({
 
   if (payload?.sub) {
     await connectToDatabase();
-    const user = await User.findById(payload.sub).select("age forumPostingRevoked");
+    const user = await User.findById(payload.sub).select("age forumPostingRevoked status isBanned");
 
-    if (user?.forumPostingRevoked) {
+    if (user?.isBanned || user?.status === "banned") {
+      readOnlyReason = "Banned accounts can read the forum but cannot post or reply.";
+    } else if (user?.forumPostingRevoked) {
       readOnlyReason = "Your forum posting access has been revoked.";
     } else if (user && user.age < 16) {
       readOnlyReason = "Accounts under 16 can read the forum but cannot post or reply.";
@@ -160,7 +166,7 @@ export default async function ForumPage({
               <p className="font-bebas text-2xl uppercase leading-none">All Topics</p>
               <p className="mt-1 text-sm font-bold text-[#8c0504]">{threads.length} threads</p>
             </Link>
-            {FORUM_CATEGORIES.map((category) => {
+            {forumCategories.map((category) => {
               const summary = categories.find((entry) => entry.category === category);
               const isActive = activeCategory === category;
               return (
@@ -174,7 +180,11 @@ export default async function ForumPage({
                 {summary?.lastActivityAt ? <p className="mt-1 text-xs text-[#667085]">Last activity {new Date(summary.lastActivityAt).toLocaleDateString()}</p> : null}
               </Link>
             )})}
-            <ForumThreadForm canPost={canPost} readOnlyReason={readOnlyReason} />
+            <ForumThreadForm
+              canPost={canPost}
+              categories={forumCategories}
+              readOnlyReason={readOnlyReason}
+            />
           </aside>
           <div className="rounded-md border-2 border-[#212121] bg-white p-4 shadow-[0_4px_0_#111]">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[#e4ded1] pb-4">
@@ -204,7 +214,7 @@ export default async function ForumPage({
                   className="min-h-12 rounded-md border border-[#d8d2c5] bg-white px-3 py-2 text-sm font-medium normal-case text-[#202020] outline-none focus:border-[#8c0504]"
                 >
                   <option value="">All topics</option>
-                  {FORUM_CATEGORIES.map((category) => (
+                  {forumCategories.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
