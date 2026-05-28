@@ -7,9 +7,12 @@ import {
   DashboardOutlined,
   FolderOpenOutlined,
   FormOutlined,
+  GiftOutlined,
   MailOutlined,
+  NotificationOutlined,
   PlaySquareOutlined,
   SafetyCertificateOutlined,
+  ShoppingOutlined,
   TagsOutlined,
   TeamOutlined,
   UserAddOutlined,
@@ -30,6 +33,10 @@ const navItems = [
   { href: "/admin/toolkit", label: "Toolkit", icon: FormOutlined },
   { href: "/admin/forum-moderation", label: "Moderation", icon: SafetyCertificateOutlined },
   { href: "/admin/scholarships", label: "Scholarships", icon: SafetyCertificateOutlined },
+  { href: "/admin/mentor-applications", label: "Mentors", icon: TeamOutlined },
+  { href: "/admin/broadcasts", label: "News & Updates", icon: NotificationOutlined },
+  { href: "/admin/products", label: "Store Products", icon: ShoppingOutlined },
+  { href: "/admin/gift-cards", label: "Gift Cards", icon: GiftOutlined },
 ];
 
 const secondaryItems = [

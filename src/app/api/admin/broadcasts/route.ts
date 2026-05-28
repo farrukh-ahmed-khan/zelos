@@ -1,10 +1,31 @@
 import { NextRequest } from "next/server";
 import { requireAdminPermission } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db";
 import { handleApiError, successResponse } from "@/lib/http";
 import { createBroadcastSchema } from "@/lib/validation/admin";
 import { createBroadcastMessage } from "@/lib/admin/service";
+import BroadcastMessage from "@/models/BroadcastMessage";
 
 export const runtime = "nodejs";
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdminPermission(request, "content.manage");
+    await connectToDatabase();
+    const broadcasts = await BroadcastMessage.find().sort({ createdAt: -1 }).limit(100).lean();
+    return successResponse({
+      broadcasts: broadcasts.map((b) => ({
+        id: b._id.toString(),
+        title: b.title,
+        content: b.content,
+        sentBy: b.sentBy,
+        createdAt: b.createdAt,
+      })),
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

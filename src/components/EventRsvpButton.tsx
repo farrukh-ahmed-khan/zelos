@@ -3,9 +3,25 @@
 import { useState } from "react";
 import { api, isApiSuccess } from "@/lib/api/client";
 
-export function EventRsvpButton({ eventId, hasRsvped }: { eventId: string; hasRsvped: boolean }) {
+export function EventRsvpButton({
+  eventId,
+  hasRsvped,
+  canRsvp = true,
+}: {
+  eventId: string;
+  hasRsvped: boolean;
+  canRsvp?: boolean;
+}) {
   const [message, setMessage] = useState(hasRsvped ? "RSVP confirmed" : "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!canRsvp) {
+    return (
+      <p className="text-sm font-bold text-[#667085]">
+        View-only access — moderators do not RSVP to events.
+      </p>
+    );
+  }
 
   async function rsvp() {
     setIsSubmitting(true);

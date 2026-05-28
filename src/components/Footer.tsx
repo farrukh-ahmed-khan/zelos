@@ -15,7 +15,7 @@ const footerGroups = [
       { label: "Financial Literacy", href: "/financial-literacy" },
       { label: "School Curriculum", href: "/school-curriculum" },
       { label: "Mentoring", href: "/mentoring" },
-      { label: "Scholarship", href: "/scholarship-incubator" },
+      { label: "Scholarship", href: "/scholarships" },
     ],
   },
   {
@@ -23,6 +23,7 @@ const footerGroups = [
     links: [
       { label: "Events", href: "/events" },
       { label: "Community Forum", href: "/forum" },
+      { label: "Money Toolkit", href: "/toolkit" },
       { label: "Mentee Signup", href: "/signup" },
       { label: "Swag Store", href: "/store" },
     ],

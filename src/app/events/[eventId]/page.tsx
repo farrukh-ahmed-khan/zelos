@@ -1,8 +1,13 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { EventRsvpButton } from "@/components/EventRsvpButton";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
+import { verifyAuthToken } from "@/lib/auth/jwt";
+import { connectToDatabase } from "@/lib/db";
 import { getEventWithRsvpStatus, getEventsWithRsvpStatus } from "@/lib/events/service";
+import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +18,16 @@ export default async function EventDetailPage({
 }) {
   const { eventId } = await params;
   const event = await getEventWithRsvpStatus(eventId);
+
+  const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+  const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
+  let userRole: string | null = null;
+  if (payload?.sub) {
+    await connectToDatabase();
+    const user = await User.findById(payload.sub).select("role").lean();
+    userRole = user?.role ?? null;
+  }
+  const canRsvp = userRole !== "forum-moderator";
 
   if (!event) notFound();
 
@@ -44,7 +59,7 @@ export default async function EventDetailPage({
           <p className="text-sm text-[#555]">{event.type === "online" ? "Online. RSVP to receive the meeting link by email." : event.location}</p>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{event.description}</p>
           <p className="mt-4 text-sm font-bold text-[#b22222]">{event.rsvpCount} RSVP</p>
-          <div className="mt-4"><EventRsvpButton eventId={event.id} hasRsvped={event.hasRsvped} /></div>
+          <div className="mt-4"><EventRsvpButton eventId={event.id} hasRsvped={event.hasRsvped} canRsvp={canRsvp} /></div>
         </div>
         {event.speakers.length ? (
           <>

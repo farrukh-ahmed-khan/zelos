@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  CalendarOutlined,
   CheckCircleOutlined,
   CreditCardOutlined,
   LockOutlined,
   PaperClipOutlined,
   PlayCircleFilled,
-  TeamOutlined,
 } from "@ant-design/icons";
 import { LogoutButton } from "@/components/LogoutButton";
 import { api, isApiSuccess } from "@/lib/api/client";
@@ -886,7 +884,7 @@ export function DashboardShell({
                     href="/educator"
                     className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
                   >
-                    Invite Students
+                    Educator Portal
                   </Link>
                 ) : user.role === "mentee" ? (
                   <Link
@@ -919,12 +917,20 @@ export function DashboardShell({
               <SectionCard
                 title="Subscriber Resources"
                 action={
-                  <Link
-                    href="/subscriber-content"
-                    className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
-                  >
-                    Open Library
-                  </Link>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href="/toolkit"
+                      className="rounded-md border-2 border-[#212121] bg-white px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                    >
+                      Money Toolkit
+                    </Link>
+                    <Link
+                      href="/subscriber-content"
+                      className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                    >
+                      Open Library
+                    </Link>
+                  </div>
                 }
               >
                 <SubscriberResourcesPanel resources={subscriberResources} />
@@ -1004,18 +1010,25 @@ export function DashboardShell({
 
             <SectionCard
               title="Upcoming Events"
-              action={<CalendarOutlined className="text-2xl text-[#b22222]" />}
+              action={
+                <Link
+                  href="/events"
+                  className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                >
+                  All Events
+                </Link>
+              }
             >
               <div className="grid gap-3">
                 {upcomingEvents.length ? (
                   upcomingEvents.map((event) => (
-                    <article key={event.id} className="rounded-md bg-white p-4">
+                    <Link key={event.id} href={`/events/${event.id}`} className="rounded-md bg-white p-4 !text-[#202020] transition hover:bg-[#fff8d9]">
                       <p className="font-bold">{event.title}</p>
                       <p className="text-xs uppercase text-[#b22222]">
                         {formatDate(event.date)} / {event.type}
                       </p>
                       <p className="mt-2 text-sm text-[#555]">{event.location}</p>
-                    </article>
+                    </Link>
                   ))
                 ) : (
                   <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
@@ -1027,16 +1040,23 @@ export function DashboardShell({
 
             <SectionCard
               title="Community"
-              action={<TeamOutlined className="text-2xl text-[#b22222]" />}
+              action={
+                <Link
+                  href="/forum"
+                  className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+                >
+                  View Forum
+                </Link>
+              }
             >
               <div className="grid gap-3">
                 {threads.slice(0, 4).map((thread) => (
-                  <article key={thread.id} className="rounded-md bg-white p-4">
+                  <Link key={thread.id} href={`/forum/${thread.id}`} className="rounded-md bg-white p-4 !text-[#202020] transition hover:bg-[#fff8d9]">
                     <p className="font-bold">{thread.title}</p>
                     <p className="text-xs uppercase text-[#b22222]">
                       {thread.category} / {thread.replies.length} replies
                     </p>
-                  </article>
+                  </Link>
                 ))}
                 {!threads.length ? (
                   <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
