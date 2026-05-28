@@ -27,11 +27,16 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const [hasMounted, setHasMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navLinkClass =
     "px-1 py-2 font-[Inter] text-[18.1px] font-medium leading-[22.58px] tracking-[-0.722px] !text-[#2C2E2A] transition hover:text-[#cf1e1e]";
   const activeNavLinkClass = "rounded-full bg-[#efe6d8] px-4";
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,6 +72,16 @@ export function Header() {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  if (!hasMounted) {
+    return (
+      <div
+        aria-hidden="true"
+        className="container relative z-20 mx-auto h-[60px]"
+        suppressHydrationWarning
+      />
+    );
+  }
 
   return (
     <>
