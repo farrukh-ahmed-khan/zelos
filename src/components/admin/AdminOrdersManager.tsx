@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { message as antMessage } from "antd";
+import { Button, Select, Table, Tag, message as antMessage } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { api, isApiSuccess } from "@/lib/api/client";
 
 type OrderItem = {
@@ -61,6 +62,18 @@ export function AdminOrdersManager({
   const [items, setItems] = useState(orders);
   const [productItems, setProductItems] = useState(products);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const productTypeFilters = [
+    { text: "Gift card", value: "gift-card" },
+    { text: "Swag", value: "swag" },
+  ];
+  const productStatusFilters = [
+    { text: "Active", value: "active" },
+    { text: "Inactive", value: "inactive" },
+  ];
+  const orderStatusFilters = Array.from(new Set(items.map((order) => order.status))).map((status) => ({
+    text: status,
+    value: status,
+  }));
 
   async function updateStatus(orderId: string, status: string) {
     setUpdatingId(orderId);
@@ -169,6 +182,164 @@ export function AdminOrdersManager({
     form.reset();
   }
 
+  const productColumns: ColumnsType<Product> = [
+    {
+      title: "Product",
+      key: "product",
+      width: 280,
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (_, product) => (
+        <div>
+          <p className="font-bold">{product.name}</p>
+          <p className="text-xs text-[#667085]">{product.slug}</p>
+        </div>
+      ),
+    },
+    {
+      title: "Price",
+      dataIndex: "priceCents",
+      key: "priceCents",
+      width: 130,
+      sorter: (a, b) => a.priceCents - b.priceCents,
+      render: (priceCents) => <span className="font-bold">{money(priceCents)}</span>,
+    },
+    {
+      title: "Inventory",
+      dataIndex: "inventoryCount",
+      key: "inventoryCount",
+      width: 130,
+      sorter: (a, b) => a.inventoryCount - b.inventoryCount,
+    },
+    {
+      title: "Type",
+      key: "type",
+      width: 130,
+      filters: productTypeFilters,
+      onFilter: (value, product) => (value === "gift-card" ? product.isGiftCard : !product.isGiftCard),
+      render: (_, product) => <Tag color={product.isGiftCard ? "purple" : "blue"}>{product.isGiftCard ? "Gift card" : "Swag"}</Tag>,
+    },
+    {
+      title: "Status",
+      key: "status",
+      width: 130,
+      filters: productStatusFilters,
+      onFilter: (value, product) => (value === "active" ? product.isActive : !product.isActive),
+      render: (_, product) => <Tag color={product.isActive ? "green" : "default"}>{product.isActive ? "ACTIVE" : "INACTIVE"}</Tag>,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 220,
+      render: (_, product) => (
+        <div className="flex flex-wrap gap-2">
+          <Button size="small" onClick={() => toggleProduct(product)}>
+            {product.isActive ? "Deactivate" : "Activate"}
+          </Button>
+          <Button size="small" danger onClick={() => deleteProduct(product.id)}>
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const orderColumns: ColumnsType<Order> = [
+    {
+      title: "Buyer",
+      key: "buyer",
+      width: 260,
+      sorter: (a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`),
+      render: (_, order) => (
+        <div>
+          <p className="font-bold">
+            {order.firstName} {order.lastName}
+          </p>
+          <p className="text-xs text-[#667085]">{order.email}</p>
+        </div>
+      ),
+    },
+    {
+      title: "Items",
+      key: "items",
+      width: 360,
+      render: (_, order) => (
+        <div className="grid gap-1">
+          {order.items.map((item) => (
+            <p key={`${order.id}-${item.productId}-${item.size}-${item.color}`} className="text-sm">
+              {item.quantity}x {item.name}
+              {item.size ? ` / ${item.size}` : ""}
+              {item.color ? ` / ${item.color}` : ""}
+            </p>
+          ))}
+        </div>
+      ),
+    },
+    {
+      title: "Subtotal",
+      dataIndex: "subtotalCents",
+      key: "subtotalCents",
+      width: 130,
+      sorter: (a, b) => a.subtotalCents - b.subtotalCents,
+      render: (value) => <span className="font-bold">{money(value)}</span>,
+    },
+    {
+      title: "Gift Card",
+      key: "giftCard",
+      width: 160,
+      filters: [
+        { text: "Used", value: "used" },
+        { text: "Not used", value: "none" },
+      ],
+      onFilter: (value, order) => (value === "used" ? Boolean(order.giftCardCode) : !order.giftCardCode),
+      render: (_, order) =>
+        order.giftCardCode ? (
+          <div>
+            <p className="font-bold">{money(order.discountCents)}</p>
+            <p className="text-xs text-[#667085]">{order.giftCardCode}</p>
+          </div>
+        ) : (
+          "-"
+        ),
+    },
+    {
+      title: "Total Paid",
+      dataIndex: "totalCents",
+      key: "totalCents",
+      width: 140,
+      sorter: (a, b) => a.totalCents - b.totalCents,
+      render: (value) => <span className="font-bold">{money(value)}</span>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 190,
+      filters: orderStatusFilters,
+      onFilter: (value, order) => order.status === value,
+      render: (_, order) => (
+        <Select
+          value={order.status}
+          disabled={updatingId === order.id || order.status === "pending"}
+          onChange={(value) => updateStatus(order.id, value)}
+          style={{ minWidth: 150 }}
+          options={[
+            ...(order.status === "pending" ? [{ value: "pending", label: "pending" }] : []),
+            ...statuses.map((status) => ({ value: status, label: status })),
+          ]}
+        />
+      ),
+    },
+    {
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 140,
+      defaultSortOrder: "descend",
+      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (value) => new Date(value).toLocaleDateString(),
+    },
+  ];
+
   return (
     <div className="grid gap-6">
       <form onSubmit={createProduct} className="grid gap-3 rounded-md border border-[#edf0f3] bg-[#f8fafc] p-4 md:grid-cols-2">
@@ -195,109 +366,27 @@ export function AdminOrdersManager({
         <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Generate Gift Card</button>
       </form>
 
-      <div className="overflow-x-auto">
+      <div className="rounded-md border border-[#edf0f3] bg-white p-4">
         <h3 className="mb-3 text-base font-black">Products</h3>
-        <table className="w-full min-w-[860px] border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b border-[#edf0f3] text-xs font-black uppercase text-[#667085]">
-              <th className="px-3 py-2">Product</th>
-              <th className="px-3 py-2">Price</th>
-              <th className="px-3 py-2">Inventory</th>
-              <th className="px-3 py-2">Type</th>
-              <th className="px-3 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {productItems.map((product) => (
-              <tr key={product.id} className="border-b border-[#edf0f3] last:border-b-0">
-                <td className="px-3 py-3">
-                  <p className="font-bold">{product.name}</p>
-                  <p className="text-xs text-[#667085]">{product.slug}</p>
-                </td>
-                <td className="px-3 py-3 font-bold">{money(product.priceCents)}</td>
-                <td className="px-3 py-3">{product.inventoryCount}</td>
-                <td className="px-3 py-3">{product.isGiftCard ? "Gift card" : "Swag"}</td>
-                <td className="px-3 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => toggleProduct(product)} className="rounded-md border px-3 py-2 text-xs font-bold">
-                      {product.isActive ? "Deactivate" : "Activate"}
-                    </button>
-                    <button onClick={() => deleteProduct(product.id)} className="rounded-md border px-3 py-2 text-xs font-bold text-[#8c0504]">
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={productColumns}
+          dataSource={productItems}
+          rowKey="id"
+          scroll={{ x: 1050 }}
+          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50] }}
+        />
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="rounded-md border border-[#edf0f3] bg-white p-4">
         <h3 className="mb-3 text-base font-black">Orders</h3>
-      <table className="w-full min-w-[980px] border-collapse text-left text-sm">
-        <thead>
-          <tr className="border-b border-[#edf0f3] text-xs font-black uppercase text-[#667085]">
-            <th className="px-3 py-2">Buyer</th>
-            <th className="px-3 py-2">Items</th>
-            <th className="px-3 py-2">Subtotal</th>
-            <th className="px-3 py-2">Gift Card</th>
-            <th className="px-3 py-2">Total Paid</th>
-            <th className="px-3 py-2">Status</th>
-            <th className="px-3 py-2">Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((order) => (
-            <tr key={order.id} className="border-b border-[#edf0f3] last:border-b-0">
-              <td className="px-3 py-3">
-                <p className="font-bold">
-                  {order.firstName} {order.lastName}
-                </p>
-                <p className="text-xs text-[#667085]">{order.email}</p>
-              </td>
-              <td className="px-3 py-3">
-                {order.items.map((item) => (
-                  <p key={`${order.id}-${item.productId}-${item.size}-${item.color}`}>
-                    {item.quantity}x {item.name}
-                    {item.size ? ` / ${item.size}` : ""}
-                    {item.color ? ` / ${item.color}` : ""}
-                  </p>
-                ))}
-              </td>
-              <td className="px-3 py-3 font-bold">{money(order.subtotalCents)}</td>
-              <td className="px-3 py-3">
-                {order.giftCardCode ? (
-                  <>
-                    <p className="font-bold">{money(order.discountCents)}</p>
-                    <p className="text-xs text-[#667085]">{order.giftCardCode}</p>
-                  </>
-                ) : (
-                  "-"
-                )}
-              </td>
-              <td className="px-3 py-3 font-bold">{money(order.totalCents)}</td>
-              <td className="px-3 py-3">
-                <select
-                  value={order.status}
-                  disabled={updatingId === order.id || order.status === "pending"}
-                  onChange={(event) => updateStatus(order.id, event.target.value)}
-                  className="rounded-md border border-[#d8d2c5] px-2 py-2 font-bold"
-                >
-                  {order.status === "pending" ? <option value="pending">pending</option> : null}
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td className="px-3 py-3">{new Date(order.createdAt).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {!items.length ? <p className="text-sm text-[#555]">No store orders yet.</p> : null}
+        <Table
+          columns={orderColumns}
+          dataSource={items}
+          rowKey="id"
+          scroll={{ x: 1430 }}
+          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50] }}
+          locale={{ emptyText: "No store orders yet." }}
+        />
       </div>
     </div>
   );
