@@ -37,8 +37,8 @@ const secondaryItems = [
   { href: "/admin/orders", label: "Store Orders", icon: DollarOutlined },
   { href: "/admin/donations", label: "Donations", icon: DollarOutlined },
   { href: "/api/admin/forum/reports", label: "Reports API", icon: SafetyCertificateOutlined },
-  { href: "/api/admin/analytics/overview", label: "Analytics API", icon: BarChartOutlined },
-  { href: "/api/admin/emails", label: "Email Outbox", icon: MailOutlined },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChartOutlined },
+  { href: "/admin/emails", label: "Email Outbox", icon: MailOutlined },
   { href: "/admin/forms", label: "Forms", icon: FormOutlined },
 ];
 
