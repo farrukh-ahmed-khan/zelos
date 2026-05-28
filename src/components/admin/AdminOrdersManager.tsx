@@ -98,6 +98,9 @@ export function AdminOrdersManager({
   const [items, setItems] = useState(orders);
   const [productItems, setProductItems] = useState(products);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [productActionId, setProductActionId] = useState<string | null>(null);
+  const [isCreatingGiftCard, setIsCreatingGiftCard] = useState(false);
   const [form] = Form.useForm<ProductFormValues>();
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const productTypeFilters = [
@@ -186,6 +189,7 @@ export function AdminOrdersManager({
   }
 
   async function createProduct(values: ProductFormValues) {
+    setIsCreatingProduct(true);
     const cleanVariants = variants
       .filter((variant) => variant.size || variant.color || variant.sku)
       .map((variant) => ({
@@ -199,79 +203,98 @@ export function AdminOrdersManager({
     const inventoryCount = cleanVariants.length
       ? cleanVariants.reduce((sum, variant) => sum + variant.inventoryCount, 0)
       : Number(values.inventoryCount ?? 0);
-    const response = await api.post("/api/admin/products", {
-      name: values.name,
-      slug: values.slug,
-      description: values.description,
-      priceCents: Math.round(Number(values.priceDollars ?? 0) * 100),
-      images: values.images ?? [],
-      sizes: values.sizes ?? [],
-      colors: values.colors ?? [],
-      variants: cleanVariants,
-      inventoryCount,
-      limitedEdition: Boolean(values.limitedEdition),
-      isActive: values.isActive !== false,
-      isGiftCard: Boolean(values.isGiftCard),
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/products", {
+        name: values.name,
+        slug: values.slug,
+        description: values.description,
+        priceCents: Math.round(Number(values.priceDollars ?? 0) * 100),
+        images: values.images ?? [],
+        sizes: values.sizes ?? [],
+        colors: values.colors ?? [],
+        variants: cleanVariants,
+        inventoryCount,
+        limitedEdition: Boolean(values.limitedEdition),
+        isActive: values.isActive !== false,
+        isGiftCard: Boolean(values.isGiftCard),
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      antMessage.error(result?.error?.message ?? "Unable to create product.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to create product.");
+        return;
+      }
+
+      setProductItems((current) => [result.data.product, ...current]);
+      antMessage.success("Product created.");
+      form.resetFields();
+      setVariants([]);
+    } finally {
+      setIsCreatingProduct(false);
     }
-
-    setProductItems((current) => [result.data.product, ...current]);
-    antMessage.success("Product created.");
-    form.resetFields();
-    setVariants([]);
   }
 
   async function toggleProduct(product: Product) {
-    const response = await api.patch(`/api/admin/products/${product.id}`, {
-      isActive: !product.isActive,
-    });
-    const result = response.data;
+    setProductActionId(product.id);
+    try {
+      const response = await api.patch(`/api/admin/products/${product.id}`, {
+        isActive: !product.isActive,
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      antMessage.error(result?.error?.message ?? "Unable to update product.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to update product.");
+        return;
+      }
+
+      setProductItems((current) =>
+        current.map((item) => (item.id === product.id ? result.data.product : item)),
+      );
+    } finally {
+      setProductActionId(null);
     }
-
-    setProductItems((current) =>
-      current.map((item) => (item.id === product.id ? result.data.product : item)),
-    );
   }
 
   async function deleteProduct(productId: string) {
-    const response = await api.delete(`/api/admin/products/${productId}`);
-    const result = response.data;
+    setProductActionId(productId);
+    try {
+      const response = await api.delete(`/api/admin/products/${productId}`);
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      antMessage.error(result?.error?.message ?? "Unable to delete product.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to delete product.");
+        return;
+      }
+
+      setProductItems((current) => current.filter((item) => item.id !== productId));
+    } finally {
+      setProductActionId(null);
     }
-
-    setProductItems((current) => current.filter((item) => item.id !== productId));
   }
 
   async function createGiftCard(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsCreatingGiftCard(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await api.post("/api/admin/gift-cards", {
-      amountCents: Math.round(Number(formData.get("amountDollars") ?? 0) * 100),
-      recipientEmail: String(formData.get("recipientEmail") ?? "") || undefined,
-      purchaserEmail: String(formData.get("purchaserEmail") ?? "") || undefined,
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/gift-cards", {
+        amountCents: Math.round(Number(formData.get("amountDollars") ?? 0) * 100),
+        recipientEmail: String(formData.get("recipientEmail") ?? "") || undefined,
+        purchaserEmail: String(formData.get("purchaserEmail") ?? "") || undefined,
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      antMessage.error(result?.error?.message ?? "Unable to create gift card.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to create gift card.");
+        return;
+      }
+
+      antMessage.success(`Gift card created: ${result.data.giftCard.code}`);
+      form.reset();
+    } finally {
+      setIsCreatingGiftCard(false);
     }
-
-    antMessage.success(`Gift card created: ${result.data.giftCard.code}`);
-    form.reset();
   }
 
   const productColumns: ColumnsType<Product> = [
@@ -335,10 +358,10 @@ export function AdminOrdersManager({
       width: 220,
       render: (_, product) => (
         <div className="flex flex-wrap gap-2">
-          <Button size="small" onClick={() => toggleProduct(product)}>
+          <Button size="small" loading={productActionId === product.id} onClick={() => toggleProduct(product)}>
             {product.isActive ? "Deactivate" : "Activate"}
           </Button>
-          <Button size="small" danger onClick={() => deleteProduct(product.id)}>
+          <Button size="small" danger loading={productActionId === product.id} onClick={() => deleteProduct(product.id)}>
             Delete
           </Button>
         </div>
@@ -621,7 +644,7 @@ export function AdminOrdersManager({
             }}>
               Clear
             </Button>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={isCreatingProduct}>
               Create Product
             </Button>
           </div>
@@ -633,7 +656,9 @@ export function AdminOrdersManager({
         <input name="amountDollars" required type="number" min="1" step="0.01" placeholder="Amount dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="recipientEmail" type="email" placeholder="Recipient email" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="purchaserEmail" type="email" placeholder="Purchaser email" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Generate Gift Card</button>
+        <button disabled={isCreatingGiftCard} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+          {isCreatingGiftCard ? "Generating..." : "Generate Gift Card"}
+        </button>
       </form>
 
       <div className="rounded-md border border-[#edf0f3] bg-white p-4">

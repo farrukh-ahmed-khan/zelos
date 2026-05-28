@@ -20,34 +20,40 @@ export function AdminToolkitManager({ resources }: { resources: Resource[] }) {
   const [items, setItems] = useState(resources);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     setError("");
+    setIsSubmitting(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await api.post("/api/admin/toolkit", {
-      title: String(formData.get("title") ?? ""),
-      description: String(formData.get("description") ?? ""),
-      resourceType: String(formData.get("resourceType") ?? "worksheet"),
-      url: String(formData.get("url") ?? ""),
-      linkedVideoId: String(formData.get("linkedVideoId") ?? "") || undefined,
-      ageTrack: String(formData.get("ageTrack") ?? ""),
-      order: Number(formData.get("order") ?? 1),
-      answers: String(formData.get("answers") ?? "").split("\n").map((answer) => answer.trim()).filter(Boolean),
-      isActive: true,
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/toolkit", {
+        title: String(formData.get("title") ?? ""),
+        description: String(formData.get("description") ?? ""),
+        resourceType: String(formData.get("resourceType") ?? "worksheet"),
+        url: String(formData.get("url") ?? ""),
+        linkedVideoId: String(formData.get("linkedVideoId") ?? "") || undefined,
+        ageTrack: String(formData.get("ageTrack") ?? ""),
+        order: Number(formData.get("order") ?? 1),
+        answers: String(formData.get("answers") ?? "").split("\n").map((answer) => answer.trim()).filter(Boolean),
+        isActive: true,
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to create toolkit resource.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to create toolkit resource.");
+        return;
+      }
+
+      setItems((current) => [result.data.resource, ...current]);
+      setMessage("Toolkit resource created.");
+      form.reset();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setItems((current) => [result.data.resource, ...current]);
-    setMessage("Toolkit resource created.");
-    form.reset();
   }
 
   return (
@@ -75,7 +81,9 @@ export function AdminToolkitManager({ resources }: { resources: Resource[] }) {
         <input name="linkedVideoId" placeholder="Linked completed lesson video ID" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="order" type="number" min={1} defaultValue={1} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <textarea name="answers" placeholder="Quiz answers, one per line" className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">Add Toolkit Resource</button>
+        <button disabled={isSubmitting} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+          {isSubmitting ? "Adding..." : "Add Toolkit Resource"}
+        </button>
       </form>
 
       <section className="grid gap-3">

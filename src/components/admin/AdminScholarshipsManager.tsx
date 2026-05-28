@@ -101,6 +101,8 @@ export function AdminScholarshipsManager({
   const [search, setSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeApplication, setActiveApplication] = useState<ApplicationItem | null>(null);
+  const [updatingScholarshipId, setUpdatingScholarshipId] = useState<string | null>(null);
+  const [forwardingApplicationId, setForwardingApplicationId] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -149,36 +151,46 @@ export function AdminScholarshipsManager({
   }
 
   async function updateStatus(scholarship: ScholarshipItem, status: ScholarshipItem["status"]) {
-    const response = await api.patch(`/api/admin/scholarships/${scholarship.id}`, { status });
-    const result = response.data;
+    setUpdatingScholarshipId(scholarship.id);
+    try {
+      const response = await api.patch(`/api/admin/scholarships/${scholarship.id}`, { status });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      antMessage.error(formatApiError(result, "Unable to update scholarship."));
-      return;
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(formatApiError(result, "Unable to update scholarship."));
+        return;
+      }
+
+      setItems((current) =>
+        current.map((item) => (item.id === scholarship.id ? { ...item, ...result.data.scholarship } : item)),
+      );
+      antMessage.success("Scholarship updated.");
+    } finally {
+      setUpdatingScholarshipId(null);
     }
-
-    setItems((current) =>
-      current.map((item) => (item.id === scholarship.id ? { ...item, ...result.data.scholarship } : item)),
-    );
-    antMessage.success("Scholarship updated.");
   }
 
   async function markForwarded(application: ApplicationItem) {
-    const response = await api.post(`/api/admin/scholarship-applications/${application.id}/forward`, {});
-    const result = response.data;
+    setForwardingApplicationId(application.id);
+    try {
+      const response = await api.post(`/api/admin/scholarship-applications/${application.id}/forward`, {});
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      antMessage.error(formatApiError(result, "Unable to mark application forwarded."));
-      return;
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(formatApiError(result, "Unable to mark application forwarded."));
+        return;
+      }
+
+      setQueue((current) =>
+        current.map((item) =>
+          item.id === application.id ? { ...item, status: "forwarded", forwardedAt: new Date().toISOString() } : item,
+        ),
+      );
+      setActiveApplication(null);
+      antMessage.success("Application marked as forwarded.");
+    } finally {
+      setForwardingApplicationId(null);
     }
-
-    setQueue((current) =>
-      current.map((item) =>
-        item.id === application.id ? { ...item, status: "forwarded", forwardedAt: new Date().toISOString() } : item,
-      ),
-    );
-    setActiveApplication(null);
-    antMessage.success("Application marked as forwarded.");
   }
 
   const scholarshipColumns: TableColumnsType<ScholarshipItem> = [
@@ -221,9 +233,9 @@ export function AdminScholarshipsManager({
       width: 260,
       render: (_, scholarship) => (
         <Space size="small" wrap>
-          <Button size="small" onClick={() => updateStatus(scholarship, "active")}>Activate</Button>
-          <Button size="small" onClick={() => updateStatus(scholarship, "closed")}>Close</Button>
-          <Button size="small" danger onClick={() => updateStatus(scholarship, "archived")}>Archive</Button>
+          <Button size="small" loading={updatingScholarshipId === scholarship.id} onClick={() => updateStatus(scholarship, "active")}>Activate</Button>
+          <Button size="small" loading={updatingScholarshipId === scholarship.id} onClick={() => updateStatus(scholarship, "closed")}>Close</Button>
+          <Button size="small" danger loading={updatingScholarshipId === scholarship.id} onClick={() => updateStatus(scholarship, "archived")}>Archive</Button>
         </Space>
       ),
     },
@@ -257,7 +269,7 @@ export function AdminScholarshipsManager({
       render: (_, application) => (
         <Space size="small" wrap>
           <Button size="small" onClick={() => setActiveApplication(application)}>View</Button>
-          <Button size="small" onClick={() => markForwarded(application)} disabled={application.status === "forwarded"}>Forwarded</Button>
+          <Button size="small" loading={forwardingApplicationId === application.id} onClick={() => markForwarded(application)} disabled={application.status === "forwarded"}>Forwarded</Button>
         </Space>
       ),
     },
@@ -323,7 +335,7 @@ export function AdminScholarshipsManager({
             <p><strong>GPA:</strong> {activeApplication.gpa ?? "Not provided"}</p>
             <p className="whitespace-pre-wrap"><strong>Personal statement:</strong><br />{activeApplication.personalStatement}</p>
             {activeApplication.documentUrl ? <a href={activeApplication.documentUrl} target="_blank" rel="noreferrer" className="font-bold !text-[#8c0504]">Open uploaded document</a> : null}
-            <Button type="primary" onClick={() => markForwarded(activeApplication)} disabled={activeApplication.status === "forwarded"} className="w-fit">
+            <Button type="primary" loading={forwardingApplicationId === activeApplication.id} onClick={() => markForwarded(activeApplication)} disabled={activeApplication.status === "forwarded"} className="w-fit">
               Mark forwarded off-platform
             </Button>
           </div>

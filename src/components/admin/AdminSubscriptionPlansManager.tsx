@@ -39,36 +39,43 @@ export function AdminSubscriptionPlansManager({
   const [codes, setCodes] = useState(promotionCodes);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isSubmittingPlan, setIsSubmittingPlan] = useState(false);
+  const [isSubmittingPromotion, setIsSubmittingPromotion] = useState(false);
   const [togglingPlanId, setTogglingPlanId] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     setError("");
+    setIsSubmittingPlan(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    const response = await api.post("/api/admin/subscription-plans", {
-      name: String(formData.get("name") ?? ""),
-      description: String(formData.get("description") ?? ""),
-      interval: String(formData.get("interval") ?? "monthly"),
-      priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
-      currency: String(formData.get("currency") ?? "usd"),
-      stripePriceId: String(formData.get("stripePriceId") ?? ""),
-      discountBadge: String(formData.get("discountBadge") ?? ""),
-      isPromotional: formData.get("isPromotional") === "on",
-      isActive: formData.get("isActive") === "on",
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/subscription-plans", {
+        name: String(formData.get("name") ?? ""),
+        description: String(formData.get("description") ?? ""),
+        interval: String(formData.get("interval") ?? "monthly"),
+        priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
+        currency: String(formData.get("currency") ?? "usd"),
+        stripePriceId: String(formData.get("stripePriceId") ?? ""),
+        discountBadge: String(formData.get("discountBadge") ?? ""),
+        isPromotional: formData.get("isPromotional") === "on",
+        isActive: formData.get("isActive") === "on",
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to create plan.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to create plan.");
+        return;
+      }
+
+      setItems((current) => [result.data.plan, ...current]);
+      setMessage("Plan created.");
+      form.reset();
+    } finally {
+      setIsSubmittingPlan(false);
     }
-
-    setItems((current) => [result.data.plan, ...current]);
-    setMessage("Plan created.");
-    form.reset();
   }
 
   async function togglePlan(plan: Plan) {
@@ -98,32 +105,37 @@ export function AdminSubscriptionPlansManager({
     event.preventDefault();
     setMessage("");
     setError("");
+    setIsSubmittingPromotion(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
     const discountType = String(formData.get("discountType") ?? "percent");
 
-    const response = await api.post("/api/admin/promotion-codes", {
-      code: String(formData.get("code") ?? ""),
-      name: String(formData.get("promoName") ?? ""),
-      discountType,
-      percentOff:
-        discountType === "percent" ? Number(formData.get("percentOff") ?? 0) : undefined,
-      amountOffCents:
-        discountType === "amount"
-          ? Math.round(Number(formData.get("amountOffDollars") ?? 0) * 100)
-          : undefined,
-      currency: String(formData.get("promoCurrency") ?? "usd"),
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/promotion-codes", {
+        code: String(formData.get("code") ?? ""),
+        name: String(formData.get("promoName") ?? ""),
+        discountType,
+        percentOff:
+          discountType === "percent" ? Number(formData.get("percentOff") ?? 0) : undefined,
+        amountOffCents:
+          discountType === "amount"
+            ? Math.round(Number(formData.get("amountOffDollars") ?? 0) * 100)
+            : undefined,
+        currency: String(formData.get("promoCurrency") ?? "usd"),
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to create promotion code.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to create promotion code.");
+        return;
+      }
+
+      setCodes((current) => [result.data.promotionCode, ...current]);
+      setMessage("Promotion code created.");
+      form.reset();
+    } finally {
+      setIsSubmittingPromotion(false);
     }
-
-    setCodes((current) => [result.data.promotionCode, ...current]);
-    setMessage("Promotion code created.");
-    form.reset();
   }
 
   return (
@@ -150,8 +162,8 @@ export function AdminSubscriptionPlansManager({
           <input name="isActive" type="checkbox" defaultChecked />
           Active
         </label>
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">
-          Add Plan
+        <button disabled={isSubmittingPlan} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+          {isSubmittingPlan ? "Adding..." : "Add Plan"}
         </button>
       </form>
 
@@ -169,8 +181,8 @@ export function AdminSubscriptionPlansManager({
         <input name="percentOff" type="number" min="1" max="100" placeholder="Percent, e.g. 20" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="amountOffDollars" type="number" min="1" step="0.01" placeholder="Amount dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="promoCurrency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <button className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white">
-          Create Promo Code
+        <button disabled={isSubmittingPromotion} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+          {isSubmittingPromotion ? "Creating..." : "Create Promo Code"}
         </button>
       </form>
 

@@ -37,87 +37,110 @@ export function ForumModerationManager({
   const [categoryItems, setCategoryItems] = useState(categories);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [reportActionId, setReportActionId] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [categoryActionId, setCategoryActionId] = useState<string | null>(null);
 
   async function resolve(report: Report, action: string) {
     setError("");
     setMessage("");
-    const response = await api.post(`/api/admin/forum/reports/${report.id}/resolve`, {
-      action,
-      note: action,
-    });
-    const result = response.data;
+    setReportActionId(report.id);
+    try {
+      const response = await api.post(`/api/admin/forum/reports/${report.id}/resolve`, {
+        action,
+        note: action,
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to resolve report.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to resolve report.");
+        return;
+      }
+
+      setItems((current) => current.filter((item) => item.id !== report.id));
+    } finally {
+      setReportActionId(null);
     }
-
-    setItems((current) => current.filter((item) => item.id !== report.id));
   }
 
   async function removeTarget(report: Report) {
     setError("");
     setMessage("");
+    setReportActionId(report.id);
     const endpoint =
       report.targetType === "thread"
         ? `/api/admin/forum/threads/${report.targetId}`
         : `/api/admin/forum/replies/${report.targetId}`;
-    const response = await api.delete(endpoint);
-    const result = response.data;
+    try {
+      const response = await api.delete(endpoint);
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to remove target.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to remove target.");
+        return;
+      }
+
+      await resolve(report, "hide-target");
+    } finally {
+      setReportActionId(null);
     }
-
-    await resolve(report, "hide-target");
   }
 
   async function createCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setMessage("");
+    setIsCreatingCategory(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const response = await api.post("/api/admin/forum/categories", {
-      name: String(formData.get("name") ?? ""),
-      description: String(formData.get("description") ?? ""),
-      order: Number(formData.get("order") ?? categoryItems.length + 1),
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/forum/categories", {
+        name: String(formData.get("name") ?? ""),
+        description: String(formData.get("description") ?? ""),
+        order: Number(formData.get("order") ?? categoryItems.length + 1),
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to create category.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to create category.");
+        return;
+      }
+
+      setCategoryItems((current) =>
+        [...current, result.data.category].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name)),
+      );
+      setMessage("Forum category created.");
+      form.reset();
+    } finally {
+      setIsCreatingCategory(false);
     }
-
-    setCategoryItems((current) =>
-      [...current, result.data.category].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name)),
-    );
-    setMessage("Forum category created.");
-    form.reset();
   }
 
   async function toggleCategory(category: Category) {
     setError("");
     setMessage("");
     const categoryId = category.id ?? category._id;
-    const response = await api.patch(`/api/admin/forum/categories/${categoryId}`, {
-      isActive: !category.isActive,
-    });
-    const result = response.data;
+    setCategoryActionId(categoryId ?? null);
+    try {
+      const response = await api.patch(`/api/admin/forum/categories/${categoryId}`, {
+        isActive: !category.isActive,
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setError(result?.error?.message ?? "Unable to update category.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to update category.");
+        return;
+      }
+
+      setCategoryItems((current) =>
+        current.map((item) =>
+          (item.id ?? item._id) === categoryId ? result.data.category : item,
+        ),
+      );
+      setMessage("Forum category updated.");
+    } finally {
+      setCategoryActionId(null);
     }
-
-    setCategoryItems((current) =>
-      current.map((item) =>
-        (item.id ?? item._id) === categoryId ? result.data.category : item,
-      ),
-    );
-    setMessage("Forum category updated.");
   }
 
   return (
@@ -133,8 +156,8 @@ export function ForumModerationManager({
           <input name="name" placeholder="Category name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
           <input name="description" placeholder="Optional description" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
           <input name="order" type="number" min={1} defaultValue={categoryItems.length + 1} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-          <button className="rounded-md border border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black">
-            Add
+          <button disabled={isCreatingCategory} className="rounded-md border border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-60">
+            {isCreatingCategory ? "Adding..." : "Add"}
           </button>
         </form>
         <div className="grid gap-2">
@@ -147,13 +170,16 @@ export function ForumModerationManager({
               <button
                 type="button"
                 onClick={() => toggleCategory(category)}
+                disabled={categoryActionId === (category.id ?? category._id)}
                 className={`rounded-md border px-3 py-2 text-xs font-black ${
                   category.isActive
                     ? "border-[#f2b8b5] bg-[#fff4f3] text-[#8c0504]"
                     : "border-[#cfd4dc] bg-white text-[#202020]"
                 }`}
               >
-                {category.isActive ? "Deactivate" : "Activate"}
+                {categoryActionId === (category.id ?? category._id)
+                  ? "Updating..."
+                  : category.isActive ? "Deactivate" : "Activate"}
               </button>
             </div>
           ))}
@@ -168,9 +194,15 @@ export function ForumModerationManager({
               <p className="mt-1 text-sm text-[#555]">{report.reason}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => resolve(report, "dismiss")} className="rounded-md border border-[#cfd4dc] px-3 py-2 text-xs font-black">Dismiss</button>
-              <button onClick={() => removeTarget(report)} className="rounded-md border border-[#f2b8b5] bg-[#fff4f3] px-3 py-2 text-xs font-black text-[#8c0504]">Remove</button>
-              <button onClick={() => resolve(report, "ban-author")} className="rounded-md bg-[#202020] px-3 py-2 text-xs font-black text-white">Ban Author</button>
+              <button disabled={reportActionId === report.id} onClick={() => resolve(report, "dismiss")} className="rounded-md border border-[#cfd4dc] px-3 py-2 text-xs font-black disabled:cursor-not-allowed disabled:opacity-60">
+                {reportActionId === report.id ? "Working..." : "Dismiss"}
+              </button>
+              <button disabled={reportActionId === report.id} onClick={() => removeTarget(report)} className="rounded-md border border-[#f2b8b5] bg-[#fff4f3] px-3 py-2 text-xs font-black text-[#8c0504] disabled:cursor-not-allowed disabled:opacity-60">
+                {reportActionId === report.id ? "Working..." : "Remove"}
+              </button>
+              <button disabled={reportActionId === report.id} onClick={() => resolve(report, "ban-author")} className="rounded-md bg-[#202020] px-3 py-2 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-60">
+                {reportActionId === report.id ? "Working..." : "Ban Author"}
+              </button>
             </div>
           </div>
         </article>

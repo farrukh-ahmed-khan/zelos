@@ -30,10 +30,12 @@ export function AdminStaticPagesManager({ pages }: { pages: StaticPage[] }) {
   const [items, setItems] = useState(pages);
   const [selected, setSelected] = useState<StaticPage | null>(pages[0] ?? null);
   const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
+    setIsSaving(true);
     const form = event.currentTarget;
     const formData = new FormData(form);
     const sections = String(formData.get("sections") ?? "")
@@ -48,28 +50,32 @@ export function AdminStaticPagesManager({ pages }: { pages: StaticPage[] }) {
       })
       .filter((section) => section.title && section.body);
 
-    const response = await api.post("/api/admin/static-pages", {
-      slug: String(formData.get("slug") ?? ""),
-      eyebrow: String(formData.get("eyebrow") ?? ""),
-      title: String(formData.get("title") ?? ""),
-      intro: String(formData.get("intro") ?? ""),
-      sections,
-      isPublished: formData.get("isPublished") === "on",
-    });
-    const result = response.data;
+    try {
+      const response = await api.post("/api/admin/static-pages", {
+        slug: String(formData.get("slug") ?? ""),
+        eyebrow: String(formData.get("eyebrow") ?? ""),
+        title: String(formData.get("title") ?? ""),
+        intro: String(formData.get("intro") ?? ""),
+        sections,
+        isPublished: formData.get("isPublished") === "on",
+      });
+      const result = response.data;
 
-    if (!isApiSuccess(response.status)) {
-      setMessage(result?.error?.message ?? "Unable to save page.");
-      return;
+      if (!isApiSuccess(response.status)) {
+        setMessage(result?.error?.message ?? "Unable to save page.");
+        return;
+      }
+
+      const saved = result.data.page;
+      setItems((current) => {
+        const withoutExisting = current.filter((page) => page.slug !== saved.slug);
+        return [...withoutExisting, saved].sort((a, b) => a.slug.localeCompare(b.slug));
+      });
+      setSelected(saved);
+      setMessage("Static page saved.");
+    } finally {
+      setIsSaving(false);
     }
-
-    const saved = result.data.page;
-    setItems((current) => {
-      const withoutExisting = current.filter((page) => page.slug !== saved.slug);
-      return [...withoutExisting, saved].sort((a, b) => a.slug.localeCompare(b.slug));
-    });
-    setSelected(saved);
-    setMessage("Static page saved.");
   }
 
   const sectionText =
@@ -138,8 +144,8 @@ export function AdminStaticPagesManager({ pages }: { pages: StaticPage[] }) {
           <input name="isPublished" type="checkbox" defaultChecked={selected?.isPublished ?? true} />
           Published
         </label>
-        <button className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black shadow-[0_3px_0_#111]">
-          Save Page
+        <button disabled={isSaving} className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black shadow-[0_3px_0_#111] disabled:cursor-not-allowed disabled:opacity-60">
+          {isSaving ? "Saving..." : "Save Page"}
         </button>
       </form>
     </div>

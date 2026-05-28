@@ -18,6 +18,10 @@ type AccountSettingsFormProps = {
 export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
 
   async function submitJson(endpoint: string, payload: object) {
     setMessage("");
@@ -55,6 +59,7 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
 
   async function submitProfileForm(form: HTMLFormElement) {
     const formData = new FormData(form);
+    setProfileLoading(true);
     try {
       await submitJson("/api/account/profile", {
         name: String(formData.get("name") ?? ""),
@@ -68,6 +73,8 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
       setMessage("Profile updated.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Update failed.");
+    } finally {
+      setProfileLoading(false);
     }
   }
 
@@ -75,6 +82,7 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
+    setEmailLoading(true);
     try {
       await submitJson("/api/account/email", {
         email: String(formData.get("email") ?? ""),
@@ -82,6 +90,8 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
       setMessage("Verification email sent to the new address.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Email update failed.");
+    } finally {
+      setEmailLoading(false);
     }
   }
 
@@ -90,6 +100,7 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
+    setPasswordLoading(true);
     try {
       await submitJson("/api/account/password", {
         currentPassword: String(formData.get("currentPassword") ?? ""),
@@ -99,14 +110,22 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
       setMessage("Password updated.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Password update failed.");
+    } finally {
+      setPasswordLoading(false);
     }
   }
 
   async function deactivateAccount() {
-    const response = await api.post("/api/account/deactivate");
+    setDeactivateLoading(true);
+    try {
+      const response = await api.post("/api/account/deactivate");
 
-    if (isApiSuccess(response.status)) {
-      window.location.assign("/login");
+      if (isApiSuccess(response.status)) {
+        window.location.assign("/login");
+        return;
+      }
+    } finally {
+      setDeactivateLoading(false);
     }
   }
 
@@ -146,16 +165,16 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
           Changing age track deletes prior lesson activity/progress.
         </p>
         <input name="interests" defaultValue={user.interests.join(", ")} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <button className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
-          Save Profile
+        <button disabled={profileLoading} className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60">
+          {profileLoading ? "Saving..." : "Save Profile"}
         </button>
       </form>
 
       <form onSubmit={handleEmail} className="grid gap-4 rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
         <h2 className="font-bebas text-3xl uppercase leading-none">Email</h2>
         <input name="email" type="email" defaultValue={user.pendingEmail ?? user.email} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <button className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
-          Send Verification
+        <button disabled={emailLoading} className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60">
+          {emailLoading ? "Sending..." : "Send Verification"}
         </button>
       </form>
 
@@ -163,8 +182,8 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
         <h2 className="font-bebas text-3xl uppercase leading-none">Password</h2>
         <input name="currentPassword" type="password" placeholder="Current password" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="password" type="password" placeholder="New password" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <button className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
-          Update Password
+        <button disabled={passwordLoading} className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60">
+          {passwordLoading ? "Updating..." : "Update Password"}
         </button>
       </form>
 
@@ -178,9 +197,10 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
       <button
         type="button"
         onClick={handleDeactivate}
-        className="w-fit rounded-md border-2 border-[#212121] bg-[#ffe8e6] px-6 py-3 text-sm font-black !text-[#8c0504] shadow-[0_4px_0_#111]"
+        disabled={deactivateLoading}
+        className="w-fit rounded-md border-2 border-[#212121] bg-[#ffe8e6] px-6 py-3 text-sm font-black !text-[#8c0504] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Deactivate Account
+        {deactivateLoading ? "Deactivating..." : "Deactivate Account"}
       </button>
     </div>
   );

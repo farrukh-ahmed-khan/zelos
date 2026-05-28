@@ -411,7 +411,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
       render: (_, event) => (
         <Space size="small" wrap>
           <Button size="small" onClick={() => openEdit(event)}>Edit</Button>
-          <Button size="small" onClick={() => openAttendees(event)}>Attendees</Button>
+          <Button size="small" loading={attendeesLoading && attendeesEvent?.id === event.id} onClick={() => openAttendees(event)}>Attendees</Button>
           <Button
             danger
             size="small"
