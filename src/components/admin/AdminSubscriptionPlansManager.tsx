@@ -144,16 +144,37 @@ export function AdminSubscriptionPlansManager({
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
 
       <form onSubmit={submit} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
-        <input name="name" placeholder="Plan name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="priceDollars" type="number" min="0" step="0.01" placeholder="Price in dollars" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <textarea name="description" placeholder="Description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 md:col-span-2" />
-        <select name="interval" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="monthly">Monthly</option>
-          <option value="annual">Annual</option>
-        </select>
-        <input name="currency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="stripePriceId" placeholder="Stripe price ID" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="discountBadge" placeholder="Discount badge, e.g. Save 20%" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <label className="grid gap-2 text-sm font-bold">
+          Plan name
+          <input name="name" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Price in dollars
+          <input name="priceDollars" type="number" min="0" step="0.01" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold md:col-span-2">
+          Description
+          <textarea name="description" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Billing interval
+          <select name="interval" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Currency
+          <input name="currency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Stripe price ID
+          <input name="stripePriceId" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Discount badge
+          <input name="discountBadge" placeholder="Example: Save 20%" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
         <label className="flex items-center gap-2 text-sm font-bold">
           <input name="isPromotional" type="checkbox" />
           Promotional
@@ -172,15 +193,33 @@ export function AdminSubscriptionPlansManager({
           <p className="font-bold text-[#111827]">Create Promo Code</p>
           <p className="mt-1 text-sm text-[#555]">Creates a matching one-time Stripe coupon and promotion code.</p>
         </div>
-        <input name="code" placeholder="Code, e.g. SAVE20" required className="rounded-md border border-[#d8d2c5] px-3 py-3 uppercase" />
-        <input name="promoName" placeholder="Internal name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <select name="discountType" className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="percent">Percent off</option>
-          <option value="amount">Amount off</option>
-        </select>
-        <input name="percentOff" type="number" min="1" max="100" placeholder="Percent, e.g. 20" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="amountOffDollars" type="number" min="1" step="0.01" placeholder="Amount dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="promoCurrency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <label className="grid gap-2 text-sm font-bold">
+          Promo code
+          <input name="code" placeholder="Example: SAVE20" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal uppercase" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Internal name
+          <input name="promoName" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Discount type
+          <select name="discountType" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="percent">Percent off</option>
+            <option value="amount">Amount off</option>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Percent off
+          <input name="percentOff" type="number" min="1" max="100" placeholder="Example: 20" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Amount off in dollars
+          <input name="amountOffDollars" type="number" min="1" step="0.01" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Currency
+          <input name="promoCurrency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
         <button disabled={isSubmittingPromotion} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
           {isSubmittingPromotion ? "Creating..." : "Create Promo Code"}
         </button>
