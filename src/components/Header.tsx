@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { api, isApiSuccess } from "@/lib/api/client";
 
 const navItems = [
@@ -25,18 +25,31 @@ const navItems = [
   { label: "Contact", href: "/contact" },
 ];
 
+function subscribeToHydration(callback: () => void) {
+  const frame = window.requestAnimationFrame(callback);
+  return () => window.cancelAnimationFrame(frame);
+}
+
+function getClientHydrationSnapshot() {
+  return true;
+}
+
+function getServerHydrationSnapshot() {
+  return false;
+}
+
 export function Header() {
   const pathname = usePathname();
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navLinkClass =
     "px-1 py-2 font-[Inter] text-[18.1px] font-medium leading-[22.58px] tracking-[-0.722px] !text-[#2C2E2A] transition hover:text-[#cf1e1e]";
   const activeNavLinkClass = "rounded-full bg-[#efe6d8] px-4";
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -57,10 +70,6 @@ export function Header() {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -183,6 +192,7 @@ export function Header() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-md px-4 py-3 text-base font-semibold !text-[#2C2E2A] transition hover:bg-[#efe6d8] hover:!text-[#cf1e1e] ${isActive ? "bg-[#efe6d8] !text-[#cf1e1e]" : ""}`}
                   >
                     {item.label}
@@ -194,6 +204,7 @@ export function Header() {
             <div className="border-t border-[#eee] px-4 py-4 flex flex-col gap-3">
               <Link
                 href={isLoggedIn ? "/dashboard" : "/login"}
+                onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center gap-2 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
               >
                 <UserOutlined />
@@ -201,6 +212,7 @@ export function Header() {
               </Link>
               <Link
                 href="/donate"
+                onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center gap-2 rounded-md border-2 border-[#212121] bg-[#2d93cf] px-4 py-3 text-sm font-black !text-white shadow-[0_3px_0_#111]"
               >
                 <SmileFilled />
