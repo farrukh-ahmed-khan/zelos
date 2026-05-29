@@ -237,12 +237,29 @@ export async function inviteStudentToSchool(params: {
   });
 }
 
+export async function getSchoolInvitePreview(token: string) {
+  await connectToDatabase();
+
+  const invite = await SchoolInvite.findOne({
+    token: hashInviteToken(token),
+    used: false,
+    expiresAt: { $gt: new Date() },
+  }).select("role");
+
+  if (!invite) {
+    return null;
+  }
+
+  return {
+    role: invite.role,
+  };
+}
+
 export async function acceptSchoolInvite(params: {
   token: string;
   name: string;
   password: string;
-  age: number;
-  ageTrack?: string;
+  age?: number;
 }) {
   await connectToDatabase();
 
@@ -266,6 +283,10 @@ export async function acceptSchoolInvite(params: {
 
   if (existingUser) {
     throw new ApiError(409, "An account with this email already exists.");
+  }
+
+  if (invite.role === "student" && !params.age) {
+    throw new ApiError(422, "Age is required for student accounts.");
   }
 
   const countField = invite.role === "teacher" ? "teachersCount" : "studentsCount";
@@ -299,8 +320,8 @@ export async function acceptSchoolInvite(params: {
       email: invite.email,
       password: await hashPassword(params.password),
       role: invite.role,
-      age: params.age,
-      ageTrack: params.ageTrack ?? deriveAgeTrack(params.age),
+      age: invite.role === "student" ? params.age : 18,
+      ageTrack: invite.role === "student" ? deriveAgeTrack(params.age!) : "teacher",
       schoolId: invite.schoolId,
       emailVerifiedAt: new Date(),
     });

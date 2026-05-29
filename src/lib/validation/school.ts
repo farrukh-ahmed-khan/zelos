@@ -34,6 +34,5 @@ export const acceptSchoolInviteSchema = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
       "Password must include uppercase, lowercase, and a number.",
     ),
-  age: z.number().int().min(1).max(120),
-  ageTrack: z.string().trim().min(2).max(60).optional(),
+  age: z.number().int().min(1).max(120).optional(),
 });

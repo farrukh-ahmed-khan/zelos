@@ -3,7 +3,13 @@
 import { FormEvent, useState } from "react";
 import { api, isApiSuccess } from "@/lib/api/client";
 
-export function SchoolInviteAcceptForm({ token }: { token: string }) {
+export function SchoolInviteAcceptForm({
+  token,
+  role,
+}: {
+  token: string;
+  role: "teacher" | "student";
+}) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,8 +25,11 @@ export function SchoolInviteAcceptForm({ token }: { token: string }) {
       const response = await api.post("/api/schools/invite/accept", {
         token,
         name: String(formData.get("name") ?? ""),
-        age: Number(formData.get("age") ?? 0),
-        ageTrack: String(formData.get("ageTrack") ?? "") || undefined,
+        ...(role === "student"
+          ? {
+              age: Number(formData.get("age") ?? 0),
+            }
+          : {}),
         password: String(formData.get("password") ?? ""),
       });
       const result = response.data;
@@ -44,8 +53,9 @@ export function SchoolInviteAcceptForm({ token }: { token: string }) {
       {message ? <p className="rounded-md bg-[#eef8e8] px-4 py-3 text-sm font-bold text-[#24551f]">{message}</p> : null}
       {error ? <p className="rounded-md bg-[#ffe8e6] px-4 py-3 text-sm font-bold text-[#8c0504]">{error}</p> : null}
       <input name="name" placeholder="Full name" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-      <input name="age" type="number" min={1} max={120} placeholder="Age" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-      <input name="ageTrack" placeholder="Age track, optional" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+      {role === "student" ? (
+        <input name="age" type="number" min={1} max={120} placeholder="Age" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+      ) : null}
       <input name="password" type="password" placeholder="Password" required className="rounded-md border border-[#d8d2c5] px-3 py-3" />
       <button
         disabled={isSubmitting}

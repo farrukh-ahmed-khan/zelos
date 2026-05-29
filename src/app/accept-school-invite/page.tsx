@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { SchoolInviteAcceptForm } from "@/components/school/SchoolInviteAcceptForm";
+import { getSchoolInvitePreview } from "@/lib/schools/service";
 
 export default async function AcceptSchoolInvitePage({
   searchParams,
@@ -13,6 +14,12 @@ export default async function AcceptSchoolInvitePage({
     redirect("/login");
   }
 
+  const invite = await getSchoolInvitePreview(token);
+
+  if (!invite) {
+    redirect("/login");
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f5f7] p-4 text-[#202020] sm:p-6">
       <Header />
@@ -20,7 +27,7 @@ export default async function AcceptSchoolInvitePage({
         <p className="text-xs font-black uppercase tracking-wide text-[#8c0504]">School Invite</p>
         <h1 className="mt-2 text-3xl font-black">Create your school account</h1>
         <div className="mt-6">
-          <SchoolInviteAcceptForm token={token} />
+          <SchoolInviteAcceptForm token={token} role={invite.role} />
         </div>
       </section>
     </main>
