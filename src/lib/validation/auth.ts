@@ -14,7 +14,6 @@ export const registerSchema = z.object({
     ),
   role: z.enum(SELF_REGISTER_ROLES),
   age: z.number().int().min(1).max(120),
-  ageTrack: z.string().trim().min(2).max(60).optional(),
   interests: z.array(z.string().trim().min(1).max(80)).max(10).optional(),
   termsAccepted: z.literal(true),
   termsVersion: z.string().trim().min(1).max(40).optional(),

@@ -4,17 +4,9 @@ import { Header } from "@/components/Header";
 
 type AuthPageShellProps = {
   mode: "login" | "signup";
-  plans?: Array<{
-    id: string;
-    name: string;
-    interval: string;
-    priceCents: number;
-    currency: string;
-    discountBadge: string | null;
-  }>;
 };
 
-export function AuthPageShell({ mode, plans = [] }: AuthPageShellProps) {
+export function AuthPageShell({ mode }: AuthPageShellProps) {
   const isSignup = mode === "signup";
 
   return (
@@ -68,7 +60,7 @@ export function AuthPageShell({ mode, plans = [] }: AuthPageShellProps) {
                 <div className="mb-4 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black uppercase tracking-wide text-[#212121] shadow-[0_4px_0_#111]">
                   {isSignup ? "Create Account" : "Member Login"}
                 </div>
-                <AuthForm mode={mode} plans={plans} />
+                <AuthForm mode={mode} />
               </div>
             </div>
           </div>

@@ -10,17 +10,9 @@ type SubmitState = "idle" | "submitting" | "error";
 
 type AuthFormProps = {
   mode: AuthMode;
-  plans?: Array<{
-    id: string;
-    name: string;
-    interval: string;
-    priceCents: number;
-    currency: string;
-    discountBadge: string | null;
-  }>;
 };
 
-export function AuthForm({ mode, plans = [] }: AuthFormProps) {
+export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
@@ -35,7 +27,6 @@ export function AuthForm({ mode, plans = [] }: AuthFormProps) {
 
     const formData = new FormData(event.currentTarget);
     const endpoint = isSignup ? "/api/auth/register" : "/api/auth/login";
-    const selectedPlanId = String(formData.get("planId") ?? "");
     const payload = isSignup
       ? {
           name: String(formData.get("name") ?? ""),
@@ -43,7 +34,6 @@ export function AuthForm({ mode, plans = [] }: AuthFormProps) {
           password: String(formData.get("password") ?? ""),
           role: "subscriber",
           age: Number(formData.get("age") ?? 0),
-          ageTrack: String(formData.get("ageTrack") ?? "teen"),
           termsAccepted: formData.get("termsAccepted") === "on",
           termsVersion: "v1",
         }
@@ -61,21 +51,12 @@ export function AuthForm({ mode, plans = [] }: AuthFormProps) {
       }
 
       if (isSignup) {
-        if (selectedPlanId) {
-          window.localStorage.setItem("zelos-pending-plan-id", selectedPlanId);
-        }
         setSubmitState("idle");
         setMessage("Account created. Please verify your email before signing in.");
         return;
       }
 
-      const pendingPlanId = window.localStorage.getItem("zelos-pending-plan-id");
-      if (pendingPlanId) {
-        window.localStorage.removeItem("zelos-pending-plan-id");
-        router.push(`/billing?planId=${encodeURIComponent(pendingPlanId)}`);
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
       router.refresh();
     } catch (error) {
       setSubmitState("error");
@@ -151,45 +132,6 @@ export function AuthForm({ mode, plans = [] }: AuthFormProps) {
                 className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
               />
             </label>
-
-            <label className="grid gap-2 text-sm font-bold">
-              Age track
-              <select
-                name="ageTrack"
-                defaultValue="teen"
-                required
-                className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
-              >
-                <option value="child">Children</option>
-                <option value="teen">Teens</option>
-                <option value="young-adult">Young Adults</option>
-              </select>
-            </label>
-
-            {plans.length ? (
-              <label className="grid gap-2 text-sm font-bold">
-                Subscription cadence
-                <select
-                  name="planId"
-                  defaultValue=""
-                  className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
-                >
-                  <option value="">Free account first</option>
-                  {plans.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.name} / {plan.interval}
-                      {" - "}
-                      {(plan.priceCents / 100).toLocaleString(undefined, {
-                        style: "currency",
-                        currency: plan.currency.toUpperCase(),
-                      })}
-                      {plan.discountBadge ? ` (${plan.discountBadge})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-
           </div>
 
           <label className="flex items-start gap-3 rounded-md border border-[#d8d2c5] bg-[#f7f2e8] px-3 py-3 text-sm font-semibold">
