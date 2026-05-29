@@ -154,17 +154,29 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
 
       <form onSubmit={handleProfile} className="grid gap-4 rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
         <h2 className="font-bebas text-3xl uppercase leading-none">Profile</h2>
-        <input name="name" defaultValue={user.name} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <input name="age" type="number" min={1} max={120} defaultValue={user.age} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
-        <select name="ageTrack" defaultValue={user.ageTrack} className="rounded-md border border-[#d8d2c5] px-3 py-3">
-          <option value="child">Children</option>
-          <option value="teen">Teens</option>
-          <option value="young-adult">Young Adults</option>
-        </select>
+        <label className="grid gap-2 text-sm font-bold">
+          Full name
+          <input name="name" defaultValue={user.name} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Age
+          <input name="age" type="number" min={1} max={120} defaultValue={user.age} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Age track
+          <select name="ageTrack" defaultValue={user.ageTrack} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="child">Children</option>
+            <option value="teen">Teens</option>
+            <option value="young-adult">Young Adults</option>
+          </select>
+        </label>
         <p className="-mt-2 text-xs font-semibold text-[#8c0504]">
           Changing age track deletes prior lesson activity/progress.
         </p>
-        <input name="interests" defaultValue={user.interests.join(", ")} className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <label className="grid gap-2 text-sm font-bold">
+          Interests
+          <input name="interests" defaultValue={user.interests.join(", ")} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
         <button disabled={profileLoading} className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-60">
           {profileLoading ? "Saving..." : "Save Profile"}
         </button>
