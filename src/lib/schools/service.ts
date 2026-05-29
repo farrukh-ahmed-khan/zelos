@@ -255,6 +255,30 @@ export async function getSchoolInvitePreview(token: string) {
   };
 }
 
+export async function getSchoolStudentInviteUsage(schoolId: string) {
+  await connectToDatabase();
+
+  const school = await School.findById(schoolId).select("studentLimit");
+
+  if (!school) {
+    throw new ApiError(404, "School not found.");
+  }
+
+  const { studentsCount } = await syncSchoolSeatCounts(schoolId);
+  const pendingInvites = await getPendingInviteCount({
+    schoolId,
+    role: "student",
+  });
+  const usedSeats = studentsCount + pendingInvites;
+
+  return {
+    studentLimit: school.studentLimit,
+    studentsCount,
+    pendingInvites,
+    remainingInvites: Math.max(school.studentLimit - usedSeats, 0),
+  };
+}
+
 export async function acceptSchoolInvite(params: {
   token: string;
   name: string;

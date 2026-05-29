@@ -7,7 +7,7 @@ import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db";
 import { getSchoolResourcesForUser, serializeSchoolResource } from "@/lib/school-resources/service";
-import { getSchoolProgress, getSchoolStudents } from "@/lib/schools/service";
+import { getSchoolProgress, getSchoolStudentInviteUsage, getSchoolStudents } from "@/lib/schools/service";
 import User from "@/models/User";
 import Video from "@/models/Video";
 
@@ -35,10 +35,11 @@ export default async function EducatorPage() {
   const user = await User.findById(payload.sub);
   if (!user || user.role !== "teacher" || !user.schoolId) redirect("/dashboard");
 
-  const [resources, progress, students, upcomingVideos] = await Promise.all([
+  const [resources, progress, students, inviteUsage, upcomingVideos] = await Promise.all([
     getSchoolResourcesForUser(user),
     getSchoolProgress(user.schoolId),
     getSchoolStudents(user.schoolId),
+    getSchoolStudentInviteUsage(user.schoolId),
     Video.find({
       audience: { $in: ["teacher", "student"] },
       releaseDate: { $gt: new Date() },
@@ -52,7 +53,7 @@ export default async function EducatorPage() {
         <p className="text-xs font-black uppercase tracking-wide text-[#8c0504]">Educator Portal</p>
         <h1 className="mt-2 text-3xl font-black">Teacher Workspace</h1>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-4">
           <article className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <p className="text-xs font-black uppercase text-[#667085]">Students</p>
             <p className="mt-2 text-3xl font-black">{students.length}</p>
@@ -64,6 +65,13 @@ export default async function EducatorPage() {
           <article className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <p className="text-xs font-black uppercase text-[#667085]">Resources</p>
             <p className="mt-2 text-3xl font-black">{resources.length}</p>
+          </article>
+          <article className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+            <p className="text-xs font-black uppercase text-[#667085]">Invites Left</p>
+            <p className="mt-2 text-3xl font-black">{inviteUsage.remainingInvites}</p>
+            <p className="mt-1 text-xs font-semibold text-[#667085]">
+              {inviteUsage.pendingInvites} pending / {inviteUsage.studentLimit} seats
+            </p>
           </article>
         </div>
 
@@ -82,7 +90,7 @@ export default async function EducatorPage() {
 
           <section className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <h2 className="font-bold">Invite Students</h2>
-            <StudentInviteForm />
+            <StudentInviteForm inviteUsage={inviteUsage} />
             <h2 className="mt-6 font-bold">Upcoming Schedule</h2>
             <div className="mt-3 grid gap-2">
               {upcomingVideos.map((video) => (
@@ -95,7 +103,7 @@ export default async function EducatorPage() {
           </section>
         </div>
 
-        <section className="mt-6 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <section className="mt-6 mb-6 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
           <h2 className="font-bold">Teacher Resources</h2>
           <div className="mt-3 grid gap-4">
             {[
