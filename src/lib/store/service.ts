@@ -16,13 +16,20 @@ export function serializeProduct(product: ProductDocument) {
     images: product.images ?? [],
     sizes: product.sizes ?? [],
     colors: product.colors ?? [],
-    variants: product.variants ?? [],
+    variants: (product.variants ?? []).map((variant) => ({
+      sku: variant.sku ?? null,
+      size: variant.size ?? null,
+      color: variant.color ?? null,
+      inventoryCount: variant.inventoryCount,
+      priceAdjustmentCents: variant.priceAdjustmentCents ?? 0,
+      isActive: variant.isActive,
+    })),
     inventoryCount: product.inventoryCount,
     limitedEdition: product.limitedEdition,
     isActive: product.isActive,
     isGiftCard: product.isGiftCard,
-    createdAt: product.createdAt,
-    updatedAt: product.updatedAt,
+    createdAt: product.createdAt?.toISOString(),
+    updatedAt: product.updatedAt?.toISOString(),
   };
 }
 

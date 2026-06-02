@@ -14,6 +14,7 @@ import {
   Tag,
   message as antMessage,
 } from "antd";
+import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { api, isApiSuccess } from "@/lib/api/client";
 
@@ -80,6 +81,7 @@ type ProductFormValues = {
 };
 
 const statuses = ["paid", "processing", "shipped", "delivered", "cancelled"] as const;
+const acceptedImageTypes = "image/jpeg,image/png,image/webp,image/gif";
 
 function money(cents: number) {
   return (cents / 100).toLocaleString(undefined, {
@@ -99,6 +101,7 @@ export function AdminOrdersManager({
   const [productItems, setProductItems] = useState(products);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [isUploadingProductImage, setIsUploadingProductImage] = useState(false);
   const [productActionId, setProductActionId] = useState<string | null>(null);
   const [isCreatingGiftCard, setIsCreatingGiftCard] = useState(false);
   const [form] = Form.useForm<ProductFormValues>();
@@ -209,7 +212,7 @@ export function AdminOrdersManager({
         slug: values.slug,
         description: values.description,
         priceCents: Math.round(Number(values.priceDollars ?? 0) * 100),
-        images: values.images ?? [],
+        images: form.getFieldValue("images") ?? values.images ?? [],
         sizes: values.sizes ?? [],
         colors: values.colors ?? [],
         variants: cleanVariants,
@@ -232,6 +235,36 @@ export function AdminOrdersManager({
     } finally {
       setIsCreatingProduct(false);
     }
+  }
+
+  async function uploadProductImage(file: File) {
+    setIsUploadingProductImage(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await api.post("/api/admin/products/images", formData);
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to upload product image.");
+        return;
+      }
+
+      const currentImages = form.getFieldValue("images") ?? [];
+      form.setFieldValue("images", [...currentImages, result.data.image.url]);
+      antMessage.success("Product image uploaded.");
+    } finally {
+      setIsUploadingProductImage(false);
+    }
+  }
+
+  function removeProductImage(imageUrl: string) {
+    const currentImages = form.getFieldValue("images") ?? [];
+    form.setFieldValue(
+      "images",
+      currentImages.filter((currentImage: string) => currentImage !== imageUrl),
+    );
   }
 
   async function toggleProduct(product: Product) {
@@ -570,7 +603,7 @@ export function AdminOrdersManager({
         <Form
           form={form}
           layout="vertical"
-          initialValues={{ isActive: true, limitedEdition: false, isGiftCard: false }}
+          initialValues={{ images: [], isActive: true, limitedEdition: false, isGiftCard: false }}
           onFinish={createProduct}
         >
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -595,8 +628,60 @@ export function AdminOrdersManager({
             </Card>
 
             <Card size="small" title="Media & Publishing" className="rounded-md">
-              <Form.Item name="images" label="Image URLs">
-                <Select mode="tags" tokenSeparators={[",", "\n"]} placeholder="Paste image URLs and press Enter" />
+              <Form.Item label="Product Images">
+                <div className="grid gap-3">
+                  <Form.Item noStyle shouldUpdate={(previous, current) => previous.images !== current.images}>
+                    {({ getFieldValue }) => {
+                      const images = (getFieldValue("images") ?? []) as string[];
+
+                      return images.length ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {images.map((imageUrl) => (
+                            <div key={imageUrl} className="rounded-md border border-[#edf0f3] p-2">
+                              <div
+                                aria-label="Product image preview"
+                                className="aspect-video w-full rounded bg-cover bg-center"
+                                style={{ backgroundImage: `url("${imageUrl}")` }}
+                              />
+                              <div className="mt-2 flex items-center justify-between gap-2">
+                                <a href={imageUrl} target="_blank" rel="noreferrer" className="truncate text-xs font-bold !text-[#8c0504]">
+                                  Open image
+                                </a>
+                                <Button size="small" icon={<DeleteOutlined />} onClick={() => removeProductImage(imageUrl)}>
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="rounded-md border border-dashed border-[#d9dde3] px-3 py-6 text-center text-xs font-semibold text-[#667085]">
+                          Upload product images from your device.
+                        </p>
+                      );
+                    }}
+                  </Form.Item>
+                  <input
+                    id="product-image-upload"
+                    type="file"
+                    accept={acceptedImageTypes}
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        void uploadProductImage(file);
+                      }
+                      event.target.value = "";
+                    }}
+                  />
+                  <Button
+                    icon={<UploadOutlined />}
+                    loading={isUploadingProductImage}
+                    onClick={() => document.getElementById("product-image-upload")?.click()}
+                  >
+                    Upload image
+                  </Button>
+                </div>
               </Form.Item>
               <div className="grid gap-3 sm:grid-cols-3">
                 <Form.Item name="limitedEdition" label="Limited Edition" valuePropName="checked">
@@ -644,7 +729,7 @@ export function AdminOrdersManager({
             }}>
               Clear
             </Button>
-            <Button type="primary" htmlType="submit" loading={isCreatingProduct}>
+            <Button type="primary" htmlType="submit" loading={isCreatingProduct} disabled={isUploadingProductImage}>
               Create Product
             </Button>
           </div>

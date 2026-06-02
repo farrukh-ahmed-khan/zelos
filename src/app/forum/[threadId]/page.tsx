@@ -27,9 +27,11 @@ export default async function ForumThreadPage({
 
   if (payload?.sub) {
     await connectToDatabase();
-    const user = await User.findById(payload.sub).select("age forumPostingRevoked");
+    const user = await User.findById(payload.sub).select("age forumPostingRevoked status isBanned");
 
-    if (user?.forumPostingRevoked) {
+    if (user?.isBanned || user?.status === "banned") {
+      readOnlyReason = "Banned accounts can read the forum but cannot post or reply.";
+    } else if (user?.forumPostingRevoked) {
       readOnlyReason = "Your forum posting access has been revoked.";
     } else if (user && user.age < 16) {
       readOnlyReason = "Accounts under 16 can read the forum but cannot post or reply.";
@@ -88,9 +90,11 @@ export default async function ForumThreadPage({
             </article>
           ))}
           <ForumReplyForm threadId={thread.id} canPost={canPost} readOnlyReason={readOnlyReason} />
-          <div className="rounded-md border-2 border-[#212121] bg-[#faff8d] p-4 text-sm font-black shadow-[0_4px_0_#111]">
-            Visitors: <Link href="/signup" className="!text-[#8c0504]">sign up free</Link> or <Link href="/billing" className="!text-[#8c0504]">subscribe</Link> to reply.
-          </div>
+          {!payload?.sub ? (
+            <div className="rounded-md border-2 border-[#212121] bg-[#faff8d] p-4 text-sm font-black shadow-[0_4px_0_#111]">
+              Visitors: <Link href="/signup" className="!text-[#8c0504]">sign up free</Link> or <Link href="/billing" className="!text-[#8c0504]">subscribe</Link> to reply.
+            </div>
+          ) : null}
         </div>
       </section>
       <Footer />

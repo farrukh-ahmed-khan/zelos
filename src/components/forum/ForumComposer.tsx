@@ -7,6 +7,7 @@ import {
   LinkOutlined,
   PictureOutlined,
 } from "@ant-design/icons";
+import { api, isApiSuccess } from "@/lib/api/client";
 
 type ForumComposerProps = {
   name: string;
@@ -19,7 +20,10 @@ export function ForumComposer({
   placeholder,
   rows = 6,
 }: ForumComposerProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
   const [value, setValue] = useState("");
 
   function insertWrap(prefix: string, suffix = prefix, fallback = "text") {
@@ -51,21 +55,35 @@ export function ForumComposer({
     insertWrap("[", `](${safeUrl})`, "link text");
   }
 
-  function insertPhoto() {
-    const url = window.prompt("Paste the photo URL");
-    if (!url) return;
-
-    const safeUrl = url.trim();
-    if (!safeUrl.startsWith("http://") && !safeUrl.startsWith("https://")) {
-      window.alert("Use a full http or https image link.");
-      return;
-    }
-
+  function insertPhoto(url: string) {
     const textarea = textareaRef.current;
     const start = textarea?.selectionStart ?? value.length;
-    const nextValue = `${value.slice(0, start)}\n![Photo](${safeUrl})\n${value.slice(start)}`;
-    setValue(nextValue);
+    const markdownUrl = encodeURI(url.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29");
+    setValue((currentValue) => `${currentValue.slice(0, start)}\n![Photo](${markdownUrl})\n${currentValue.slice(start)}`);
     requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
+  async function uploadPhoto(file: File) {
+    setIsUploadingImage(true);
+    setUploadMessage("");
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await api.post("/api/forum/images", formData);
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        setUploadMessage(result?.error?.message ?? "Unable to upload image.");
+        return;
+      }
+
+      insertPhoto(result.data.image.url);
+      setUploadMessage("Image attached.");
+    } finally {
+      setIsUploadingImage(false);
+    }
   }
 
   const toolbarButtonClass =
@@ -104,14 +122,28 @@ export function ForumComposer({
         <button
           type="button"
           aria-label="Attach photo"
-          title="Attach photo"
+          title="Upload photo"
           className={toolbarButtonClass}
-          onClick={insertPhoto}
+          disabled={isUploadingImage}
+          onClick={() => fileInputRef.current?.click()}
         >
           <PictureOutlined />
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+              void uploadPhoto(file);
+            }
+            event.target.value = "";
+          }}
+        />
         <p className="ml-auto text-xs font-bold text-[#667085]">
-          Public post
+          {isUploadingImage ? "Uploading image..." : uploadMessage || "Public post"}
         </p>
       </div>
       <textarea

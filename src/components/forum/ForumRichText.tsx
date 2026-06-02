@@ -6,9 +6,13 @@ function isSafeUrl(value: string) {
   return value.startsWith("http://") || value.startsWith("https://");
 }
 
+function normalizeMarkdownUrl(value: string) {
+  return value.trim().replace(/\s/g, "%20");
+}
+
 function renderInline(text: string) {
   const parts: React.ReactNode[] = [];
-  const pattern = /(!?\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  const pattern = /(!?\[[^\]]+\]\(https?:\/\/[^\r\n]+\)|\*\*[^*]+\*\*|\*[^*]+\*)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -18,23 +22,25 @@ function renderInline(text: string) {
     }
 
     const token = match[0];
-    const imageMatch = token.match(/^!\[([^\]]+)\]\(([^)]+)\)$/);
-    const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    const imageMatch = token.match(/^!\[([^\]]+)\]\((https?:\/\/[^\r\n]+)\)$/);
+    const linkMatch = token.match(/^\[([^\]]+)\]\((https?:\/\/[^\r\n]+)\)$/);
 
     if (imageMatch && isSafeUrl(imageMatch[2])) {
+      const imageUrl = normalizeMarkdownUrl(imageMatch[2]);
       parts.push(
         <img
           key={`${match.index}-${token}`}
-          src={imageMatch[2]}
+          src={imageUrl}
           alt={imageMatch[1]}
           className="my-3 max-h-[360px] w-full rounded-md border border-[#e4ded1] object-cover"
         />,
       );
     } else if (linkMatch && isSafeUrl(linkMatch[2])) {
+      const linkUrl = normalizeMarkdownUrl(linkMatch[2]);
       parts.push(
         <Link
           key={`${match.index}-${token}`}
-          href={linkMatch[2]}
+          href={linkUrl}
           target="_blank"
           rel="noreferrer"
           className="font-bold !text-[#8c0504] underline"
