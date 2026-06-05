@@ -47,13 +47,13 @@ export default async function EducatorPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-[#f4f5f7] p-4 text-[#202020] sm:p-6">
+    <main className="min-h-screen bg-[#f4f5f7] p-3 text-[#202020] sm:p-6">
       <Header />
       <section className="container mt-12">
         <p className="text-xs font-black uppercase tracking-wide text-[#8c0504]">Educator Portal</p>
-        <h1 className="mt-2 text-3xl font-black">Teacher Workspace</h1>
+        <h1 className="mt-2 text-[clamp(2rem,10vw,3rem)] font-black leading-tight">Teacher Workspace</h1>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <article className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <p className="text-xs font-black uppercase text-[#667085]">Students</p>
             <p className="mt-2 text-3xl font-black">{students.length}</p>
@@ -75,12 +75,12 @@ export default async function EducatorPage() {
           </article>
         </div>
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-2">
-          <section className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <section className="min-w-0 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <h2 className="font-bold">Class Progress</h2>
             <div className="mt-3 grid gap-2">
               {progress.students.map((student) => (
-                <div key={student.id} className="rounded-md bg-[#f8fafc] px-3 py-2 text-sm">
+                <div key={student.id} className="min-w-0 rounded-md bg-[#f8fafc] px-3 py-2 text-sm">
                   <p className="font-bold">{student.name}</p>
                   <p className="text-[#555]">{student.completionPercent}% complete / {student.completedVideoIds.length} completed</p>
                 </div>
@@ -88,13 +88,13 @@ export default async function EducatorPage() {
             </div>
           </section>
 
-          <section className="rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+          <section className="min-w-0 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
             <h2 className="font-bold">Invite Students</h2>
             <StudentInviteForm inviteUsage={inviteUsage} />
             <h2 className="mt-6 font-bold">Upcoming Schedule</h2>
             <div className="mt-3 grid gap-2">
               {upcomingVideos.map((video) => (
-                <div key={video._id.toString()} className="rounded-md bg-[#f8fafc] px-3 py-2 text-sm">
+                <div key={video._id.toString()} className="min-w-0 rounded-md bg-[#f8fafc] px-3 py-2 text-sm">
                   <p className="font-bold">{video.title}</p>
                   <p className="text-[#555]">{video.audience} / {video.ageTrack} / {video.releaseDate ? new Date(video.releaseDate).toLocaleString() : ""}</p>
                 </div>
@@ -103,7 +103,7 @@ export default async function EducatorPage() {
           </section>
         </div>
 
-        <section className="mt-6 mb-6 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
+        <section className="mt-6 mb-6 min-w-0 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
           <h2 className="font-bold">Teacher Resources</h2>
           <div className="mt-3 grid gap-4">
             {[
@@ -121,7 +121,7 @@ export default async function EducatorPage() {
                 <div className="mt-2 grid gap-3 md:grid-cols-2">
                   {group.items.length ? (
                     group.items.map((item) => (
-                      <a key={item.id} href={item.url} target="_blank" rel="noreferrer" className="rounded-md bg-[#f8fafc] p-3 !text-[#202020]">
+                      <a key={item.id} href={item.url} target="_blank" rel="noreferrer" className="min-w-0 rounded-md bg-[#f8fafc] p-3 !text-[#202020]">
                         <span className="rounded-sm bg-[#eaf3ff] px-2 py-1 text-[11px] font-black uppercase text-[#175cd3]">
                           {formatResourceScope(item)}
                         </span>

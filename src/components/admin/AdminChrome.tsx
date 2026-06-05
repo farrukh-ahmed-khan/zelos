@@ -63,8 +63,8 @@ export function AdminChrome({
   return (
     <main className="min-h-screen bg-[#f4f5f7] text-[#202020]">
       <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
-        <aside className="border-r border-[#d9dde3] bg-white">
-          <div className="flex h-16 items-center gap-3 border-b border-[#edf0f3] px-5">
+        <aside className="border-b border-[#d9dde3] bg-white lg:border-b-0 lg:border-r">
+          <div className="flex min-h-16 items-center gap-3 border-b border-[#edf0f3] px-4 py-3 sm:px-5 lg:h-16 lg:py-0">
             <span className="grid h-9 w-9 place-items-center rounded-md bg-[#8c0504] text-white">
               <UsergroupAddOutlined />
             </span>
@@ -78,7 +78,7 @@ export function AdminChrome({
             </div>
           </div>
 
-          <nav className="grid gap-1 p-3">
+          <nav className="flex gap-2 overflow-x-auto p-3 [scrollbar-width:none] lg:grid lg:overflow-visible [&::-webkit-scrollbar]:hidden">
             {navItems.map((item) => {
               const Icon = item.icon;
 
@@ -86,7 +86,7 @@ export function AdminChrome({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold !text-[#344054] transition hover:bg-[#f2f4f7] hover:!text-[#8c0504]"
+                  className="flex shrink-0 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold !text-[#344054] transition hover:bg-[#f2f4f7] hover:!text-[#8c0504]"
                 >
                   <Icon className="text-base text-[#8c0504]" />
                   {item.label}
@@ -95,7 +95,7 @@ export function AdminChrome({
             })}
           </nav>
 
-          <div className="mx-3 border-t border-[#edf0f3] pt-3">
+          <div className="mx-3 flex gap-2 overflow-x-auto border-t border-[#edf0f3] py-3 [scrollbar-width:none] lg:grid lg:overflow-visible lg:pt-3 [&::-webkit-scrollbar]:hidden">
             {secondaryItems.map((item) => {
               const Icon = item.icon;
 
@@ -103,7 +103,7 @@ export function AdminChrome({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-bold !text-[#667085] hover:bg-[#f2f4f7] hover:!text-[#202020]"
+                  className="flex shrink-0 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold !text-[#667085] hover:bg-[#f2f4f7] hover:!text-[#202020]"
                 >
                   <Icon className="text-sm" />
                   {item.label}
@@ -113,10 +113,10 @@ export function AdminChrome({
           </div>
 
           {isSuperAdmin ? (
-            <div className="mx-3 mt-3 border-t border-[#edf0f3] pt-3">
+            <div className="mx-3 border-t border-[#edf0f3] py-3 lg:mt-3 lg:pt-3">
               <Link
                 href="/super-admin"
-                className="flex rounded-md bg-[#15171c] px-3 py-2 text-sm font-bold !text-white"
+                className="flex w-fit rounded-md bg-[#15171c] px-3 py-2 text-sm font-bold !text-white lg:w-auto"
               >
                 Super Admin
               </Link>
@@ -135,7 +135,7 @@ export function AdminChrome({
                   {title}
                 </h1>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {isSuperAdmin ? (
                   <Link
                     href="/super-admin"
@@ -154,7 +154,7 @@ export function AdminChrome({
             </div>
           </header>
 
-          <section className="px-4 py-5 sm:px-6">{children}</section>
+          <section className="min-w-0 px-4 py-5 sm:px-6">{children}</section>
         </div>
       </div>
     </main>
@@ -194,7 +194,7 @@ export function AdminPanel({
         <h2 className="text-base font-black tracking-normal text-[#111827]">{title}</h2>
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="min-w-0 overflow-x-auto p-4">{children}</div>
     </section>
   );
 }

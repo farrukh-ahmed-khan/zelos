@@ -9,7 +9,7 @@ export function NonprofitSupport() {
             <p className="eyebrow-red mb-2">
               Support Zelos
             </p>
-            <h2 className="font-bebas text-[clamp(3.1rem,5.2vw,5rem)] uppercase leading-[0.95] tracking-[-1px] text-black">
+            <h2 className="font-bebas text-[clamp(3.1rem,5.2vw,5rem)] uppercase leading-[0.95] tracking-normal text-black">
               Zelos Is A
               <br />
               Recognized

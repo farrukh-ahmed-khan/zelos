@@ -19,6 +19,7 @@
 
 html {
   background: var(--background);
+  overflow-x: hidden;
 }
 
 body {
@@ -27,6 +28,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
 }
 
 a {
@@ -56,11 +59,30 @@ a {
 @layer components {
   .home-section-heading {
     font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif !important;
-    font-size: 90px !important;
+    font-size: clamp(3.1rem, 13vw, 5.625rem) !important;
     font-style: normal !important;
     font-weight: 400 !important;
-    line-height: 76px !important;
-    letter-spacing: -2px !important;
+    line-height: 0.9 !important;
+    letter-spacing: 0 !important;
     text-transform: uppercase !important;
   }
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  min-width: 0;
+}
+
+.ant-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
 }

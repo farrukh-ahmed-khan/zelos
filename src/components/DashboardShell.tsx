@@ -238,9 +238,9 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-md border-2 border-[#212121] bg-[#f8f3e8] p-4 shadow-[0_4px_0_#111]">
+    <section className="min-w-0 rounded-md border-2 border-[#212121] bg-[#f8f3e8] p-4 shadow-[0_4px_0_#111]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-bebas text-3xl uppercase leading-none text-[#202020]">
+        <h2 className="font-bebas text-[clamp(1.85rem,9vw,1.875rem)] uppercase leading-none text-[#202020]">
           {title}
         </h2>
         {action}
@@ -346,8 +346,8 @@ function VideoPanel({
           {completionError}
         </p>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="overflow-hidden rounded-md bg-[#151515]">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <div className="min-w-0 overflow-hidden rounded-md bg-[#151515]">
         {nextVideo.url ? (
           <video
             key={nextVideo.id}
@@ -403,7 +403,7 @@ function VideoPanel({
         </div>
       </div>
 
-      <div className="grid content-start gap-2">
+      <div className="grid min-w-0 content-start gap-2">
         {groupedVideos.map((categoryGroup) => (
           <div key={categoryGroup.category} className="grid gap-2 rounded-md bg-white p-2">
             <p className="rounded-sm bg-[#8c0504] px-2 py-1 text-xs font-black uppercase text-white">
@@ -416,7 +416,7 @@ function VideoPanel({
                 className="group rounded-md border border-[#e4ded1] bg-[#fbf7ef]"
               >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-xs font-black uppercase text-[#555]">
-                  <span>{playlistGroup.playlist}</span>
+                  <span className="min-w-0">{playlistGroup.playlist}</span>
                   <span className="rounded-sm bg-white px-2 py-1 text-[11px] text-[#8c0504]">
                     {playlistGroup.videos.length} lesson{playlistGroup.videos.length === 1 ? "" : "s"}
                   </span>
@@ -428,7 +428,7 @@ function VideoPanel({
                       type="button"
                       disabled={video.locked}
                       onClick={() => setSelectedVideoId(video.id)}
-                      className={`flex items-center gap-3 rounded-md px-3 py-3 text-left text-sm transition ${
+                      className={`flex min-w-0 items-center gap-3 rounded-md px-3 py-3 text-left text-sm transition ${
                         nextVideo.id === video.id
                           ? "bg-[#faff8d] ring-2 ring-[#8c0504]"
                           : "bg-white"
@@ -814,12 +814,12 @@ export function DashboardShell({
   const isFreeSubscriber = user.role === "subscriber" && needsVideoSubscription && !hasVideoLibraryAccess;
 
   return (
-    <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
-      <section className="rounded-[2rem] bg-[#8c0504] px-5 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.38)] sm:px-9 lg:px-14">
+    <main className="min-h-screen bg-[#eee6d6] p-3 text-[#202020] sm:p-6">
+      <section className="rounded-[1.25rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.38)] sm:rounded-[2rem] sm:px-9 lg:px-14">
         <header className="container flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/"
-            className="flex h-12 items-center gap-3 rounded-sm bg-white px-4 text-2xl font-bold !text-[#343434] shadow-[0_3px_0_rgba(0,0,0,0.18)]"
+            className="flex h-12 items-center gap-3 rounded-sm bg-white px-4 text-xl font-bold !text-[#343434] shadow-[0_3px_0_rgba(0,0,0,0.18)] sm:text-2xl"
           >
             <span className="grid h-8 w-8 place-items-center text-[#ff3038]">
               <PlayCircleFilled className="text-[22px]" />
@@ -830,7 +830,7 @@ export function DashboardShell({
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/account"
-              className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]"
+              className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-3 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111] sm:px-4"
             >
               Account Settings
             </Link>
@@ -853,7 +853,7 @@ export function DashboardShell({
       </section>
 
       <div className="container py-8">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Account" value={roleLabels[user.role] ?? user.role} detail={user.email} />
           <StatCard label="Age Track" value={user.ageTrack} detail={`Age captured as ${user.age}`} />
           <StatCard label="Lessons" value={videos.length} detail={`${videos.filter((video) => video.completed).length} completed`} />
@@ -868,8 +868,8 @@ export function DashboardShell({
 
         {paidIntroVideo?.url ? <PaidIntroVideoPrompt video={paidIntroVideo} /> : null}
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="grid gap-6">
+        <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
+          <div className="grid min-w-0 gap-6">
             <SectionCard
               title={
                 isSchoolUser

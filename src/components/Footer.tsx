@@ -46,7 +46,7 @@ export function Footer() {
         <div className="row g-4">
           {footerGroups.map((group) => (
             <div className="col-12 col-md-6 col-lg-3" key={group.title}>
-              <div className="h-full rounded-md border border-[#dedede] px-8 py-8">
+              <div className="h-full rounded-md border border-[#dedede] px-5 py-7 sm:px-8 sm:py-8">
                 <h2 className="font-bebas text-2xl uppercase leading-none text-[#1d1d1d]">
                   {group.title}
                 </h2>
@@ -66,7 +66,7 @@ export function Footer() {
           ))}
 
           <div className="col-12 col-md-6 col-lg-3">
-            <div className="h-full rounded-md border border-[#dedede] px-8 py-8">
+            <div className="h-full rounded-md border border-[#dedede] px-5 py-7 sm:px-8 sm:py-8">
               <h2 className="font-bebas text-2xl uppercase leading-none text-[#1d1d1d]">
                 Get In Touch
               </h2>
@@ -79,7 +79,7 @@ export function Footer() {
               </a>
               <a
                 href="tel:+14065550120"
-                className="mt-3 block font-bebas text-[2.35rem] uppercase leading-none !text-[#1d1d1d]"
+                className="mt-3 block font-bebas text-[clamp(1.85rem,10vw,2.35rem)] uppercase leading-none !text-[#1d1d1d]"
               >
                 +1 406 555-0120
               </a>
@@ -128,7 +128,7 @@ export function Footer() {
             Copyright © 2026 <span className="text-[#1d1d1d]">Zelos</span>. All Rights Reserved
           </p>
 
-          <div className="flex flex-wrap gap-8">
+          <div className="flex flex-wrap gap-4 sm:gap-8">
             <Link href="/terms" className="!text-[#9a9a9a] transition hover:!text-[#b22222]">
               Terms & Conditions
             </Link>

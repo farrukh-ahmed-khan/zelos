@@ -29,8 +29,8 @@ export function SuperAdminChrome({
   return (
     <main className="min-h-screen bg-[#f4f5f7] text-[#202020]">
       <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
-        <aside className="border-r border-[#d9dde3] bg-[#15171c] text-white">
-          <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+        <aside className="border-b border-[#d9dde3] bg-[#15171c] text-white lg:border-b-0 lg:border-r">
+          <div className="flex min-h-16 items-center gap-3 border-b border-white/10 px-4 py-3 sm:px-5 lg:h-16 lg:py-0">
             <span className="grid h-9 w-9 place-items-center rounded-md bg-[#b22222]">
               <AppstoreOutlined />
             </span>
@@ -44,7 +44,7 @@ export function SuperAdminChrome({
             </div>
           </div>
 
-          <nav className="grid gap-1 p-3">
+          <nav className="flex gap-2 overflow-x-auto p-3 [scrollbar-width:none] lg:grid lg:overflow-visible [&::-webkit-scrollbar]:hidden">
             {navItems.map((item) => {
               const Icon = item.icon;
 
@@ -52,7 +52,7 @@ export function SuperAdminChrome({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold !text-white/82 transition hover:bg-white/10 hover:!text-white"
+                  className="flex shrink-0 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold !text-white/82 transition hover:bg-white/10 hover:!text-white"
                 >
                   <Icon className="text-base text-white/60" />
                   {item.label}
@@ -61,16 +61,16 @@ export function SuperAdminChrome({
             })}
           </nav>
 
-          <div className="mx-3 mt-2 border-t border-white/10 pt-3">
+          <div className="mx-3 flex gap-2 overflow-x-auto border-t border-white/10 py-3 [scrollbar-width:none] lg:mt-2 lg:grid lg:overflow-visible lg:pt-3 [&::-webkit-scrollbar]:hidden">
             <Link
               href="/admin"
-              className="flex rounded-md px-3 py-2 text-sm font-bold !text-white/72 hover:bg-white/10 hover:!text-white"
+              className="flex shrink-0 rounded-md px-3 py-2 text-sm font-bold !text-white/72 hover:bg-white/10 hover:!text-white"
             >
               Admin Operations
             </Link>
             <Link
               href="/dashboard"
-              className="flex rounded-md px-3 py-2 text-sm font-bold !text-white/72 hover:bg-white/10 hover:!text-white"
+              className="flex shrink-0 rounded-md px-3 py-2 text-sm font-bold !text-white/72 hover:bg-white/10 hover:!text-white"
             >
               User Dashboard
             </Link>
@@ -88,7 +88,7 @@ export function SuperAdminChrome({
                   {title}
                 </h1>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href="/admin"
                   className="rounded-md border border-[#cfd4dc] bg-white px-3 py-2 text-sm font-bold !text-[#202020] hover:border-[#8c0504]"
@@ -105,7 +105,7 @@ export function SuperAdminChrome({
             </div>
           </header>
 
-          <section className="px-4 py-5 sm:px-6">{children}</section>
+          <section className="min-w-0 px-4 py-5 sm:px-6">{children}</section>
         </div>
       </div>
     </main>
@@ -145,7 +145,7 @@ export function SuperAdminPanel({
         <h2 className="text-base font-black tracking-normal text-[#111827]">{title}</h2>
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="min-w-0 overflow-x-auto p-4">{children}</div>
     </section>
   );
 }

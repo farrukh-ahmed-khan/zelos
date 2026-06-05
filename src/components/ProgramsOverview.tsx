@@ -50,13 +50,13 @@ export function ProgramsOverview() {
 
         <div className="row g-4">
           {programs.map((program) => (
-            <div className="col-12 col-lg-6" key={program.title}>
-              <article className="flex h-full flex-col items-center rounded-2xl bg-white px-8 py-10 text-center shadow-[0_4px_0_rgba(0,0,0,0.08)]">
-                <h3 className="text-center font-bebas text-[60px] font-normal uppercase leading-[76px] tracking-[-2px] text-[#202020]">
+            <div className="col-12 col-md-6" key={program.title}>
+              <article className="flex h-full flex-col items-center rounded-2xl bg-white px-5 py-8 text-center shadow-[0_4px_0_rgba(0,0,0,0.08)] sm:px-8 sm:py-10">
+                <h3 className="text-center font-bebas text-[clamp(2.8rem,12vw,3.75rem)] font-normal uppercase leading-[0.95] tracking-normal text-[#202020]">
                   {program.title}
                 </h3>
 
-                <div className="my-6 flex h-[500px] w-full items-center justify-center sm:h-[450px]">
+                <div className="my-6 flex h-[280px] w-full items-center justify-center sm:h-[380px] lg:h-[450px] xl:h-[500px]">
                   <video
                     className="h-full max-w-full object-contain"
                     autoPlay
@@ -69,7 +69,7 @@ export function ProgramsOverview() {
                   </video>
                 </div>
 
-                <p className="mx-auto max-w-[360px] flex-1 text-center font-sans text-[18px] font-medium leading-[30px] text-[#252628]">
+                <p className="mx-auto max-w-[360px] flex-1 text-center font-sans text-[16px] font-medium leading-[1.65] text-[#252628] sm:text-[18px]">
                   {program.description}
                 </p>
 

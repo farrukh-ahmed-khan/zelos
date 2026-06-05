@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 
 export function HeroBanner() {
   return (
-    <section className="relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[2rem] bg-[#7a0505] px-5 py-5 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:min-h-[calc(100vh-3rem)] sm:px-9 lg:px-24">
+    <section className="relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:min-h-[calc(100vh-3rem)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-24">
       <video
         className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-multiply"
         autoPlay
@@ -18,22 +18,22 @@ export function HeroBanner() {
 
       <Header />
 
-      <div className="container relative z-10 pt-10 lg:pt-2">
+      <div className="container relative z-10 pt-8 lg:pt-2">
         <div className="row min-h-[calc(100vh-8rem)] items-center">
           <div className="col-12 col-lg-7">
             <div className="py-10 lg:py-0">
               <p className="eyebrow-white mb-3">
                 Welcome to Zelos
               </p>
-              <h1 className="font-bebas text-[120px] font-bold uppercase leading-[100px] text-white">
+              <h1 className="font-bebas text-[clamp(4rem,18vw,7.5rem)] font-bold uppercase leading-[0.86] text-white">
                 Empowering the
                 <br />
                 Next <span className="text-transparent [-webkit-text-stroke:2px_#EEDEC5]">Generation</span>
               </h1>
-              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[28px] font-bold uppercase leading-[30px] text-[#B22222]">
+              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[20px] font-bold uppercase leading-tight text-[#B22222] sm:text-[28px]">
                 With financial literacy, mentorship, scholarship, and opportunity.
               </p>
-              <p className="mt-2 font-sans text-[24px] font-normal leading-[32px] text-white">
+              <p className="mt-3 max-w-[680px] font-sans text-[18px] font-normal leading-[1.45] text-white sm:text-[22px] lg:text-[24px]">
                 Giving young people the tools, guidance, and real-world exposure they
                 need to build strong futures - wherever they&apos;re starting from.
               </p>
@@ -60,14 +60,14 @@ export function HeroBanner() {
           </div>
 
           <div className="col-12 col-lg-5">
-            <div className="pointer-events-none relative min-h-[410px] lg:min-h-[610px]">
+            <div className="pointer-events-none relative min-h-[280px] sm:min-h-[410px] lg:min-h-[610px]">
               <Image
                 src="/assets/hero-gif.gif"
                 alt="Animated superhero standing on a cliff"
                 width={760}
                 height={711}
                 unoptimized
-                className="absolute bottom-[-26px] right-[-120px] w-[min(820px,118vw)] max-w-none object-contain sm:right-[-80px] lg:bottom-[-48px] lg:right-[-190px] xl:right-[-280px]"
+                className="absolute bottom-[-26px] right-[-58px] w-[min(660px,116vw)] max-w-none object-contain sm:right-[-80px] sm:w-[min(820px,118vw)] lg:bottom-[-48px] lg:right-[-190px] xl:right-[-280px]"
               />
             </div>
           </div>
