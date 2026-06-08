@@ -41,6 +41,8 @@ export function AdminSubscriptionPlansManager({
   const [error, setError] = useState("");
   const [isSubmittingPlan, setIsSubmittingPlan] = useState(false);
   const [isSubmittingPromotion, setIsSubmittingPromotion] = useState(false);
+  const [promotionDiscountType, setPromotionDiscountType] =
+    useState<PromotionCode["discountType"]>("percent");
   const [togglingPlanId, setTogglingPlanId] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -133,6 +135,7 @@ export function AdminSubscriptionPlansManager({
       setCodes((current) => [result.data.promotionCode, ...current]);
       setMessage("Promotion code created.");
       form.reset();
+      setPromotionDiscountType("percent");
     } finally {
       setIsSubmittingPromotion(false);
     }
@@ -203,23 +206,35 @@ export function AdminSubscriptionPlansManager({
         </label>
         <label className="grid gap-2 text-sm font-bold">
           Discount type
-          <select name="discountType" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+          <select
+            name="discountType"
+            value={promotionDiscountType}
+            onChange={(event) =>
+              setPromotionDiscountType(event.target.value as PromotionCode["discountType"])
+            }
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          >
             <option value="percent">Percent off</option>
             <option value="amount">Amount off</option>
           </select>
         </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Percent off
-          <input name="percentOff" type="number" min="1" max="100" placeholder="Example: 20" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Amount off in dollars
-          <input name="amountOffDollars" type="number" min="1" step="0.01" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Currency
-          <input name="promoCurrency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
+        {promotionDiscountType === "percent" ? (
+          <label className="grid gap-2 text-sm font-bold">
+            Percent off
+            <input name="percentOff" type="number" min="1" max="100" step="1" placeholder="Example: 20" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          </label>
+        ) : (
+          <>
+            <label className="grid gap-2 text-sm font-bold">
+              Amount off in dollars
+              <input name="amountOffDollars" type="number" min="1" step="0.01" placeholder="Example: 10" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+            </label>
+            <label className="grid gap-2 text-sm font-bold">
+              Currency
+              <input name="promoCurrency" defaultValue="usd" maxLength={3} required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+            </label>
+          </>
+        )}
         <button disabled={isSubmittingPromotion} className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
           {isSubmittingPromotion ? "Creating..." : "Create Promo Code"}
         </button>
