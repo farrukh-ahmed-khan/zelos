@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CheckCircleOutlined,
@@ -819,12 +820,15 @@ export function DashboardShell({
         <header className="container flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/"
-            className="flex h-12 items-center gap-3 rounded-sm bg-white px-4 text-xl font-bold !text-[#343434] shadow-[0_3px_0_rgba(0,0,0,0.18)] sm:text-2xl"
+            className="flex h-12 items-center rounded-sm bg-white px-3 !text-[#343434] shadow-[0_3px_0_rgba(0,0,0,0.18)]"
           >
-            <span className="grid h-8 w-8 place-items-center text-[#ff3038]">
-              <PlayCircleFilled className="text-[22px]" />
-            </span>
-            Zelos
+            <Image
+              src="/assets/logo.png"
+              alt="Zelos Logo"
+              width={140}
+              height={80}
+              className="h-auto w-[104px] sm:w-[126px]"
+            />
           </Link>
 
           <div className="flex flex-wrap items-center gap-3">
