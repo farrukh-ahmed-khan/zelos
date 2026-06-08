@@ -1,23 +1,56 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState, useSyncExternalStore } from "react";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { type CartItem, loadCart, saveCart, cartSubtotalCents, money } from "@/lib/cart";
+import { CART_KEY, type CartItem, saveCart, cartSubtotalCents, money } from "@/lib/cart";
 import { api, isApiSuccess } from "@/lib/api/client";
 
-export function CheckoutView({ imageMap }: { imageMap: Record<string, string> }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [mounted, setMounted] = useState(false);
+type CheckoutContact = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+};
+
+const EMPTY_CART: CartItem[] = [];
+let cachedCartRaw = "";
+let cachedCart: CartItem[] = EMPTY_CART;
+
+function getCartSnapshot() {
+  if (typeof window === "undefined") return EMPTY_CART;
+
+  try {
+    const raw = window.localStorage.getItem(CART_KEY) ?? "[]";
+    if (raw === cachedCartRaw) return cachedCart;
+
+    const parsed = JSON.parse(raw);
+    cachedCartRaw = raw;
+    cachedCart = Array.isArray(parsed) ? (parsed as CartItem[]) : EMPTY_CART;
+    return cachedCart;
+  } catch {
+    cachedCartRaw = "";
+    cachedCart = EMPTY_CART;
+    return cachedCart;
+  }
+}
+
+function subscribeToCartChanges(listener: () => void) {
+  window.addEventListener("storage", listener);
+  return () => window.removeEventListener("storage", listener);
+}
+
+export function CheckoutView({
+  contact,
+  imageMap,
+}: {
+  contact?: CheckoutContact;
+  imageMap: Record<string, string>;
+}) {
+  const cart = useSyncExternalStore(subscribeToCartChanges, getCartSnapshot, () => EMPTY_CART);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [giftCodeOpen, setGiftCodeOpen] = useState(false);
-
-  useEffect(() => {
-    setCart(loadCart());
-    setMounted(true);
-  }, []);
 
   const subtotal = cartSubtotalCents(cart);
   const itemCount = cart.reduce((n, i) => n + i.quantity, 0);
@@ -57,7 +90,6 @@ export function CheckoutView({ imageMap }: { imageMap: Record<string, string> })
       }
 
       saveCart([]);
-      setCart([]);
 
       if (result.data.checkoutUrl) {
         window.location.assign(result.data.checkoutUrl);
@@ -104,11 +136,7 @@ export function CheckoutView({ imageMap }: { imageMap: Record<string, string> })
           </h1>
         </div>
 
-        {!mounted ? (
-          <div className="py-24 text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#d8d2c5] border-t-[#8c0504]" />
-          </div>
-        ) : cart.length === 0 ? (
+        {cart.length === 0 ? (
           <div className="rounded-2xl border-2 border-[#d8d2c5] bg-white px-8 py-20 text-center">
             <p className="font-bebas text-3xl uppercase text-[#bbb]">Your cart is empty</p>
             <p className="mt-2 text-sm text-[#999]">Add some items before checking out.</p>
@@ -143,6 +171,7 @@ export function CheckoutView({ imageMap }: { imageMap: Record<string, string> })
                         name="firstName"
                         required
                         placeholder="e.g. Jordan"
+                        defaultValue={contact?.firstName ?? ""}
                         className="w-full rounded-md border-2 border-[#d8d2c5] bg-[#faf8f4] px-4 py-3 text-sm transition focus:border-[#8c0504] focus:outline-none"
                       />
                     </div>
@@ -154,6 +183,7 @@ export function CheckoutView({ imageMap }: { imageMap: Record<string, string> })
                         name="lastName"
                         required
                         placeholder="e.g. Smith"
+                        defaultValue={contact?.lastName ?? ""}
                         className="w-full rounded-md border-2 border-[#d8d2c5] bg-[#faf8f4] px-4 py-3 text-sm transition focus:border-[#8c0504] focus:outline-none"
                       />
                     </div>
@@ -168,6 +198,7 @@ export function CheckoutView({ imageMap }: { imageMap: Record<string, string> })
                       type="email"
                       required
                       placeholder="you@example.com"
+                      defaultValue={contact?.email ?? ""}
                       className="w-full rounded-md border-2 border-[#d8d2c5] bg-[#faf8f4] px-4 py-3 text-sm transition focus:border-[#8c0504] focus:outline-none"
                     />
                     <p className="mt-1.5 text-xs text-[#aaa]">
@@ -210,7 +241,7 @@ export function CheckoutView({ imageMap }: { imageMap: Record<string, string> })
                 </button>
 
                 <p className="text-center text-xs text-[#aaa]">
-                  You'll be redirected to Stripe for secure payment processing.
+                  You&apos;ll be redirected to Stripe for secure payment processing.
                 </p>
               </form>
             </div>

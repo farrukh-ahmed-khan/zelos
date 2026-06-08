@@ -8,15 +8,71 @@ export const dynamic = "force-dynamic";
 
 type SerializedProduct = ReturnType<typeof serializeProduct>;
 
+const DEFAULT_PRODUCTS_PER_PAGE = 9;
+const PRODUCT_PAGE_SIZE_OPTIONS = [6, 9, 12, 24];
+
+function getSearchParam(
+  params: { [key: string]: string | string[] | undefined },
+  key: string,
+) {
+  const value = params[key];
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+function productMatchesQuery(product: SerializedProduct, query: string) {
+  if (!query) return true;
+
+  const haystack = [
+    product.name,
+    product.slug,
+    product.description,
+    product.sizes.join(" "),
+    product.colors.join(" "),
+    product.limitedEdition ? "limited edition" : "",
+  ].join(" ").toLowerCase();
+
+  return haystack.includes(query.toLowerCase());
+}
+
+function getPageSize(value: string) {
+  const parsed = Number(value);
+  return PRODUCT_PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : DEFAULT_PRODUCTS_PER_PAGE;
+}
+
+function storePageHref(query: string, page: number, pageSize: number) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (pageSize !== DEFAULT_PRODUCTS_PER_PAGE) params.set("pageSize", String(pageSize));
+  if (page > 1) params.set("page", String(page));
+  const search = params.toString();
+  return search ? `/store?${search}` : "/store";
+}
+
 export default async function StorePage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const products = (await getProducts()).map(serializeProduct);
-  const { checkout } = await searchParams;
+  const resolvedSearchParams = await searchParams;
+  const checkout = getSearchParam(resolvedSearchParams, "checkout");
+  const query = getSearchParam(resolvedSearchParams, "q").trim();
+  const requestedPage = Number(getSearchParam(resolvedSearchParams, "page"));
+  const pageSize = getPageSize(getSearchParam(resolvedSearchParams, "pageSize"));
   const activeProducts = products.filter((p) => p.isActive && !p.isGiftCard);
   const giftCards = products.filter((p) => p.isActive && p.isGiftCard);
+  const matchingProducts = activeProducts.filter((product) => productMatchesQuery(product, query));
+  const totalPages = Math.max(1, Math.ceil(matchingProducts.length / pageSize));
+  const currentPage = Math.min(
+    Math.max(Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1, 1),
+    totalPages,
+  );
+  const firstProductNumber = matchingProducts.length ? (currentPage - 1) * pageSize + 1 : 0;
+  const lastProductNumber = Math.min(currentPage * pageSize, matchingProducts.length);
+  const paginatedProducts = matchingProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   return (
     <main className="min-h-screen bg-[#eee6d6] text-[#202020]">
@@ -63,17 +119,120 @@ export default async function StorePage({
         {/* Products grid */}
         {activeProducts.length > 0 ? (
           <section className="mt-12">
-            <div className="mb-6 flex items-center gap-3">
-              <p className="eyebrow-red">All Products</p>
-              <span className="rounded-full bg-[#d8d2c5] px-2.5 py-0.5 text-xs font-black text-[#202020]">
-                {activeProducts.length}
-              </span>
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <p className="eyebrow-red">All Products</p>
+                  <span className="rounded-full bg-[#d8d2c5] px-2.5 py-0.5 text-xs font-black text-[#202020]">
+                    {matchingProducts.length}
+                  </span>
+                </div>
+                {query ? (
+                  <p className="mt-1 text-sm text-[#777]">
+                    Showing results for <span className="font-bold text-[#202020]">{query}</span>
+                  </p>
+                ) : null}
+              </div>
+              <form action="/store" className="grid w-full gap-2 sm:w-auto sm:grid-cols-[minmax(220px,1fr)_140px_auto_auto]">
+                <input
+                  name="q"
+                  defaultValue={query}
+                  placeholder="Search products"
+                  className="min-w-0 flex-1 rounded-md border-2 border-[#d8d2c5] bg-white px-4 py-3 text-sm transition focus:border-[#8c0504] focus:outline-none"
+                />
+                <select
+                  name="pageSize"
+                  defaultValue={pageSize}
+                  aria-label="Products per page"
+                  className="rounded-md border-2 border-[#d8d2c5] bg-white px-3 py-3 text-sm font-bold transition focus:border-[#8c0504] focus:outline-none"
+                >
+                  {PRODUCT_PAGE_SIZE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option} per page
+                    </option>
+                  ))}
+                </select>
+                <button className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black text-[#212121]! shadow-[0_3px_0_#111] transition hover:bg-[#fff176]">
+                  Search
+                </button>
+                {query || pageSize !== DEFAULT_PRODUCTS_PER_PAGE ? (
+                  <Link
+                    href="/store"
+                    className="rounded-md border-2 border-[#d8d2c5] bg-white px-4 py-3 text-sm font-black text-[#555]! transition hover:border-[#8c0504] hover:text-[#8c0504]!"
+                  >
+                    Clear
+                  </Link>
+                ) : null}
+              </form>
             </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {activeProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {paginatedProducts.length > 0 ? (
+              <>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-[#777]">
+                  <span>
+                    Showing {firstProductNumber}-{lastProductNumber} of {matchingProducts.length} products
+                  </span>
+                  <span>
+                    Pagination starts after {pageSize} products
+                  </span>
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {paginatedProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Product pages">
+                  {totalPages > 1 ? (
+                    <>
+                    <Link
+                      href={storePageHref(query, currentPage - 1, pageSize)}
+                      aria-disabled={currentPage === 1}
+                      className={`rounded-md border-2 px-4 py-2 text-sm font-black shadow-[0_2px_0_#111] ${
+                        currentPage === 1
+                          ? "pointer-events-none border-[#d8d2c5] bg-[#f4f1e9] text-[#aaa]!"
+                          : "border-[#212121] bg-white text-[#212121]! hover:bg-[#faff8d]"
+                      }`}
+                    >
+                      Previous
+                    </Link>
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                      <Link
+                        key={page}
+                        href={storePageHref(query, page, pageSize)}
+                        aria-current={page === currentPage ? "page" : undefined}
+                        className={`rounded-md border-2 px-4 py-2 text-sm font-black shadow-[0_2px_0_#111] ${
+                          page === currentPage
+                            ? "border-[#212121] bg-[#8c0504] text-white!"
+                            : "border-[#212121] bg-white text-[#212121]! hover:bg-[#faff8d]"
+                        }`}
+                      >
+                        {page}
+                      </Link>
+                    ))}
+                    <Link
+                      href={storePageHref(query, currentPage + 1, pageSize)}
+                      aria-disabled={currentPage === totalPages}
+                      className={`rounded-md border-2 px-4 py-2 text-sm font-black shadow-[0_2px_0_#111] ${
+                        currentPage === totalPages
+                          ? "pointer-events-none border-[#d8d2c5] bg-[#f4f1e9] text-[#aaa]!"
+                          : "border-[#212121] bg-white text-[#212121]! hover:bg-[#faff8d]"
+                      }`}
+                    >
+                      Next
+                    </Link>
+                    </>
+                  ) : (
+                    <span className="rounded-md border-2 border-[#d8d2c5] bg-[#f4f1e9] px-4 py-2 text-sm font-black text-[#777]">
+                      Page 1 of 1
+                    </span>
+                  )}
+                </nav>
+              </>
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-[#c8c2b5] py-16 text-center">
+                <p className="font-bebas text-4xl uppercase text-[#c8c2b5]">No Matches</p>
+                <p className="mt-2 text-sm text-[#999]">Try a different product search.</p>
+              </div>
+            )}
           </section>
         ) : (
           <div className="mt-16 rounded-2xl border-2 border-dashed border-[#c8c2b5] py-20 text-center">
