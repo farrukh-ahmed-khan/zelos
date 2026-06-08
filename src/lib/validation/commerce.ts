@@ -4,7 +4,6 @@ export const createToolkitResourceSchema = z.object({
   title: z.string().trim().min(2).max(160),
   description: z.string().trim().max(1000).optional(),
   resourceType: z.enum(["worksheet", "quiz", "budget-template", "goal-setting", "family-prompt"]),
-  url: z.url().trim().max(2048),
   linkedVideoId: z.string().trim().min(1).optional(),
   ageTrack: z.string().trim().min(2).max(60),
   order: z.number().int().min(1).optional(),

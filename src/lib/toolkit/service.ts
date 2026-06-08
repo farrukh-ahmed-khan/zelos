@@ -1,4 +1,5 @@
 import { connectToDatabase } from "@/lib/db";
+import { uploadToS3 } from "@/lib/aws/s3";
 import { ApiError } from "@/lib/http";
 import { requirePremiumAccess } from "@/lib/subscriptions/service";
 import { type UserDocument } from "@/models/User";
@@ -12,6 +13,8 @@ export function serializeToolkitResource(resource: ToolkitResourceDocument, unlo
     description: resource.description ?? null,
     resourceType: resource.resourceType,
     url: unlocked ? resource.url : null,
+    fileName: resource.fileName ?? null,
+    mimeType: resource.mimeType ?? null,
     linkedVideoId: resource.linkedVideoId ?? null,
     ageTrack: resource.ageTrack,
     order: resource.order,
@@ -26,7 +29,9 @@ export async function createToolkitResource(params: {
   title: string;
   description?: string;
   resourceType: "worksheet" | "quiz" | "budget-template" | "goal-setting" | "family-prompt";
-  url: string;
+  file: Buffer;
+  fileName: string;
+  mimeType: string;
   linkedVideoId?: string;
   ageTrack: string;
   order?: number;
@@ -34,9 +39,21 @@ export async function createToolkitResource(params: {
   isActive?: boolean;
 }) {
   await connectToDatabase();
+  const upload = await uploadToS3({
+    file: params.file,
+    fileName: params.fileName,
+    mimeType: params.mimeType,
+    keyPrefix: "toolkit",
+  });
 
   return ToolkitResource.create({
-    ...params,
+    title: params.title,
+    resourceType: params.resourceType,
+    ageTrack: params.ageTrack,
+    url: upload.url,
+    s3Key: upload.key,
+    fileName: params.fileName,
+    mimeType: params.mimeType,
     description: params.description || null,
     linkedVideoId: params.linkedVideoId || null,
     order: params.order ?? 1,
