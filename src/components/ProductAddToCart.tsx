@@ -168,19 +168,28 @@ export function ProductAddToCart({ product }: { product: StoreProduct }) {
           onClick={addToCart}
           className="w-full rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-4 text-sm font-black text-[#212121] shadow-[0_4px_0_#111] transition hover:bg-[#fff176] active:shadow-[0_2px_0_#111] disabled:opacity-50"
         >
-          {isOutOfStock ? "Out of Stock" : added ? "Added to Cart!" : "Add to Cart"}
+          {isOutOfStock ? "Out of Stock" : added ? "Added!" : "Add to Cart"}
         </button>
-        <a
-          href="/store"
-          className="block text-center text-sm font-medium !text-[#8c0504] underline underline-offset-2 hover:!text-[#7a0505]"
-        >
-          View Full Store &amp; Checkout →
-        </a>
+        {added ? (
+          <a
+            href="/store/cart"
+            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-[#212121] bg-white px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111] transition hover:bg-[#f9f6f1]"
+          >
+            View Cart →
+          </a>
+        ) : (
+          <a
+            href="/store"
+            className="block text-center text-sm font-medium !text-[#8c0504] underline underline-offset-2 hover:!text-[#7a0505]"
+          >
+            ← Back to Store
+          </a>
+        )}
       </div>
 
       {added && (
         <p className="rounded-md bg-[#eef8e8] px-4 py-3 text-sm font-bold text-[#24551f]">
-          Added to your cart! Head to the store to checkout.
+          Added to your cart! Continue shopping or head to checkout.
         </p>
       )}
     </div>
