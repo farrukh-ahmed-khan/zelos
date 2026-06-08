@@ -51,7 +51,7 @@ export async function CommunityForumPreview() {
               return (
                 <div className="col-12 col-md-6 col-lg-4" key={topic.id}>
                   <Link
-                    href={`/forum?thread=${topic.id}`}
+                    href={`/forum/${topic.id}`}
                     className="flex h-full flex-col overflow-hidden rounded-lg border border-[#e8e8e8] bg-white shadow-[0_1px_1px_rgba(0,0,0,0.03)] transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
                   >
                     <div className="relative h-67.75 w-full overflow-hidden">

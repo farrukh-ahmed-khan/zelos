@@ -40,17 +40,17 @@ export function HeroBanner() {
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <a
-                  href="#"
+                  href="/financial-literacy"
                   className="rounded-md bg-[#FAFF8D] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] border-2
-                   border-[#212121] transition hover:bg-[#fff176] focus:outline-none focus:ring-2 focus:ring-[#fff176]/50 active:bg-[#fff176] 
+                   border-[#212121] transition hover:bg-[#fff176] focus:outline-none focus:ring-2 focus:ring-[#fff176]/50 active:bg-[#fff176]
                    active:shadow-[0_2px_0_#111]"
                 >
                   Watch a Free Video
                 </a>
                 <a
-                  href="#"
+                  href="/signup"
                   className="rounded-md bg-[#f4f1e9] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] border-2
-                   border-[#212121] transition hover:bg-[#fff176] focus:outline-none focus:ring-2 focus:ring-[#fff176]/50 active:bg-[#fff176] 
+                   border-[#212121] transition hover:bg-[#fff176] focus:outline-none focus:ring-2 focus:ring-[#fff176]/50 active:bg-[#fff176]
                    active:shadow-[0_2px_0_#111]"
                 >
                   Subscribe Now

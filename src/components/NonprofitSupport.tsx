@@ -42,7 +42,7 @@ export function NonprofitSupport() {
               </p>
 
               <a
-                href="#"
+                href="/donate"
                 className="mt-8 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-7 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] transition hover:bg-[#fff176]"
               >
                 Donate To Zelos

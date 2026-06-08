@@ -21,13 +21,13 @@ export function MiddleBanner() {
 
           <div className="flex flex-col gap-3 pb-1 sm:flex-row sm:flex-wrap lg:pb-6">
             <a
-              href="#"
+              href="/signup"
               className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-7 py-3 text-center text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] transition hover:bg-[#fff176]"
             >
               Sign Up Free
             </a>
             <a
-              href="#"
+              href="/billing"
               className="rounded-md border-2 border-[#212121] bg-[#f4f1e9] px-7 py-3 text-center text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] transition hover:bg-white"
             >
               Subscribe Now
