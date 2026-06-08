@@ -8,8 +8,13 @@ import { ProgramsOverview } from "@/components/ProgramsOverview";
 import { SwagStoreHighlight } from "@/components/SwagStoreHighlight";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { WatchVideoSection } from "@/components/WatchVideoSection";
+import { getProducts, serializeProduct } from "@/lib/store/service";
 
-export default function Home() {
+export default async function Home() {
+  const storeProducts = await getProducts()
+    .then((docs) => docs.map(serializeProduct).slice(0, 4))
+    .catch(() => []);
+
   return (
     <main className="min-h-screen bg-[#eee6d6] text-white">
       <div className="padding-sections p-4 sm:p-6">
@@ -23,7 +28,7 @@ export default function Home() {
       <UpcomingEvents />
       <CommunityForumPreview />
       <MiddleBanner />
-      <SwagStoreHighlight />
+      <SwagStoreHighlight products={storeProducts} />
       <NonprofitSupport />
       <Footer />
     </main>
