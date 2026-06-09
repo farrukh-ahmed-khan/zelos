@@ -2,6 +2,7 @@ import { ActiveScholarships } from "@/components/ActiveScholarships";
 import { CommunityForumPreview } from "@/components/CommunityForumPreview";
 import { Footer } from "@/components/Footer";
 import { HeroBanner } from "@/components/HeroBanner";
+import { HomeScrollReset } from "@/components/HomeScrollReset";
 import { MiddleBanner } from "@/components/MiddleBanner";
 import { NonprofitSupport } from "@/components/NonprofitSupport";
 import { ProgramsOverview } from "@/components/ProgramsOverview";
@@ -21,6 +22,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#eee6d6] text-white">
+      <HomeScrollReset />
       <div className="padding-sections p-4 sm:p-6">
         <HeroBanner />
       </div>
