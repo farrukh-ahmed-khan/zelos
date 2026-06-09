@@ -104,6 +104,13 @@ async function assertVideoOrderAvailable(params: {
   }
 }
 
+async function clearOtherMissionVideos(videoId: string) {
+  await Video.updateMany(
+    { _id: { $ne: videoId }, isMissionVideo: true },
+    { $set: { isMissionVideo: false } },
+  );
+}
+
 export async function updateUserBanStatus(params: {
   actor: UserDocument;
   userId: string;
@@ -196,12 +203,18 @@ export async function createVideoByAdmin(params: {
   await dropLegacyVideoOrderIndex();
   await assertVideoOrderAvailable(params);
 
-  return Video.create({
+  const video = await Video.create({
     ...params,
     schoolScope: params.schoolScope ?? "global",
     schoolIds: params.schoolIds ?? [],
     district: params.district || null,
   });
+
+  if (video.isMissionVideo) {
+    await clearOtherMissionVideos(video._id.toString());
+  }
+
+  return video;
 }
 
 export async function updateVideoByAdmin(params: {
@@ -262,10 +275,7 @@ export async function updateVideoByAdmin(params: {
   }
 
   if (params.updates.isMissionVideo) {
-    await Video.updateMany(
-      { _id: { $ne: params.videoId }, isMissionVideo: true },
-      { $set: { isMissionVideo: false } },
-    );
+    await clearOtherMissionVideos(params.videoId);
   }
 
   const video = await Video.findByIdAndUpdate(existingVideo._id, params.updates, {
@@ -386,6 +396,10 @@ export async function createVideoByAdminWithUpload(params: {
     attachmentMimeType: params.attachmentMimeType ?? null,
     s3Key: key, // Store the S3 key for future deletion if needed
   });
+
+  if (video.isMissionVideo) {
+    await clearOtherMissionVideos(video._id.toString());
+  }
 
   return video;
 }

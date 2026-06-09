@@ -337,6 +337,29 @@ export async function buildPaidIntroVideo(user: UserDocument) {
   };
 }
 
+export async function getHomepageMissionVideo() {
+  await connectToDatabase();
+
+  const video = await Video.findOne({
+    isMissionVideo: true,
+    releaseDate: { $not: { $gt: new Date() } },
+  })
+    .sort({ updatedAt: -1, createdAt: -1 })
+    .select("title description url updatedAt createdAt")
+    .lean();
+
+  if (!video) {
+    return null;
+  }
+
+  return {
+    id: video._id.toString(),
+    title: video.title,
+    description: video.description,
+    url: video.url,
+  };
+}
+
 export async function resolveCompletableVideo(params: {
   user: UserDocument;
   videoId: string;

@@ -1,6 +1,16 @@
 import Image from "next/image";
 
-export function WatchVideoSection() {
+type MissionVideo = {
+  title: string;
+  description: string;
+  url: string;
+};
+
+export function WatchVideoSection({
+  missionVideo,
+}: {
+  missionVideo?: MissionVideo | null;
+}) {
   return (
     <section
       id="watch-video"
@@ -27,14 +37,26 @@ export function WatchVideoSection() {
 
           <div className="relative mx-auto">
             <div className="absolute inset-x-[8%] bottom-[5%] h-[20%] rounded-full bg-[#f0d7d2] blur-3xl" />
-            <Image
-              src="/assets/video-img.png"
-              alt="Zelos video preview in a browser-style player"
-              width={1693}
-              height={1101}
-              className="relative z-10 h-auto w-full"
-              sizes="(min-width: 1200px) 960px, calc(100vw - 2rem)"
-            />
+            {missionVideo?.url ? (
+              <video
+                className="relative z-10 aspect-video w-full rounded-[1rem] bg-black object-cover shadow-[0_24px_80px_rgba(0,0,0,0.18)] sm:rounded-[1.4rem]"
+                controls
+                playsInline
+                preload="metadata"
+                aria-label={missionVideo.title}
+              >
+                <source src={missionVideo.url} />
+              </video>
+            ) : (
+              <Image
+                src="/assets/video-img.png"
+                alt="Zelos video preview in a browser-style player"
+                width={1693}
+                height={1101}
+                className="relative z-10 h-auto w-full"
+                sizes="(min-width: 1200px) 960px, calc(100vw - 2rem)"
+              />
+            )}
           </div>
         </div>
       </div>

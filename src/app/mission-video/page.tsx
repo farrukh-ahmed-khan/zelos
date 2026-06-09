@@ -1,7 +1,10 @@
 import { StaticInfoPage } from "@/components/StaticInfoPage";
 import { WatchVideoSection } from "@/components/WatchVideoSection";
+import { getHomepageMissionVideo } from "@/lib/videos/service";
 
-export default function MissionVideoPage() {
+export default async function MissionVideoPage() {
+  const missionVideo = await getHomepageMissionVideo().catch(() => null);
+
   return (
     <>
       <StaticInfoPage
@@ -16,7 +19,7 @@ export default function MissionVideoPage() {
           },
         ]}
       />
-      <WatchVideoSection />
+      <WatchVideoSection missionVideo={missionVideo} />
     </>
   );
 }
