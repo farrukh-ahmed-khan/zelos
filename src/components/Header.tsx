@@ -48,8 +48,8 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navLinkClass =
-    "inline-flex items-center justify-center gap-1.5 whitespace-nowrap px-1 py-2 font-[Inter] text-[18.1px] font-medium leading-none tracking-normal !text-[#2C2E2A] transition hover:text-[#cf1e1e]";
-  const activeNavLinkClass = "rounded-full bg-[#efe6d8] px-4";
+    "inline-flex items-center justify-center gap-1 whitespace-nowrap px-1 py-2 font-[Inter] text-[15px] font-medium leading-none tracking-normal !text-[#2C2E2A] transition hover:text-[#cf1e1e] 2xl:gap-1.5 2xl:text-[18.1px]";
+  const activeNavLinkClass = "rounded-full bg-[#efe6d8] px-3 2xl:px-4";
 
   useEffect(() => {
     let isMounted = true;
@@ -95,13 +95,13 @@ export function Header() {
   return (
     <>
       <header className="container relative z-20 mx-auto flex min-w-0 items-center gap-2 sm:gap-3">
-        <nav className="flex min-h-[60px] min-w-0 flex-1 items-center justify-between gap-3 rounded-sm bg-white px-3 py-2
+        <nav className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 rounded-sm bg-white px-3 py-2
          text-[#1b1b1b] shadow-[0_3px_0_rgba(0,0,0,0.18)] ">
           <Link href="/" className="flex min-w-0 items-center font-bold text-[#343434]">
-            <Image src="/assets/logo.png" alt="Zelos Logo" width={140} height={80} className="h-auto w-[104px] sm:w-[140px]" />
+            <Image src="/assets/logo.png" alt="Zelos Logo" width={140} height={80} className="h-auto w-26 2xl:w-35" />
           </Link>
 
-          <div className="hidden items-center gap-5 text-sm font-medium xl:flex">
+          <div className="hidden flex-1 items-center justify-center gap-3 text-sm font-medium xl:flex 2xl:gap-5">
             {navItems.map((item) => {
               const isActive =
                 item.href === "/"
@@ -116,7 +116,7 @@ export function Header() {
                 >
                   <span>{item.label}</span>
                   {item.label === "Program" ? (
-                    <DownOutlined className="shrink-0 text-[11px] leading-none !text-[#2C2E2A]" />
+                    <DownOutlined className="shrink-0 text-[11px] leading-none text-[#2C2E2A]!" />
                   ) : null}
                 </Link>
               );
@@ -125,7 +125,7 @@ export function Header() {
 
           <button
             onClick={() => setMobileOpen(true)}
-            className="grid h-9 w-9 place-items-center rounded-full bg-[#83ce54] text-[#1d3b31] xl:hidden"
+            className="ml-auto grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#83ce54] text-[#1d3b31] xl:hidden"
             aria-label="Open menu"
           >
             <MenuOutlined />
@@ -137,15 +137,15 @@ export function Header() {
           aria-label={isLoggedIn ? "Go to dashboard" : "Go to login"}
           title={isLoggedIn ? "Dashboard" : "Login"}
           className="hidden h-[60px] w-[60px] place-items-center rounded-md bg-white text-[22px] font-bold !text-[#000]
-          shadow-[0_3px_0_rgba(0,0,0,0.18)] md:grid"
+          shadow-[0_3px_0_rgba(0,0,0,0.18)] xl:grid"
         >
           <UserOutlined />
         </Link>
 
         <Link
           href="/donate"
-          className="hidden min-h-[60px] items-center gap-3 rounded-md bg-white px-4 text-sm font-bold !text-[#000]
-          shadow-[0_3px_0_rgba(0,0,0,0.18)] md:flex md:text-[16px] lg:text-[18px]"
+          className="hidden min-h-[60px] items-center gap-2 rounded-md bg-white px-3 text-sm font-bold !text-[#000]
+          shadow-[0_3px_0_rgba(0,0,0,0.18)] xl:flex xl:text-[15px] 2xl:gap-3 2xl:px-4 2xl:text-[18px]"
         >
           Donate Now
           <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2d93cf] text-white">
