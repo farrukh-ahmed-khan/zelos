@@ -134,16 +134,22 @@ export function AuthForm({ mode }: AuthFormProps) {
             </label>
           </div>
 
-          <label className="flex items-start gap-3 rounded-md border border-[#d8d2c5] bg-[#f7f2e8] px-3 py-3 text-sm font-semibold">
+          <label className="flex cursor-pointer items-start gap-3 rounded-md border border-[#d8d2c5] bg-[#fbf8f0] px-3 py-3 text-sm font-semibold leading-snug text-[#2b2b2b] transition hover:border-[#b22222] hover:bg-[#fffaf0] focus-within:ring-2 focus-within:ring-[#b22222]/25">
             <input
               name="termsAccepted"
               type="checkbox"
               required
-              className="mt-1 accent-[#b22222]"
+              className="peer sr-only"
             />
+            <span
+              aria-hidden="true"
+              className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[4px] border-2 border-[#212121] bg-white shadow-[0_2px_0_#111] transition peer-checked:bg-[#b22222] peer-checked:[&>span]:block"
+            >
+              <span className="hidden h-2.5 w-1.5 rotate-45 border-b-2 border-r-2 border-white" />
+            </span>
             <span>
-              I agree to the Zelos terms and understand that age information is
-              used to provide age-appropriate access.
+              I agree to the <span className="font-black text-[#8c0504]">Zelos terms</span> and understand
+              that age information is used to provide age-appropriate access.
             </span>
           </label>
         </>
