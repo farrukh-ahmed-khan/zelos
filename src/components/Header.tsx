@@ -147,7 +147,7 @@ export function Header() {
           className="hidden min-h-[60px] items-center gap-3 rounded-md bg-white px-4 text-sm font-bold !text-[#000]
           shadow-[0_3px_0_rgba(0,0,0,0.18)] md:flex md:text-[16px] lg:text-[18px]"
         >
-          Donate Us
+          Donate Now
           <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2d93cf] text-white">
             <SmileFilled />
           </span>
@@ -210,7 +210,7 @@ export function Header() {
                 className="flex items-center justify-center gap-2 rounded-md border-2 border-[#212121] bg-[#2d93cf] px-4 py-3 text-sm font-black !text-white shadow-[0_3px_0_#111]"
               >
                 <SmileFilled />
-                Donate Us
+                Donate Now
               </Link>
             </div>
           </div>

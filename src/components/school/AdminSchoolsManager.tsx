@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useMemo } from "react";
-import { Table, Input, Button, Tag, Space, message as antMessage } from "antd";
+import { Table, Input, Button, Tag, Space, Select, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 import { api, isApiSuccess } from "@/lib/api/client";
@@ -19,6 +19,12 @@ type School = {
   assignedTracks: string[];
 };
 
+const levelTrackOptions = [
+  { label: "Children", value: "children" },
+  { label: "Teens", value: "teens" },
+  { label: "Young Adults", value: "young-adults" },
+];
+
 export function AdminSchoolsManager({ schools }: { schools: School[] }) {
   const [items, setItems] = useState(schools);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,6 +32,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [invitingSchoolId, setInvitingSchoolId] = useState<string | null>(null);
+  const [assignedTracks, setAssignedTracks] = useState<string[]>([]);
 
   const filteredItems = useMemo(() => {
     if (!searchTerm) return items;
@@ -54,10 +61,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
         teacherLimit: Number(formData.get("teacherLimit") ?? 1),
         studentLimit: Number(formData.get("studentLimit") ?? 1),
         licenseStatus: String(formData.get("licenseStatus") ?? "active"),
-        assignedTracks: String(formData.get("assignedTracks") ?? "")
-          .split(",")
-          .map((track) => track.trim())
-          .filter(Boolean),
+        assignedTracks: formData.getAll("assignedTracks").map(String).filter(Boolean),
       });
       const result = response.data;
 
@@ -69,6 +73,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
       setItems((current) => [result.data.school, ...current]);
       antMessage.success("School created successfully.");
       form.reset();
+      setAssignedTracks([]);
     } finally {
       setIsSubmitting(false);
     }
@@ -240,7 +245,22 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
         </label>
         <label className="grid gap-1 text-sm font-bold text-[#344054] md:col-span-2">
           Assigned Level Tracks
-          <input name="assignedTracks" placeholder="Children, Teens, Young Adults" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <Select
+            mode="multiple"
+            allowClear
+            value={assignedTracks}
+            onChange={setAssignedTracks}
+            options={levelTrackOptions}
+            placeholder="Select level tracks"
+            className="font-normal"
+            size="large"
+            getPopupContainer={(triggerNode) => triggerNode.parentElement ?? document.body}
+            optionFilterProp="label"
+            dropdownStyle={{ zIndex: 1100 }}
+          />
+          {assignedTracks.map((track) => (
+            <input key={track} type="hidden" name="assignedTracks" value={track} />
+          ))}
         </label>
         <button
           disabled={isSubmitting}
