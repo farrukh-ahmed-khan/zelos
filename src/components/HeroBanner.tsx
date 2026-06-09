@@ -60,14 +60,14 @@ export function HeroBanner() {
           </div>
 
           <div className="col-12 col-lg-5">
-            <div className="pointer-events-none relative min-h-[280px] sm:min-h-[410px] lg:min-h-[610px]">
+            <div className="pointer-events-none relative min-h-75 overflow-hidden sm:min-h-135 lg:min-h-152.5 lg:overflow-visible">
               <Image
                 src="/assets/hero-gif.gif"
                 alt="Animated superhero standing on a cliff"
                 width={760}
                 height={711}
                 unoptimized
-                className="absolute bottom-[-26px] right-[-58px] w-[min(660px,116vw)] max-w-none object-contain sm:right-[-80px] sm:w-[min(820px,118vw)] lg:bottom-[-48px] lg:right-[-170px] xl:right-[-210px] 2xl:right-[-280px]"
+                className="absolute bottom-0 -right-5 w-[min(520px,95vw)] max-w-none object-contain sm:-right-10 sm:w-[min(520px,88vw)] lg:-bottom-12 lg:-right-42.5 lg:w-[min(660px,116vw)] xl:-right-52.5 2xl:-right-70 2xl:w-[min(820px,118vw)]"
               />
             </div>
           </div>
