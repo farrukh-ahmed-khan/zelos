@@ -27,6 +27,15 @@ type OrderItem = {
   color?: string | null;
 };
 
+type OrderAddress = {
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  country?: string | null;
+} | null;
+
 type Order = {
   id: string;
   email: string;
@@ -38,6 +47,7 @@ type Order = {
   totalCents: number;
   giftCardCode: string | null;
   status: string;
+  shippingAddress?: OrderAddress;
   createdAt: string | Date;
 };
 
@@ -434,6 +444,22 @@ export function AdminOrdersManager({
       ),
     },
     {
+      title: "Ship To",
+      key: "shippingAddress",
+      width: 220,
+      render: (_, order) => {
+        const addr = order.shippingAddress;
+        if (!addr) return <span className="text-[#bbb]">—</span>;
+        return (
+          <div className="text-xs leading-snug">
+            <p className="font-semibold">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
+            <p className="text-[#667085]">{addr.city}, {addr.state} {addr.zip}</p>
+            {addr.country && <p className="text-[#667085]">{addr.country}</p>}
+          </div>
+        );
+      },
+    },
+    {
       title: "Subtotal",
       dataIndex: "subtotalCents",
       key: "subtotalCents",
@@ -763,7 +789,7 @@ export function AdminOrdersManager({
           columns={orderColumns}
           dataSource={items}
           rowKey="id"
-          scroll={{ x: 1430 }}
+          scroll={{ x: 1660 }}
           pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50] }}
           locale={{ emptyText: "No store orders yet." }}
         />

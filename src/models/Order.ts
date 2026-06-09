@@ -12,6 +12,18 @@ const OrderItemSchema = new Schema(
   { _id: false },
 );
 
+const AddressSchema = new Schema(
+  {
+    line1: { type: String, required: true, trim: true, maxlength: 200 },
+    line2: { type: String, default: null, trim: true, maxlength: 200 },
+    city: { type: String, required: true, trim: true, maxlength: 100 },
+    state: { type: String, required: true, trim: true, maxlength: 100 },
+    zip: { type: String, required: true, trim: true, maxlength: 20 },
+    country: { type: String, default: "US", trim: true, maxlength: 60 },
+  },
+  { _id: false },
+);
+
 const OrderSchema = new Schema(
   {
     userId: { type: String, default: null, index: true },
@@ -35,6 +47,8 @@ const OrderSchema = new Schema(
     providerPaymentId: { type: String, default: null },
     stripeCheckoutSessionId: { type: String, default: null, index: true },
     paidAt: { type: Date, default: null },
+    shippingAddress: { type: AddressSchema, default: null },
+    billingAddress: { type: AddressSchema, default: null },
   },
   { timestamps: true, versionKey: false },
 );

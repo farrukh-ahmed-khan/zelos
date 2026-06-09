@@ -89,8 +89,11 @@ export default async function StorePage({
       <div className="container px-4 pb-20 sm:px-6">
         {/* Checkout status banners */}
         {checkout === "success" && (
-          <div className="mt-6 rounded-xl border border-[#b7e4c7] bg-[#eef8e8] px-5 py-4 text-sm font-bold text-[#1a5c2e]">
-            ✓ Order confirmed! Check your email for details.
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#b7e4c7] bg-[#eef8e8] px-5 py-4 text-sm font-bold text-[#1a5c2e]">
+            <span>✓ Order confirmed! Check your email for details.</span>
+            <Link href="/store/orders" className="text-sm font-black text-[#1a5c2e]! underline underline-offset-2">
+              View My Orders →
+            </Link>
           </div>
         )}
         {checkout === "cancelled" && (
@@ -111,7 +114,13 @@ export default async function StorePage({
               real financial knowledge.
             </p>
           </div>
-          <div className="mt-3 shrink-0">
+          <div className="mt-3 flex shrink-0 items-center gap-3">
+            <Link
+              href="/store/orders"
+              className="text-sm font-black text-[#8c0504]! underline underline-offset-2 hover:text-[#7a0505]!"
+            >
+              My Orders
+            </Link>
             <CartButton />
           </div>
         </div>

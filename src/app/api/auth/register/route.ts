@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       age: body.age,
       ageTrack: deriveAgeTrack(body.age),
       interests: body.interests ?? [],
-      emailVerifiedAt: new Date(),
+      emailVerifiedAt: null,
       termsAcceptedAt: new Date(),
       termsVersion: body.termsVersion ?? "v1",
       status: "active",
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     return successResponse(
       {
-        message: "Registration successful. Your account is active; please confirm your email when you can.",
+        message: "Registration successful. Please verify your email before signing in.",
         user: serializeUser(user),
         ...(process.env.NODE_ENV !== "production" ? verification : {}),
       },

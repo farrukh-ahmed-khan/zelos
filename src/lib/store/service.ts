@@ -75,12 +75,23 @@ export async function deleteProduct(productId: string) {
   return product;
 }
 
+type Address = {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country?: string;
+};
+
 export async function createOrder(params: {
   userId?: string | null;
   email: string;
   firstName: string;
   lastName: string;
   giftCardCode?: string;
+  shippingAddress?: Address;
+  billingAddress?: Address;
   items: Array<{
     productId: string;
     quantity: number;
@@ -184,6 +195,8 @@ export async function createOrder(params: {
     giftCardCode,
     giftCardAppliedCents,
     status: "pending",
+    shippingAddress: params.shippingAddress ?? null,
+    billingAddress: params.billingAddress ?? params.shippingAddress ?? null,
   });
 
   return order;

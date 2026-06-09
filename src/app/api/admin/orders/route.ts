@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         totalCents: order.totalCents,
         giftCardCode: order.giftCardCode ?? null,
         status: order.status,
+        shippingAddress: order.shippingAddress ?? null,
         createdAt: order.createdAt,
       })),
     });

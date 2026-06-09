@@ -84,12 +84,25 @@ export const createProductSchema = z.object({
   isGiftCard: z.boolean().optional(),
 });
 
+const addressSchema = z.object({
+  line1: z.string().trim().min(1).max(200),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().min(1).max(100),
+  state: z.string().trim().min(1).max(100),
+  zip: z.string().trim().min(1).max(20),
+  country: z.string().trim().max(60).default("US"),
+});
+
+export type AddressInput = z.infer<typeof addressSchema>;
+
 export const checkoutSchema = z.object({
   email: z.email().trim().toLowerCase(),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   giftCardCode: z.string().trim().max(80).optional(),
   captchaToken: z.string().trim().max(4000).optional(),
+  shippingAddress: addressSchema.optional(),
+  billingAddress: addressSchema.optional(),
   items: z
     .array(
       z.object({

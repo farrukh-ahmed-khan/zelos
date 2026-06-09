@@ -184,6 +184,8 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
   const [pageSize, setPageSize] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
+  const [createEventType, setCreateEventType] = useState<EventItem["type"]>("physical");
+  const [editEventType, setEditEventType] = useState<EventItem["type"]>("physical");
   const [createCoverImageUrl, setCreateCoverImageUrl] = useState("");
   const [createRecapImageUrl, setCreateRecapImageUrl] = useState("");
   const [editCoverImageUrl, setEditCoverImageUrl] = useState("");
@@ -244,12 +246,14 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
 
   function openEdit(event: EventItem) {
     setEditingEvent(event);
+    setEditEventType(event.type);
     setEditCoverImageUrl(event.coverImageUrl ?? "");
     setEditRecapImageUrl(event.recapImageUrl ?? "");
   }
 
   function closeEdit() {
     setEditingEvent(null);
+    setEditEventType("physical");
     setEditCoverImageUrl("");
     setEditRecapImageUrl("");
   }
@@ -272,6 +276,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
 
       setItems((current) => [{ ...result.data.event, rsvpCount: 0 }, ...current]);
       form.reset();
+      setCreateEventType("physical");
       setCreateCoverImageUrl("");
       setCreateRecapImageUrl("");
       antMessage.success("Event created.");
@@ -479,7 +484,12 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
         </label>
         <label className="grid gap-2 text-sm font-bold">
           Event type
-          <select name="type" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+          <select
+            name="type"
+            value={createEventType}
+            onChange={(event) => setCreateEventType(event.target.value as EventItem["type"])}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          >
             <option value="physical">Physical</option>
             <option value="online">Digital / Online</option>
           </select>
@@ -488,10 +498,12 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
           Address or location
           <input name="location" placeholder="Full address for physical events" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <label className="grid gap-2 text-sm font-bold md:col-span-2">
-          Zoom / Meet link (optional)
-          <input name="meetingLink" type="url" placeholder="Only needed for digital events; physical events can leave this blank" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
+        {createEventType === "online" ? (
+          <label className="grid gap-2 text-sm font-bold md:col-span-2">
+            Zoom / Meet link (optional)
+            <input name="meetingLink" type="url" placeholder="Paste the digital event link" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          </label>
+        ) : null}
         <label className="grid gap-2 text-sm font-bold md:col-span-2">
           Speakers
           <textarea name="speakers" rows={3} placeholder="One per line: Name | Title | Bio | Image URL" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
@@ -572,7 +584,12 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
             </label>
             <label className="grid gap-2 text-sm font-bold">
               Event type
-              <select name="type" defaultValue={editingEvent.type} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+              <select
+                name="type"
+                value={editEventType}
+                onChange={(event) => setEditEventType(event.target.value as EventItem["type"])}
+                className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+              >
                 <option value="physical">Physical</option>
                 <option value="online">Digital / Online</option>
               </select>
@@ -581,10 +598,12 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
               Address or location
               <input name="location" defaultValue={editingEvent.location} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
             </label>
-            <label className="grid gap-2 text-sm font-bold md:col-span-2">
-              Zoom / Meet link (optional)
-              <input name="meetingLink" type="url" defaultValue={editingEvent.meetingLink ?? ""} placeholder="Only needed for digital events; physical events can leave this blank" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-            </label>
+            {editEventType === "online" ? (
+              <label className="grid gap-2 text-sm font-bold md:col-span-2">
+                Zoom / Meet link (optional)
+                <input name="meetingLink" type="url" defaultValue={editingEvent.meetingLink ?? ""} placeholder="Paste the digital event link" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+              </label>
+            ) : null}
             <label className="grid gap-2 text-sm font-bold md:col-span-2">
               Speakers
               <textarea name="speakers" rows={3} defaultValue={serializeSpeakers(editingEvent.speakers)} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />

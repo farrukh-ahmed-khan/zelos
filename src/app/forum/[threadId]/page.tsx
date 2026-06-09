@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { Footer } from "@/components/Footer";
 import { ForumReplyForm } from "@/components/ForumReplyForm";
+import { ForumDeleteButton } from "@/components/forum/ForumDeleteButton";
 import { ForumReportButton } from "@/components/forum/ForumReportButton";
 import { ForumRichText } from "@/components/forum/ForumRichText";
 import { Header } from "@/components/Header";
 import { getForumThreadById } from "@/lib/forum/service";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
+import { hasAdminPermission } from "@/lib/auth/roles";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
 
@@ -23,11 +25,14 @@ export default async function ForumThreadPage({
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
   let canPost = false;
+  let canModerate = false;
   let readOnlyReason = "Visitors can read every thread. Sign in to reply publicly.";
 
   if (payload?.sub) {
     await connectToDatabase();
-    const user = await User.findById(payload.sub).select("age forumPostingRevoked status isBanned");
+    const user = await User.findById(payload.sub).select(
+      "age adminPermissions emailVerifiedAt forumPostingRevoked isBanned role status",
+    );
 
     if (user?.isBanned || user?.status === "banned") {
       readOnlyReason = "Banned accounts can read the forum but cannot post or reply.";
@@ -39,6 +44,14 @@ export default async function ForumThreadPage({
       canPost = true;
       readOnlyReason = "";
     }
+
+    canModerate = Boolean(
+      user &&
+        user.emailVerifiedAt &&
+        !user.isBanned &&
+        !["banned", "deactivated", "suspended"].includes(user.status ?? "") &&
+        hasAdminPermission(user.role, user.adminPermissions, "forum.moderate"),
+    );
   }
 
   const thread = await getForumThreadById(threadId);
@@ -71,8 +84,9 @@ export default async function ForumThreadPage({
           <div className="mt-4">
             <ForumRichText content={thread.content} />
           </div>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-start gap-2">
             <ForumReportButton targetType="thread" targetId={thread.id} />
+            {canModerate ? <ForumDeleteButton targetType="thread" targetId={thread.id} /> : null}
           </div>
         </article>
         <div className="mt-6 grid gap-3">
@@ -84,8 +98,9 @@ export default async function ForumThreadPage({
                 {typeof reply.author === "object" && reply.author && "role" in reply.author && String(reply.author.role) === "teacher" ? " / Teacher" : null}
               </p>
               <ForumRichText content={String(reply.content)} />
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-start gap-2">
                 <ForumReportButton targetType="reply" targetId={String(reply.id)} />
+                {canModerate ? <ForumDeleteButton targetType="reply" targetId={String(reply.id)} /> : null}
               </div>
             </article>
           ))}

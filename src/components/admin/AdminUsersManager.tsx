@@ -15,6 +15,8 @@ type User = {
   status: "active" | "suspended" | "banned" | "deactivated";
   adminPermissions: string[];
   emailVerifiedAt: string | Date | null;
+  hasPremiumAccess?: boolean;
+  subscriptionStatus?: "active" | "grace-period" | "expired" | "suspended" | "canceled" | "none";
 };
 
 const permissions = [
@@ -71,6 +73,8 @@ export function AdminUsersManager({ users }: { users: User[] }) {
         user.ageTrack,
         user.status,
         user.emailVerifiedAt ? "verified" : "unverified",
+        user.role === "subscriber" && user.hasPremiumAccess === false ? "free subscriber" : "",
+        user.subscriptionStatus ?? "",
         ...user.adminPermissions,
       ]
         .join(" ")
@@ -200,7 +204,14 @@ export function AdminUsersManager({ users }: { users: User[] }) {
       dataIndex: "role",
       key: "role",
       width: 160,
-      render: (role: string) => <Tag color={role.includes("admin") || role.includes("moderator") ? "blue" : "default"}>{formatRole(role)}</Tag>,
+      render: (role: string, user) => (
+        <Space size={[4, 4]} wrap>
+          <Tag color={role.includes("admin") || role.includes("moderator") ? "blue" : "default"}>{formatRole(role)}</Tag>
+          {role === "subscriber" && user.hasPremiumAccess === false ? (
+            <Tag color="gold">Free Subscriber</Tag>
+          ) : null}
+        </Space>
+      ),
     },
     {
       title: "Age Track",

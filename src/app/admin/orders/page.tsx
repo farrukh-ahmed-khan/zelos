@@ -33,6 +33,10 @@ export default async function AdminOrdersPage() {
     totalCents: order.totalCents,
     giftCardCode: order.giftCardCode ?? null,
     status: order.status,
+    shippingAddress: (order.shippingAddress as {
+      line1: string; line2?: string | null; city: string;
+      state: string; zip: string; country?: string | null;
+    } | null) ?? null,
     createdAt: order.createdAt,
   }));
 

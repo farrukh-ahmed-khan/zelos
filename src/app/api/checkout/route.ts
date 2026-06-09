@@ -23,7 +23,12 @@ export async function POST(request: NextRequest) {
       userId = payload?.sub ?? null;
     }
 
-    const order = await createOrder({ ...body, userId });
+    const order = await createOrder({
+      ...body,
+      userId,
+      shippingAddress: body.shippingAddress,
+      billingAddress: body.billingAddress ?? body.shippingAddress,
+    });
 
     if (order.totalCents === 0) {
       await markOrderPaid({ orderId: order._id.toString(), providerPaymentId: "gift-card" });
