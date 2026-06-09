@@ -16,6 +16,9 @@ import SchoolInvite from "@/models/SchoolInvite";
 import { notifyUsers, queueEmailsForUserIds } from "@/lib/notifications/service";
 import { uploadToS3, deleteFromS3 } from "@/lib/aws/s3";
 
+type VideoAudience = "subscriber" | "teacher" | "student" | "public-preview";
+type VideoSchoolScope = "global" | "all-schools" | "specific-schools" | "district";
+
 function canManageUser(actor: UserDocument, target: UserDocument) {
   if (actor._id.toString() === target._id.toString()) {
     return true;
@@ -51,6 +54,53 @@ async function dropLegacyVideoOrderIndex() {
     if (mongoError.codeName !== "IndexNotFound") {
       throw error;
     }
+  }
+}
+
+async function assertVideoOrderAvailable(params: {
+  audience?: VideoAudience;
+  ageTrack: string;
+  category?: string;
+  playlist?: string;
+  schoolScope?: VideoSchoolScope;
+  schoolIds?: string[];
+  district?: string | null;
+  order: number;
+  excludeVideoId?: string;
+}) {
+  const audience = params.audience ?? "subscriber";
+  const schoolScope = params.schoolScope ?? "global";
+  const query: Record<string, unknown> = {
+    audience,
+    ageTrack: params.ageTrack,
+    category: params.category ?? "General",
+    playlist: params.playlist ?? "General",
+    order: params.order,
+  };
+
+  if (["teacher", "student"].includes(audience)) {
+    query.schoolScope = schoolScope;
+
+    if (schoolScope === "district") {
+      query.district = params.district || null;
+    }
+
+    if (schoolScope === "specific-schools") {
+      query.schoolIds = { $in: params.schoolIds ?? [] };
+    }
+  }
+
+  if (params.excludeVideoId) {
+    query._id = { $ne: params.excludeVideoId };
+  }
+
+  const existingVideo = await Video.findOne(query).select("_id title").lean();
+
+  if (existingVideo) {
+    throw new ApiError(
+      409,
+      `Sequence order ${params.order} is already used by "${existingVideo.title}" in this playlist.`,
+    );
   }
 }
 
@@ -144,6 +194,7 @@ export async function createVideoByAdmin(params: {
 }) {
   await connectToDatabase();
   await dropLegacyVideoOrderIndex();
+  await assertVideoOrderAvailable(params);
 
   return Video.create({
     ...params,
@@ -181,6 +232,35 @@ export async function updateVideoByAdmin(params: {
 }) {
   await connectToDatabase();
 
+  const existingVideo = await Video.findById(params.videoId);
+
+  if (!existingVideo) {
+    throw new ApiError(404, "Video not found.");
+  }
+
+  if (
+    params.updates.order !== undefined ||
+    params.updates.audience !== undefined ||
+    params.updates.ageTrack !== undefined ||
+    params.updates.category !== undefined ||
+    params.updates.playlist !== undefined ||
+    params.updates.schoolScope !== undefined ||
+    params.updates.district !== undefined ||
+    params.updates.schoolIds !== undefined
+  ) {
+    await assertVideoOrderAvailable({
+      audience: params.updates.audience ?? existingVideo.audience,
+      ageTrack: params.updates.ageTrack ?? existingVideo.ageTrack,
+      category: params.updates.category ?? existingVideo.category,
+      playlist: params.updates.playlist ?? existingVideo.playlist,
+      schoolScope: params.updates.schoolScope ?? existingVideo.schoolScope,
+      schoolIds: params.updates.schoolIds ?? existingVideo.schoolIds,
+      district: params.updates.district ?? existingVideo.district,
+      order: params.updates.order ?? existingVideo.order,
+      excludeVideoId: params.videoId,
+    });
+  }
+
   if (params.updates.isMissionVideo) {
     await Video.updateMany(
       { _id: { $ne: params.videoId }, isMissionVideo: true },
@@ -188,7 +268,7 @@ export async function updateVideoByAdmin(params: {
     );
   }
 
-  const video = await Video.findByIdAndUpdate(params.videoId, params.updates, {
+  const video = await Video.findByIdAndUpdate(existingVideo._id, params.updates, {
     new: true,
     runValidators: true,
   });
@@ -265,6 +345,7 @@ export async function createVideoByAdminWithUpload(params: {
 }) {
   await connectToDatabase();
   await dropLegacyVideoOrderIndex();
+  await assertVideoOrderAvailable(params);
 
   // Upload file to S3
   const { url, key } = await uploadToS3({
