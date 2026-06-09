@@ -1,5 +1,6 @@
 "use client";
 
+import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -12,10 +13,47 @@ type AuthFormProps = {
   mode: AuthMode;
 };
 
+function getApiErrorMessage(result: unknown) {
+  if (
+    typeof result === "object" &&
+    result !== null &&
+    "error" in result &&
+    typeof result.error === "object" &&
+    result.error !== null
+  ) {
+    const error = result.error as {
+      message?: unknown;
+      details?: {
+        fieldErrors?: Record<string, string[] | undefined>;
+        formErrors?: string[];
+      };
+    };
+    const fieldErrors = error.details?.fieldErrors;
+    const firstFieldError = fieldErrors
+      ? Object.values(fieldErrors).flat().find(Boolean)
+      : null;
+
+    if (firstFieldError) {
+      return firstFieldError;
+    }
+
+    if (error.details?.formErrors?.[0]) {
+      return error.details.formErrors[0];
+    }
+
+    if (typeof error.message === "string") {
+      return error.message;
+    }
+  }
+
+  return "Something went wrong.";
+}
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const isSignup = mode === "signup";
 
@@ -47,7 +85,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       const result = response.data;
 
       if (!isApiSuccess(response.status)) {
-        throw new Error(result?.error?.message ?? "Something went wrong.");
+        throw new Error(getApiErrorMessage(result));
       }
 
       if (isSignup) {
@@ -96,14 +134,25 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       <label className="grid gap-2 text-sm font-bold">
         Password
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={isSignup ? 8 : 1}
-          maxLength={72}
-          className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
-        />
+        <div className="relative">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            minLength={isSignup ? 8 : 1}
+            maxLength={72}
+            className="w-full rounded-md border border-[#d8d2c5] px-3 py-3 pr-12 font-normal outline-none focus:border-[#b22222]"
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-[#555] transition hover:bg-[#f7f2e8] hover:text-[#8c0504] focus:outline-none focus:ring-2 focus:ring-[#b22222]/25"
+          >
+            {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+          </button>
+        </div>
       </label>
 
       {!isSignup ? (
