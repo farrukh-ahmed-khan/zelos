@@ -12,7 +12,7 @@ export default async function AdminToolkitPage() {
   );
 
   return (
-    <AdminChrome title="Money Toolkit" eyebrow="Admin / Downloadables" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Money Toolkit" eyebrow="Admin / Downloadables" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminToolkitManager resources={JSON.parse(JSON.stringify(resources))} />
     </AdminChrome>
   );

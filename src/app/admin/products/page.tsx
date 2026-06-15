@@ -10,7 +10,7 @@ export default async function AdminProductsPage() {
   const products = (await getProducts(true)).map((product) => serializeProduct(product));
 
   return (
-    <AdminChrome title="Store Products" eyebrow="Admin / Store" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Store Products" eyebrow="Admin / Store" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminProductsManager products={JSON.parse(JSON.stringify(products))} />
     </AdminChrome>
   );

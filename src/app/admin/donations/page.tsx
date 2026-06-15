@@ -12,7 +12,7 @@ export default async function AdminDonationsPage() {
   const donations = await Donation.find().sort({ createdAt: -1 }).lean();
 
   return (
-    <AdminChrome title="Donation History" eyebrow="Admin / Donations" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Donation History" eyebrow="Admin / Donations" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminPanel title="One-Time Donations">
         <AdminDonationsTable
           donations={donations.map((donation) => ({

@@ -28,7 +28,7 @@ export default async function AdminContentCategoriesPage() {
     .lean();
 
   return (
-    <AdminChrome title="Content Categories" eyebrow="Admin / Content" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Content Categories" eyebrow="Admin / Content" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminContentCategoriesManager categories={JSON.parse(JSON.stringify(categories))} />
     </AdminChrome>
   );

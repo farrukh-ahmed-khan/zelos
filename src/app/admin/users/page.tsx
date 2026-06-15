@@ -59,7 +59,7 @@ export default async function AdminUsersPage() {
   });
 
   return (
-    <AdminChrome title="Users & Roles" eyebrow="Admin / Access" isSuperAdmin={actor.role === "super-admin"}>
+    <AdminChrome title="Users & Roles" eyebrow="Admin / Access" isSuperAdmin={actor.role === "super-admin"} adminRole={actor.role} adminPermissions={actor.adminPermissions ?? []}>
       <AdminUsersManager users={JSON.parse(JSON.stringify(serializedUsers))} />
     </AdminChrome>
   );

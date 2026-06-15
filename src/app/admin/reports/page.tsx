@@ -10,7 +10,7 @@ export default async function AdminReportsPage() {
   const reports = await getForumReports();
 
   return (
-    <AdminChrome title="Reports" eyebrow="Admin / Moderation" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Reports" eyebrow="Admin / Moderation" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminReportsManager reports={JSON.parse(JSON.stringify(reports))} />
     </AdminChrome>
   );

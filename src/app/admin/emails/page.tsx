@@ -18,7 +18,7 @@ export default async function AdminEmailsPage() {
   ]);
 
   return (
-    <AdminChrome title="Email Outbox" eyebrow="Admin / Notifications" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Email Outbox" eyebrow="Admin / Notifications" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <div className="grid gap-5">
         <div className="grid gap-4 md:grid-cols-3">
           <AdminMetric label="Sent" value={sentCount} detail="Delivered through configured mail transport" />

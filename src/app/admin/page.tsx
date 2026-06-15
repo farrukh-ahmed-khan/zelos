@@ -38,8 +38,8 @@ const modules = [
   { title: "Mentor Applications", href: "/admin/mentor-applications", permission: "users.manage-limited", detail: "Review/contact inbox" },
   { title: "Analytics", href: "/admin/analytics", permission: "analytics.read", detail: "Subscribers, video completion, revenue, RSVP, funds" },
   { title: "Email Outbox", href: "/admin/emails", permission: "users.manage-limited", detail: "Transactional email queue visibility" },
-  { title: "News & Updates", href: "/admin/broadcasts", permission: "users.manage-limited", detail: "Push news and updates to all user dashboards" },
-  { title: "Store Products", href: "/admin/products", permission: "users.manage-limited", detail: "Add, edit, and delete swag store products" },
+  { title: "News & Updates", href: "/admin/broadcasts", permission: "content.manage", detail: "Push news and updates to all user dashboards" },
+  { title: "Store Products", href: "/admin/products", permission: "billing.read", detail: "Add, edit, and delete swag store products" },
   { title: "Gift Cards", href: "/admin/gift-cards", permission: "billing.read", detail: "Generate and manage gift cards" },
   { title: "Donation History", href: "/admin/donations", permission: "billing.read", detail: "One-time donation records and receipts" },
   { title: "Store Orders", href: "/admin/orders", permission: "billing.read", detail: "Swag orders, statuses, gift-card credits, and revenue" },
@@ -107,7 +107,7 @@ export default async function AdminPage() {
   });
 
   return (
-    <AdminChrome title="Platform Control Center" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Platform Control Center" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         <AdminMetric label="Users" value={users} />
         <AdminMetric label="Videos" value={videos} />

@@ -41,7 +41,7 @@ export default async function AdminOrdersPage() {
   }));
 
   return (
-    <AdminChrome title="Store Orders" eyebrow="Admin / Store" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Store Orders" eyebrow="Admin / Store" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminPanel title="Order Management">
         <AdminOrdersManager
           orders={JSON.parse(JSON.stringify(serializedOrders))}

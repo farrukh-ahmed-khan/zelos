@@ -17,7 +17,7 @@ export default async function AdminSchoolContentPage() {
   ]);
 
   return (
-    <AdminChrome title="School Content Library" eyebrow="Admin / School CMS" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="School Content Library" eyebrow="Admin / School CMS" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminSchoolResourcesManager
         resources={JSON.parse(JSON.stringify(resources.map(serializeSchoolResource)))}
         schools={JSON.parse(JSON.stringify(schools.map((school) => ({

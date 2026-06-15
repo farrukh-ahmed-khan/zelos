@@ -13,7 +13,7 @@ export default async function AdminSubscriberContentPage() {
   const resources = await getSubscriberResourcesForAdmin();
 
   return (
-    <AdminChrome title="Subscriber Content Library" eyebrow="Admin / Subscriber CMS" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Subscriber Content Library" eyebrow="Admin / Subscriber CMS" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminSubscriberResourcesManager
         resources={JSON.parse(JSON.stringify(resources.map(serializeSubscriberResource)))}
       />

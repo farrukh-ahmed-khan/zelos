@@ -10,7 +10,7 @@ export default async function AdminSchoolsPage() {
   const schools = await School.find().sort({ name: 1 }).lean();
 
   return (
-    <AdminChrome title="Schools" eyebrow="Admin / Schools" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Schools" eyebrow="Admin / Schools" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminSchoolsManager schools={JSON.parse(JSON.stringify(schools.map((school) => ({
         id: school._id.toString(),
         name: school.name,

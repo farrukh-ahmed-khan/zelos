@@ -13,7 +13,7 @@ export default async function AdminScholarshipsPage() {
   ]);
 
   return (
-    <AdminChrome title="Scholarships" eyebrow="Admin / Scholarships" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Scholarships" eyebrow="Admin / Scholarships" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminScholarshipsManager
         scholarships={JSON.parse(JSON.stringify(scholarships))}
         applications={JSON.parse(JSON.stringify(applications))}

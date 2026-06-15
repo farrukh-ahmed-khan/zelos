@@ -39,7 +39,7 @@ export default async function AdminVideosPage() {
   ]);
 
   return (
-    <AdminChrome title="Video Library" eyebrow="Admin / Content" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Video Library" eyebrow="Admin / Content" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminVideosManager
         videos={JSON.parse(JSON.stringify(videos.map((video) => ({
           id: video._id.toString(),

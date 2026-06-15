@@ -10,7 +10,7 @@ export default async function AdminAnalyticsPage() {
   const data = await getAdminAnalyticsOverview();
 
   return (
-    <AdminChrome title="Analytics" eyebrow="Admin / Analytics" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Analytics" eyebrow="Admin / Analytics" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminAnalyticsDashboard data={JSON.parse(JSON.stringify(data))} />
     </AdminChrome>
   );

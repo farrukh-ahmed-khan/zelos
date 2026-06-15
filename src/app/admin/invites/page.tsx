@@ -50,7 +50,7 @@ export default async function AdminInvitesPage({
     .lean();
 
   return (
-    <AdminChrome title="Admin Invites" eyebrow="Admin / Access" isSuperAdmin={actor.role === "super-admin"}>
+    <AdminChrome title="Admin Invites" eyebrow="Admin / Access" isSuperAdmin={actor.role === "super-admin"} adminRole={actor.role} adminPermissions={actor.adminPermissions ?? []}>
       <AdminInvitesManager invites={JSON.parse(JSON.stringify(invites.map((invite) => ({
         id: invite._id.toString(),
         email: invite.email,

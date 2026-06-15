@@ -13,7 +13,7 @@ export default async function AdminFormsPage() {
   const submissions = await getFormSubmissions("scholarship-inquiry");
 
   return (
-    <AdminChrome title="Fund a Scholarship Leads" eyebrow="Admin / Forms" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Fund a Scholarship Leads" eyebrow="Admin / Forms" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminPanel title="Scholarship Funder Leads">
         <div className="grid gap-3">
           {submissions.map((submission) => (

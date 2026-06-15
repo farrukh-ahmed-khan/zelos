@@ -10,7 +10,7 @@ export default async function AdminEventsPage() {
   const events = await getAdminEvents();
 
   return (
-    <AdminChrome title="Events" eyebrow="Admin / Events" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Events" eyebrow="Admin / Events" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminEventsManager events={JSON.parse(JSON.stringify(events))} />
     </AdminChrome>
   );

@@ -13,7 +13,7 @@ export default async function AdminForumModerationPage() {
   ]);
 
   return (
-    <AdminChrome title="Forum Moderation" eyebrow="Admin / Community" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Forum Moderation" eyebrow="Admin / Community" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <ForumModerationManager
         categories={JSON.parse(JSON.stringify(categories))}
         reports={JSON.parse(JSON.stringify(reports))}

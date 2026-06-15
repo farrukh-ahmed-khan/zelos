@@ -18,48 +18,81 @@ import {
   UserAddOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
+import { hasAdminPermission, type AdminPermission, type UserRole } from "@/lib/auth/roles";
+
+type AdminNavItem = {
+  href: string;
+  label: string;
+  icon: typeof DashboardOutlined;
+  permission?: AdminPermission;
+  roles?: UserRole[];
+};
 
 const navItems = [
-  { href: "/admin", label: "Overview", icon: DashboardOutlined },
-  { href: "/admin/videos", label: "Videos", icon: PlaySquareOutlined },
-  { href: "/admin/content-categories", label: "Categories", icon: FolderOpenOutlined },
-  { href: "/admin/static-pages", label: "Static Pages", icon: FormOutlined },
-  { href: "/admin/subscription-plans", label: "Plans", icon: TagsOutlined },
-  { href: "/admin/users", label: "Users", icon: TeamOutlined },
-  { href: "/admin/invites", label: "Invites", icon: UserAddOutlined },
-  { href: "/admin/schools", label: "Schools", icon: SafetyCertificateOutlined },
-  { href: "/admin/subscriber-content", label: "Subscriber Content", icon: FolderOpenOutlined },
-  { href: "/admin/school-content", label: "School Content", icon: FolderOpenOutlined },
-  { href: "/admin/toolkit", label: "Toolkit", icon: FormOutlined },
-  { href: "/admin/forum-moderation", label: "Moderation", icon: SafetyCertificateOutlined },
-  { href: "/admin/scholarships", label: "Scholarships", icon: SafetyCertificateOutlined },
-  { href: "/admin/mentor-applications", label: "Mentors", icon: TeamOutlined },
-  { href: "/admin/broadcasts", label: "News & Updates", icon: NotificationOutlined },
-  { href: "/admin/products", label: "Store Products", icon: ShoppingOutlined },
-  { href: "/admin/gift-cards", label: "Gift Cards", icon: GiftOutlined },
-];
+  { href: "/admin", label: "Overview", icon: DashboardOutlined, roles: ["sub-admin", "super-admin"] },
+  { href: "/admin/videos", label: "Videos", icon: PlaySquareOutlined, permission: "content.manage" },
+  { href: "/admin/content-categories", label: "Categories", icon: FolderOpenOutlined, permission: "content.manage" },
+  { href: "/admin/static-pages", label: "Static Pages", icon: FormOutlined, permission: "content.manage" },
+  { href: "/admin/subscription-plans", label: "Plans", icon: TagsOutlined, permission: "billing.read" },
+  { href: "/admin/users", label: "Users", icon: TeamOutlined, permission: "users.manage-limited" },
+  { href: "/admin/invites", label: "Invites", icon: UserAddOutlined, permission: "users.manage-limited" },
+  { href: "/admin/schools", label: "Schools", icon: SafetyCertificateOutlined, permission: "schools.manage" },
+  { href: "/admin/subscriber-content", label: "Subscriber Content", icon: FolderOpenOutlined, permission: "content.manage" },
+  { href: "/admin/school-content", label: "School Content", icon: FolderOpenOutlined, permission: "content.manage" },
+  { href: "/admin/toolkit", label: "Toolkit", icon: FormOutlined, permission: "content.manage" },
+  { href: "/admin/forum-moderation", label: "Moderation", icon: SafetyCertificateOutlined, permission: "forum.moderate" },
+  { href: "/admin/scholarships", label: "Scholarships", icon: SafetyCertificateOutlined, permission: "users.manage-limited" },
+  { href: "/admin/mentor-applications", label: "Mentors", icon: TeamOutlined, permission: "users.manage-limited" },
+  { href: "/admin/broadcasts", label: "News & Updates", icon: NotificationOutlined, permission: "content.manage" },
+  { href: "/admin/products", label: "Store Products", icon: ShoppingOutlined, permission: "billing.read" },
+  { href: "/admin/gift-cards", label: "Gift Cards", icon: GiftOutlined, permission: "billing.read" },
+] satisfies AdminNavItem[];
 
 const secondaryItems = [
-  { href: "/admin/events", label: "Events", icon: CalendarOutlined },
-  { href: "/admin/orders", label: "Store Orders", icon: DollarOutlined },
-  { href: "/admin/donations", label: "Donations", icon: DollarOutlined },
-  { href: "/admin/reports", label: "Reports", icon: SafetyCertificateOutlined },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChartOutlined },
-  { href: "/admin/emails", label: "Email Outbox", icon: MailOutlined },
-  { href: "/admin/forms", label: "Forms", icon: FormOutlined },
-];
+  { href: "/admin/events", label: "Events", icon: CalendarOutlined, permission: "events.manage" },
+  { href: "/admin/orders", label: "Store Orders", icon: DollarOutlined, permission: "billing.read" },
+  { href: "/admin/donations", label: "Donations", icon: DollarOutlined, permission: "billing.read" },
+  { href: "/admin/reports", label: "Reports", icon: SafetyCertificateOutlined, permission: "forum.moderate" },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChartOutlined, permission: "analytics.read" },
+  { href: "/admin/emails", label: "Email Outbox", icon: MailOutlined, permission: "users.manage-limited" },
+  { href: "/admin/forms", label: "Forms", icon: FormOutlined, permission: "users.manage-limited" },
+] satisfies AdminNavItem[];
+
+function canSeeNavItem(item: AdminNavItem, role: UserRole, adminPermissions: string[]) {
+  if (item.roles) {
+    return item.roles.includes(role);
+  }
+
+  if (!item.permission) {
+    return true;
+  }
+
+  return hasAdminPermission(role, adminPermissions, item.permission);
+}
 
 export function AdminChrome({
   title,
   eyebrow = "Admin",
   children,
   isSuperAdmin = false,
+  adminRole,
+  adminPermissions = [],
 }: {
   title: string;
   eyebrow?: string;
   children: ReactNode;
   isSuperAdmin?: boolean;
+  adminRole?: UserRole;
+  adminPermissions?: string[];
 }) {
+  const effectiveRole: UserRole = adminRole ?? (isSuperAdmin ? "super-admin" : "sub-admin");
+  const visiblePrimaryItems = navItems.filter((item) =>
+    canSeeNavItem(item, effectiveRole, adminPermissions),
+  );
+  const visibleSecondaryItems = secondaryItems.filter((item) =>
+    canSeeNavItem(item, effectiveRole, adminPermissions),
+  );
+
   return (
     <main className="min-h-screen bg-[#f4f5f7] text-[#202020]">
       <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
@@ -79,7 +112,7 @@ export function AdminChrome({
           </div>
 
           <nav className="flex gap-2 overflow-x-auto p-3 [scrollbar-width:none] lg:grid lg:overflow-visible [&::-webkit-scrollbar]:hidden">
-            {navItems.map((item) => {
+            {visiblePrimaryItems.map((item) => {
               const Icon = item.icon;
 
               return (
@@ -96,7 +129,7 @@ export function AdminChrome({
           </nav>
 
           <div className="mx-3 flex gap-2 overflow-x-auto border-t border-[#edf0f3] py-3 [scrollbar-width:none] lg:grid lg:overflow-visible lg:pt-3 [&::-webkit-scrollbar]:hidden">
-            {secondaryItems.map((item) => {
+            {visibleSecondaryItems.map((item) => {
               const Icon = item.icon;
 
               return (

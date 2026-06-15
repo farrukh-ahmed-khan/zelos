@@ -34,7 +34,7 @@ export default async function AdminSubscriptionPlansPage() {
   ]);
 
   return (
-    <AdminChrome title="Subscription Plans" eyebrow="Admin / Billing" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Subscription Plans" eyebrow="Admin / Billing" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminSubscriptionPlansManager
         plans={JSON.parse(JSON.stringify(plans.map(serializeSubscriptionPlan)))}
         promotionCodes={JSON.parse(JSON.stringify(promotionCodes.map(serializePromotionCode)))}

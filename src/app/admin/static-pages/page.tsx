@@ -10,7 +10,7 @@ export default async function AdminStaticPagesPage() {
   const pages = await getStaticPages();
 
   return (
-    <AdminChrome title="Static Pages" eyebrow="Admin / CMS" isSuperAdmin={user.role === "super-admin"}>
+    <AdminChrome title="Static Pages" eyebrow="Admin / CMS" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
       <AdminStaticPagesManager pages={JSON.parse(JSON.stringify(pages))} />
     </AdminChrome>
   );

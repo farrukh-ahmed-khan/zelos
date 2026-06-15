@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth/session";
+import { hasAdminPermission } from "@/lib/auth/roles";
 import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { getSchoolProgress } from "@/lib/schools/service";
 
@@ -14,8 +15,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (
       user.role !== "teacher" &&
-      user.role !== "super-admin" &&
-      user.role !== "sub-admin"
+      !hasAdminPermission(user.role, user.adminPermissions, "schools.manage")
     ) {
       throw new ApiError(403, "Only teachers and admins can view school progress.");
     }
