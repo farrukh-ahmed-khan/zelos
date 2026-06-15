@@ -54,6 +54,12 @@ const SchoolSchema = new Schema(
       type: Date,
       default: () => new Date(),
     },
+    licenseDurationMonths: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 12,
+    },
     licenseExpiresAt: {
       type: Date,
       default: null,

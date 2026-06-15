@@ -41,6 +41,8 @@ export function WatchVideoSection({
               <video
                 className="relative z-10 aspect-video w-full rounded-[1rem] bg-black object-cover shadow-[0_24px_80px_rgba(0,0,0,0.18)] sm:rounded-[1.4rem]"
                 controls
+                controlsList="nodownload"
+                disablePictureInPicture
                 playsInline
                 preload="metadata"
                 aria-label={missionVideo.title}

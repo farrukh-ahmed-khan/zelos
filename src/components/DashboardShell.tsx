@@ -404,7 +404,7 @@ function VideoPanel({
         </div>
       </div>
 
-      <div className="grid min-w-0 content-start gap-2">
+      <div className="grid min-w-0 max-h-[calc(100vh-10rem)] content-start gap-2 overflow-y-auto pr-1">
         {groupedVideos.map((categoryGroup) => (
           <div key={categoryGroup.category} className="grid gap-2 rounded-md bg-white p-2">
             <p className="rounded-sm bg-[#8c0504] px-2 py-1 text-xs font-black uppercase text-white">

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState, useMemo } from "react";
-import { Table, Input, Button, Tag, Space, Select, message as antMessage } from "antd";
+import { FormEvent, useMemo, useState } from "react";
+import { Table, Input, Button, Tag, Space, Select, Modal, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 import { api, isApiSuccess } from "@/lib/api/client";
@@ -9,21 +9,40 @@ import { api, isApiSuccess } from "@/lib/api/client";
 type School = {
   id: string;
   name: string;
-  licenseType: string;
   district: string | null;
   teacherLimit: number;
   studentLimit: number;
   teachersCount: number;
   studentsCount: number;
   licenseStatus: string;
+  licenseDurationMonths: number;
+  licenseExpiresAt: string | null;
   assignedTracks: string[];
 };
 
 const levelTrackOptions = [
-  { label: "Children", value: "children" },
-  { label: "Teens", value: "teens" },
-  { label: "Young Adults", value: "young-adults" },
+  { label: "All", value: "all" },
+  { label: "Children", value: "child" },
+  { label: "Teens", value: "teen" },
+  { label: "Young Adults", value: "young-adult" },
+  { label: "Adults", value: "adult" },
 ];
+
+function formatTrack(track: string) {
+  return levelTrackOptions.find((option) => option.value === track)?.label ?? track;
+}
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "No expiry";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
 export function AdminSchoolsManager({ schools }: { schools: School[] }) {
   const [items, setItems] = useState(schools);
@@ -32,14 +51,23 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [invitingSchoolId, setInvitingSchoolId] = useState<string | null>(null);
+  const [statusSchoolId, setStatusSchoolId] = useState<string | null>(null);
   const [assignedTracks, setAssignedTracks] = useState<string[]>([]);
 
   const filteredItems = useMemo(() => {
-    if (!searchTerm) return items;
-    return items.filter(
-      (school) =>
-        school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.district?.toLowerCase().includes(searchTerm.toLowerCase())
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return items;
+
+    return items.filter((school) =>
+      [
+        school.name,
+        school.district ?? "",
+        school.licenseStatus,
+        school.assignedTracks.map(formatTrack).join(" "),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
     );
   }, [items, searchTerm]);
 
@@ -56,11 +84,9 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     try {
       const response = await api.post("/api/schools", {
         name: String(formData.get("name") ?? ""),
-        licenseType: String(formData.get("licenseType") ?? "school"),
-        district: String(formData.get("district") ?? ""),
         teacherLimit: Number(formData.get("teacherLimit") ?? 1),
         studentLimit: Number(formData.get("studentLimit") ?? 1),
-        licenseStatus: String(formData.get("licenseStatus") ?? "active"),
+        licenseDurationMonths: Number(formData.get("licenseDurationMonths") ?? 12),
         assignedTracks: formData.getAll("assignedTracks").map(String).filter(Boolean),
       });
       const result = response.data;
@@ -102,39 +128,80 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     }
   }
 
+  async function updateSchoolStatus(school: School, licenseStatus: "active" | "suspended") {
+    setStatusSchoolId(school.id);
+    try {
+      const response = await api.patch(`/api/schools/${school.id}`, { licenseStatus });
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to update school subscription.");
+        return;
+      }
+
+      setItems((current) =>
+        current.map((item) => (item.id === school.id ? { ...item, ...result.data.school } : item)),
+      );
+      antMessage.success(
+        licenseStatus === "suspended" ? "School subscription suspended." : "School subscription reactivated.",
+      );
+    } finally {
+      setStatusSchoolId(null);
+    }
+  }
+
+  function confirmStatusChange(school: School) {
+    const nextStatus = school.licenseStatus === "suspended" ? "active" : "suspended";
+
+    Modal.confirm({
+      title: nextStatus === "suspended" ? "Suspend school subscription?" : "Reactivate school subscription?",
+      content:
+        nextStatus === "suspended"
+          ? "Students and teachers at this school will lose school subscription access until reactivated."
+          : "Students and teachers at this school will regain school subscription access.",
+      okText: nextStatus === "suspended" ? "Suspend" : "Reactivate",
+      okButtonProps: { danger: nextStatus === "suspended" },
+      onOk: () => updateSchoolStatus(school, nextStatus),
+    });
+  }
+
   const columns: TableColumnsType<School> = [
     {
       title: "School Name",
       dataIndex: "name",
       key: "name",
-      width: 200,
+      width: 220,
       render: (text: string, record: School) => (
         <div>
           <div className="font-bold text-[#202020]">{text}</div>
-          {record.district && <div className="text-xs text-[#667085]">{record.district}</div>}
+          {record.district ? <div className="text-xs text-[#667085]">{record.district}</div> : null}
         </div>
       ),
-    },
-    {
-      title: "Type",
-      dataIndex: "licenseType",
-      key: "licenseType",
-      width: 100,
-      render: (text: string) => <span className="capitalize">{text}</span>,
     },
     {
       title: "License Status",
       dataIndex: "licenseStatus",
       key: "licenseStatus",
-      width: 120,
+      width: 140,
       render: (status: string) => {
-        const colors: { [key: string]: string } = {
+        const colors: Record<string, string> = {
           active: "green",
           expired: "orange",
           suspended: "red",
         };
         return <Tag color={colors[status] || "default"}>{status.toUpperCase()}</Tag>;
       },
+    },
+    {
+      title: "License",
+      key: "license",
+      width: 170,
+      render: (_, record: School) => (
+        <div>
+          <div className="font-bold text-[#202020]">{record.licenseDurationMonths} months</div>
+          <div className="text-xs text-[#667085]">Expires {formatDate(record.licenseExpiresAt)}</div>
+        </div>
+      ),
     },
     {
       title: "Teachers",
@@ -154,53 +221,63 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
       title: "Tracks",
       dataIndex: "assignedTracks",
       key: "tracks",
-      width: 150,
+      width: 180,
       render: (tracks: string[]) =>
         tracks?.length ? (
           <Space size="small" wrap>
             {tracks.map((track) => (
-              <Tag key={track} color="blue">
-                {track}
+              <Tag key={track} color={track === "all" ? "purple" : "blue"}>
+                {formatTrack(track)}
               </Tag>
             ))}
           </Space>
         ) : (
-          <span className="text-[#999]">—</span>
+          <span className="text-[#999]">-</span>
         ),
     },
     {
       title: "Action",
       key: "action",
-      width: 200,
+      width: 320,
       render: (_, record: School) => (
-        <form onSubmit={(e) => inviteTeacher(e, record.id)} className="flex gap-1">
-          <input
-            name="email"
-            type="email"
-            placeholder="Teacher email"
-            required
-            className="flex-1 rounded-md border border-[#d8d2c5] px-2 py-1.5 text-xs"
-          />
+        <div className="grid gap-2">
+          <form onSubmit={(event) => inviteTeacher(event, record.id)} className="flex gap-1">
+            <input
+              name="email"
+              type="email"
+              placeholder="Teacher email"
+              required
+              className="flex-1 rounded-md border border-[#d8d2c5] px-2 py-1.5 text-xs"
+            />
+            <Button
+              type="primary"
+              size="small"
+              htmlType="submit"
+              loading={invitingSchoolId === record.id}
+            >
+              Invite
+            </Button>
+          </form>
           <Button
-            type="primary"
             size="small"
-            htmlType="submit"
-            loading={invitingSchoolId === record.id}
+            danger={record.licenseStatus !== "suspended"}
+            loading={statusSchoolId === record.id}
+            onClick={() => confirmStatusChange(record)}
           >
-            Invite
+            {record.licenseStatus === "suspended" ? "Reactivate subscription" : "Suspend subscription"}
           </Button>
-        </form>
+        </div>
       ),
     },
   ];
 
   const pagination: TablePaginationConfig = {
     current: currentPage,
-    pageSize: pageSize,
+    pageSize,
     total: filteredItems.length,
-    onChange: (page, pageSize) => {
+    onChange: (page, nextPageSize) => {
       setCurrentPage(page);
-      setPageSize(pageSize);
+      setPageSize(nextPageSize);
     },
     pageSizeOptions: [10, 20, 50],
     showSizeChanger: true,
@@ -211,27 +288,13 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
     <div className="grid gap-6">
       <form onSubmit={createSchool} className="grid gap-4 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm md:grid-cols-2">
         <label className="grid gap-1 text-sm font-bold text-[#344054]">
-          School / District Name
+          School Name
           <input name="name" placeholder="Example: Lincoln Middle School" required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
         <label className="grid gap-1 text-sm font-bold text-[#344054]">
-          License Type
-          <select name="licenseType" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
-            <option value="school">School</option>
-            <option value="district">District</option>
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm font-bold text-[#344054]">
-          District Tag
-          <input name="district" placeholder="Optional, e.g. Dallas ISD" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
-        </label>
-        <label className="grid gap-1 text-sm font-bold text-[#344054]">
-          License Status
-          <select name="licenseStatus" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
-            <option value="active">Active</option>
-            <option value="expired">Expired</option>
-            <option value="suspended">Suspended</option>
-          </select>
+          License Duration
+          <input name="licenseDurationMonths" type="number" min={1} max={240} defaultValue={12} required className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <span className="text-xs font-normal text-[#667085]">Number of months the school license remains valid.</span>
         </label>
         <label className="grid gap-1 text-sm font-bold text-[#344054]">
           Teacher Seat Limit
@@ -249,7 +312,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
             mode="multiple"
             allowClear
             value={assignedTracks}
-            onChange={setAssignedTracks}
+            onChange={(tracks) => setAssignedTracks(tracks.includes("all") ? ["all"] : tracks)}
             options={levelTrackOptions}
             placeholder="Select level tracks"
             className="font-normal"
@@ -264,7 +327,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
         </label>
         <button
           disabled={isSubmitting}
-          className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-fit rounded-md bg-[#202020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Creating..." : "Create School"}
         </button>
@@ -272,10 +335,10 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
 
       <div className="grid gap-3 rounded-md border border-[#d9dde3] bg-white p-4 shadow-sm">
         <Input
-          placeholder="Search schools by name or district..."
+          placeholder="Search schools by name, status, or assigned track..."
           prefix={<SearchOutlined />}
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(event) => handleSearch(event.target.value)}
           size="large"
           className="mb-2"
         />
@@ -284,7 +347,7 @@ export function AdminSchoolsManager({ schools }: { schools: School[] }) {
           dataSource={filteredItems}
           rowKey="id"
           pagination={pagination}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1230 }}
           locale={{
             emptyText: "No schools found",
           }}

@@ -6,6 +6,7 @@ export const createSchoolSchema = z.object({
   name: z.string().trim().min(2).max(180),
   teacherLimit: z.number().int().min(1),
   studentLimit: z.number().int().min(1),
+  licenseDurationMonths: z.number().int().min(1).max(240).default(12),
   licenseType: z.enum(["school", "district"]).optional(),
   district: z.string().trim().max(120).optional(),
   licenseStatus: z.enum(["active", "expired", "suspended"]).optional(),
@@ -13,6 +14,10 @@ export const createSchoolSchema = z.object({
   licenseExpiresAt: z.iso.datetime().optional(),
   assignedTracks: z.array(z.string().trim().min(2).max(60)).optional(),
   assignedVideoIds: z.array(objectIdLikeSchema).optional(),
+});
+
+export const updateSchoolSchema = z.object({
+  licenseStatus: z.enum(["active", "suspended"]),
 });
 
 export const inviteTeacherSchema = z.object({

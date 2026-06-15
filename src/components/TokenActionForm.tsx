@@ -86,6 +86,9 @@ export function TokenActionForm({ endpoint, token = "", mode }: TokenActionFormP
       if (mode === "reset-password") {
         router.push("/login");
         router.refresh();
+      } else if (mode === "verify-email") {
+        router.push("/dashboard");
+        router.refresh();
       }
     } finally {
       setIsSubmitting(false);

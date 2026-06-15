@@ -21,6 +21,8 @@ export default async function AdminSchoolsPage() {
         teachersCount: school.teachersCount,
         studentsCount: school.studentsCount,
         licenseStatus: school.licenseStatus,
+        licenseDurationMonths: school.licenseDurationMonths ?? 12,
+        licenseExpiresAt: school.licenseExpiresAt ?? null,
         assignedTracks: school.assignedTracks ?? [],
       }))))} />
     </AdminChrome>

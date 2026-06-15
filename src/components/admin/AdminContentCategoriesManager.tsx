@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Button, Input, Space, Table, Tag, message as antMessage } from "antd";
+import { Button, Input, Modal, Space, Table, Tag, message as antMessage } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 import { api, isApiSuccess } from "@/lib/api/client";
@@ -53,6 +53,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
   const [selectedAudience, setSelectedAudience] = useState("subscriber");
   const [playlistTarget, setPlaylistTarget] = useState<CategoryGroup | null>(null);
   const [isAddingPlaylist, setIsAddingPlaylist] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const isTeacherAudience = selectedAudience === "teacher";
 
   const filteredItems = useMemo(() => {
@@ -174,6 +175,46 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
     }
   }
 
+  async function deleteCategory(category: Category) {
+    const categoryId = category.id ?? category._id;
+
+    if (!categoryId) {
+      setError("Unable to delete category without an id.");
+      return;
+    }
+
+    setDeletingCategoryId(categoryId);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await api.delete(`/api/admin/content-categories/${categoryId}`);
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        setError(result?.error?.message ?? "Unable to delete category.");
+        antMessage.error(result?.error?.message ?? "Unable to delete category.");
+        return;
+      }
+
+      setItems((current) => current.filter((item) => (item.id ?? item._id) !== categoryId));
+      setMessage("Category playlist deleted.");
+      antMessage.success("Category playlist deleted.");
+    } finally {
+      setDeletingCategoryId(null);
+    }
+  }
+
+  function confirmDeleteCategory(category: Category) {
+    Modal.confirm({
+      title: "Delete category playlist?",
+      content: `Delete "${category.name} / ${category.playlist ?? "General"}"? Existing videos keep their labels, but this playlist will no longer be selectable for new uploads.`,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: () => deleteCategory(category),
+    });
+  }
+
   const columns: TableColumnsType<CategoryGroup> = [
     {
       title: "Category",
@@ -218,6 +259,14 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
                 <Tag color={playlist.isActive ? "green" : "default"}>
                   {playlist.order}. {playlist.playlist ?? "General"}
                 </Tag>
+                <Button
+                  danger
+                  size="small"
+                  loading={deletingCategoryId === (playlist.id ?? playlist._id)}
+                  onClick={() => confirmDeleteCategory(playlist)}
+                >
+                  Delete
+                </Button>
               </Space>
             );
           })}
@@ -364,7 +413,7 @@ export function AdminContentCategoriesManager({ categories }: { categories: Cate
           dataSource={groupedItems}
           rowKey="key"
           pagination={pagination}
-          scroll={{ x: 900 }}
+          scroll={{ x: 1050, y: 520 }}
           locale={{
             emptyText: "No categories found",
           }}

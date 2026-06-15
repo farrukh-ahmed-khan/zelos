@@ -29,6 +29,30 @@ function getAgeTrackAliases(ageTrack: string) {
   return aliases[ageTrack] ?? [ageTrack];
 }
 
+function schoolLicenseIsActive(school: {
+  licenseStatus?: string;
+  licenseExpiresAt?: Date | null;
+} | null) {
+  if (!school || school.licenseStatus !== "active") {
+    return false;
+  }
+
+  return !school.licenseExpiresAt || school.licenseExpiresAt > new Date();
+}
+
+function schoolAllowsStudentTrack(schoolTracks: string[] | undefined, userAgeTrack: string) {
+  if (!schoolTracks?.length) {
+    return true;
+  }
+
+  if (schoolTracks.includes("all")) {
+    return true;
+  }
+
+  const userTrackAliases = getAgeTrackAliases(userAgeTrack);
+  return schoolTracks.some((track) => userTrackAliases.includes(track));
+}
+
 export async function getAgeTrackVideos(ageTrack: string) {
   await connectToDatabase();
 
@@ -69,9 +93,17 @@ async function filterSchoolScopedVideos(user: UserDocument, videos: VideoDocumen
   }
 
   const [school, assignedVideoIds] = await Promise.all([
-    School.findById(user.schoolId).select("district").lean(),
+    School.findById(user.schoolId).select("district assignedTracks licenseStatus licenseExpiresAt").lean(),
     user.role === "student" ? getAssignedSchoolVideoIds(user.schoolId) : Promise.resolve(new Set<string>()),
   ]);
+
+  if (!school || !schoolLicenseIsActive(school)) {
+    return [];
+  }
+
+  if (user.role === "student" && !schoolAllowsStudentTrack(school.assignedTracks, user.ageTrack)) {
+    return videos.filter((video) => assignedVideoIds.has(video._id.toString()));
+  }
 
   return videos.filter((video) => {
     const scope = video.schoolScope ?? "all-schools";

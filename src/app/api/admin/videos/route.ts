@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // Get the video file
     const videoFile = files.video;
-    if (!videoFile) {
+    if (!videoFile?.filename || !videoFile.buffer.length) {
       throw new ApiError(400, "No video file provided. Use 'video' field name.");
     }
 
@@ -119,7 +119,10 @@ export async function POST(request: NextRequest) {
       throw new ApiError(400, "File size exceeds maximum limit of 500MB");
     }
 
-    const attachmentFile = files.attachment;
+    const attachmentFile =
+      files.attachment?.filename && files.attachment.buffer.length
+        ? files.attachment
+        : undefined;
     const MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024; // 50MB
 
     if (attachmentFile && attachmentFile.buffer.length > MAX_ATTACHMENT_SIZE) {

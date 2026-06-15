@@ -23,6 +23,30 @@ function getAgeTrackAliases(ageTrack: string) {
   return aliases[ageTrack] ?? [ageTrack];
 }
 
+function schoolLicenseIsActive(school: {
+  licenseStatus?: string;
+  licenseExpiresAt?: Date | null;
+} | null) {
+  if (!school || school.licenseStatus !== "active") {
+    return false;
+  }
+
+  return !school.licenseExpiresAt || school.licenseExpiresAt > new Date();
+}
+
+function schoolAllowsStudentTrack(schoolTracks: string[] | undefined, userAgeTrack: string) {
+  if (!schoolTracks?.length) {
+    return true;
+  }
+
+  if (schoolTracks.includes("all")) {
+    return true;
+  }
+
+  const userTrackAliases = getAgeTrackAliases(userAgeTrack);
+  return schoolTracks.some((track) => userTrackAliases.includes(track));
+}
+
 export function serializeSchoolResource(resource: SchoolResourceDocument) {
   return {
     id: resource._id.toString(),
@@ -92,7 +116,15 @@ export async function getSchoolResourcesForUser(user: UserDocument) {
   }
 
   const now = new Date();
-  const school = await School.findById(user.schoolId).select("district").lean();
+  const school = await School.findById(user.schoolId).select("district assignedTracks licenseStatus licenseExpiresAt").lean();
+
+  if (!school || !schoolLicenseIsActive(school)) {
+    return [];
+  }
+
+  if (user.role === "student" && !schoolAllowsStudentTrack(school.assignedTracks, user.ageTrack)) {
+    return [];
+  }
 
   return SchoolResource.find({
     audience: user.role,

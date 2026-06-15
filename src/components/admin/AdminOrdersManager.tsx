@@ -8,6 +8,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Modal,
   Select,
   Switch,
   Table,
@@ -114,6 +115,7 @@ export function AdminOrdersManager({
   const [isUploadingProductImage, setIsUploadingProductImage] = useState(false);
   const [productActionId, setProductActionId] = useState<string | null>(null);
   const [isCreatingGiftCard, setIsCreatingGiftCard] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [form] = Form.useForm<ProductFormValues>();
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const productTypeFilters = [
@@ -523,6 +525,16 @@ export function AdminOrdersManager({
       sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       render: (value) => new Date(value).toLocaleDateString(),
     },
+    {
+      title: "Details",
+      key: "details",
+      width: 110,
+      render: (_, order) => (
+        <Button size="small" onClick={() => setSelectedOrder(order)}>
+          View details
+        </Button>
+      ),
+    },
   ];
 
   const variantColumns: ColumnsType<ProductVariant & { key: number }> = [
@@ -794,6 +806,81 @@ export function AdminOrdersManager({
           locale={{ emptyText: "No store orders yet." }}
         />
       </div>
+
+      <Modal
+        title={selectedOrder ? `Order #${selectedOrder.id.slice(-8).toUpperCase()}` : "Order details"}
+        open={Boolean(selectedOrder)}
+        onCancel={() => setSelectedOrder(null)}
+        footer={[
+          <Button key="close" onClick={() => setSelectedOrder(null)}>
+            Close
+          </Button>,
+        ]}
+        width={760}
+      >
+        {selectedOrder ? (
+          <div className="grid gap-5 text-sm">
+            <div className="grid gap-3 rounded-md bg-[#f8fafc] p-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs font-bold uppercase text-[#667085]">Customer</p>
+                <p className="font-bold text-[#202020]">
+                  {selectedOrder.firstName} {selectedOrder.lastName}
+                </p>
+                <p className="break-all text-[#667085]">{selectedOrder.email}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-[#667085]">Status</p>
+                <Tag color={selectedOrder.status === "cancelled" ? "red" : "green"}>{selectedOrder.status.toUpperCase()}</Tag>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-[#667085]">Placed</p>
+                <p className="font-bold text-[#202020]">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase text-[#667085]">Items</p>
+              <div className="grid gap-2">
+                {selectedOrder.items.map((item) => (
+                  <div key={`${item.productId}-${item.size}-${item.color}`} className="flex items-center justify-between gap-3 rounded-md border border-[#edf0f3] p-3">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#202020]">{item.quantity}x {item.name}</p>
+                      {[item.size, item.color].filter(Boolean).length ? (
+                        <p className="text-xs text-[#667085]">{[item.size, item.color].filter(Boolean).join(" / ")}</p>
+                      ) : null}
+                    </div>
+                    <p className="font-bold">{money(item.unitPriceCents * item.quantity)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-md border border-[#edf0f3] p-3">
+                <p className="text-xs font-bold uppercase text-[#667085]">Shipping Address</p>
+                {selectedOrder.shippingAddress ? (
+                  <div className="mt-2 text-[#344054]">
+                    <p>{selectedOrder.shippingAddress.line1}{selectedOrder.shippingAddress.line2 ? `, ${selectedOrder.shippingAddress.line2}` : ""}</p>
+                    <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zip}</p>
+                    {selectedOrder.shippingAddress.country ? <p>{selectedOrder.shippingAddress.country}</p> : null}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[#667085]">No shipping address.</p>
+                )}
+              </div>
+              <div className="rounded-md border border-[#edf0f3] p-3">
+                <p className="text-xs font-bold uppercase text-[#667085]">Payment</p>
+                <div className="mt-2 grid gap-1">
+                  <p className="flex justify-between"><span>Subtotal</span><span>{money(selectedOrder.subtotalCents)}</span></p>
+                  <p className="flex justify-between"><span>Discount</span><span>{money(selectedOrder.discountCents)}</span></p>
+                  {selectedOrder.giftCardCode ? <p className="text-xs text-[#667085]">Gift card: {selectedOrder.giftCardCode}</p> : null}
+                  <p className="flex justify-between border-t border-[#edf0f3] pt-2 font-black"><span>Total</span><span>{money(selectedOrder.totalCents)}</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 }

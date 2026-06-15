@@ -6,7 +6,6 @@ import User from "@/models/User";
 import { deriveAgeTrack } from "@/lib/users/age-track";
 import { serializeUser } from "@/lib/users/serialize-user";
 import { hashPassword } from "@/lib/auth/password";
-import { queueEmail } from "@/lib/notifications/service";
 import { issueEmailVerification } from "@/lib/auth/email-verification";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -40,15 +39,6 @@ export async function POST(request: NextRequest) {
     });
 
     const verification = await issueEmailVerification(user);
-
-    await queueEmail({
-      template: body.role === "subscriber" ? "welcome-subscriber" : "welcome-mentee",
-      recipient: user.email,
-      payload: {
-        name: user.name,
-        role: user.role,
-      },
-    });
 
     return successResponse(
       {

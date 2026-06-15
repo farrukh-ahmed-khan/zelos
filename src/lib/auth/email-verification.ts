@@ -55,10 +55,22 @@ export async function verifyEmailToken(token: string) {
     user.pendingEmail = null;
   }
 
+  const wasFirstVerification = !user.emailVerifiedAt;
   user.emailVerifiedAt = new Date();
   user.emailVerificationToken = null;
   user.emailVerificationExpiresAt = null;
   await user.save();
+
+  if (wasFirstVerification) {
+    await queueEmail({
+      template: user.role === "subscriber" ? "welcome-subscriber" : "welcome-mentee",
+      recipient: user.email,
+      payload: {
+        name: user.name,
+        role: user.role,
+      },
+    });
+  }
 
   return user;
 }

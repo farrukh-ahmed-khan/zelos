@@ -36,3 +36,25 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return handleApiError(error);
   }
 }
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    await requireAdminPermission(request, "content.manage");
+    const { categoryId } = await context.params;
+
+    await connectToDatabase();
+
+    const category = await ContentCategory.findByIdAndDelete(categoryId);
+
+    if (!category) {
+      throw new ApiError(404, "Content category not found.");
+    }
+
+    return successResponse({
+      message: "Content category deleted.",
+      categoryId,
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

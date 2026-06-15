@@ -25,6 +25,12 @@ function buildInviteUrl(token: string) {
   return `${baseUrl}/accept-school-invite?token=${token}`;
 }
 
+function addLicenseMonths(startDate: Date, durationMonths: number) {
+  const expiresAt = new Date(startDate);
+  expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+  return expiresAt;
+}
+
 async function getPendingInviteCount(params: {
   schoolId: string;
   role: "teacher" | "student";
@@ -96,6 +102,7 @@ export async function createSchool(params: {
   name: string;
   teacherLimit: number;
   studentLimit: number;
+  licenseDurationMonths?: number;
   licenseType?: "school" | "district";
   district?: string;
   licenseStatus?: "active" | "expired" | "suspended";
@@ -112,6 +119,11 @@ export async function createSchool(params: {
     throw new ApiError(409, "A school with this name already exists.");
   }
 
+  const licenseStartsAt = params.licenseStartsAt
+    ? new Date(params.licenseStartsAt)
+    : new Date();
+  const licenseDurationMonths = params.licenseDurationMonths ?? 12;
+
   const school = await School.create({
     name: params.name,
     teacherLimit: params.teacherLimit,
@@ -121,12 +133,11 @@ export async function createSchool(params: {
     teachersCount: 0,
     studentsCount: 0,
     licenseStatus: params.licenseStatus ?? "active",
-    licenseStartsAt: params.licenseStartsAt
-      ? new Date(params.licenseStartsAt)
-      : new Date(),
+    licenseStartsAt,
+    licenseDurationMonths,
     licenseExpiresAt: params.licenseExpiresAt
       ? new Date(params.licenseExpiresAt)
-      : null,
+      : addLicenseMonths(licenseStartsAt, licenseDurationMonths),
     assignedTracks: params.assignedTracks ?? [],
   });
 
