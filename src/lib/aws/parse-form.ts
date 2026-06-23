@@ -1,5 +1,6 @@
 import Busboy from "busboy";
 import { NextRequest } from "next/server";
+import { ApiError } from "@/lib/http";
 
 export interface ParsedFormData {
   fields: Record<string, string>;
@@ -21,7 +22,7 @@ export async function parseFormData(request: NextRequest): Promise<ParsedFormDat
   const contentType = request.headers.get("content-type");
 
   if (!contentType?.includes("multipart/form-data")) {
-    throw new Error("Content type must be multipart/form-data");
+    throw new ApiError(400, "Content type must be multipart/form-data.");
   }
 
   const fields: Record<string, string> = {};
@@ -78,7 +79,7 @@ export async function parseFormData(request: NextRequest): Promise<ParsedFormDat
     // Feed the request body to busboy
     const body = request.body;
     if (!body) {
-      reject(new Error("Request body is empty"));
+      reject(new ApiError(400, "Request body is empty."));
       return;
     }
 

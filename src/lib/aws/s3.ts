@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { ApiError } from "@/lib/http";
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || "us-east-1",
@@ -32,7 +33,7 @@ export async function uploadToS3(params: S3UploadParams): Promise<S3UploadResult
   const bucket = process.env.AWS_S3_BUCKET;
 
   if (!bucket) {
-    throw new Error("AWS_S3_BUCKET environment variable is not set");
+    throw new ApiError(500, "AWS_S3_BUCKET environment variable is not set.");
   }
 
   // Generate a unique key with timestamp
@@ -56,7 +57,10 @@ export async function uploadToS3(params: S3UploadParams): Promise<S3UploadResult
     return { url, key };
   } catch (error) {
     console.error("S3 upload error:", error);
-    throw new Error(`Failed to upload file to S3: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new ApiError(
+      502,
+      `Failed to upload file to S3: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -67,7 +71,7 @@ export async function deleteFromS3(key: string): Promise<void> {
   const bucket = process.env.AWS_S3_BUCKET;
 
   if (!bucket) {
-    throw new Error("AWS_S3_BUCKET environment variable is not set");
+    throw new ApiError(500, "AWS_S3_BUCKET environment variable is not set.");
   }
 
   const command = new DeleteObjectCommand({
@@ -79,6 +83,9 @@ export async function deleteFromS3(key: string): Promise<void> {
     await s3Client.send(command);
   } catch (error) {
     console.error("S3 delete error:", error);
-    throw new Error(`Failed to delete file from S3: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new ApiError(
+      502,
+      `Failed to delete file from S3: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }

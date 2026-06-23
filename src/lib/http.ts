@@ -46,7 +46,11 @@ export function handleApiError(error: unknown) {
   }
 
   if (error instanceof ZodError) {
-    return errorResponse(422, "Validation failed.", error.flatten());
+    return errorResponse(
+      422,
+      error.issues[0]?.message ?? "Validation failed.",
+      error.flatten(),
+    );
   }
 
   if (error instanceof SyntaxError) {
