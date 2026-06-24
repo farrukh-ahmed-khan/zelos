@@ -1,6 +1,15 @@
+"use client";
+
 /* eslint-disable @next/next/no-img-element */
+import { useState } from "react";
+import { Modal } from "antd";
 import Link from "next/link";
 import type React from "react";
+
+type PreviewImage = {
+  src: string;
+  alt: string;
+};
 
 function isSafeUrl(value: string) {
   return value.startsWith("http://") || value.startsWith("https://");
@@ -60,7 +69,7 @@ function renderEmphasis(text: string, keyPrefix: string): React.ReactNode[] {
   return parts;
 }
 
-function renderInline(text: string) {
+function renderInline(text: string, onImageClick: (image: PreviewImage) => void) {
   const parts: React.ReactNode[] = [];
   const pattern = /(!?\[[^\]]+\]\(https?:\/\/[^\r\n]+\))/g;
   let lastIndex = 0;
@@ -77,13 +86,21 @@ function renderInline(text: string) {
 
     if (imageMatch && isSafeUrl(imageMatch[2])) {
       const imageUrl = normalizeMarkdownUrl(imageMatch[2]);
+      const imageAlt = imageMatch[1];
       parts.push(
-        <img
+        <button
           key={`${match.index}-${token}`}
-          src={imageUrl}
-          alt={imageMatch[1]}
-          className="my-3 max-h-[360px] w-full rounded-md border border-[#e4ded1] object-cover"
-        />,
+          type="button"
+          aria-label="Open image preview"
+          className="my-3 block w-full cursor-zoom-in rounded-md border border-[#e4ded1] bg-transparent p-0 transition hover:border-[#8c0504] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c0504]"
+          onClick={() => onImageClick({ src: imageUrl, alt: imageAlt })}
+        >
+          <img
+            src={imageUrl}
+            alt={imageAlt}
+            className="max-h-[360px] w-full rounded-md object-cover"
+          />
+        </button>,
       );
     } else if (linkMatch && isSafeUrl(linkMatch[2])) {
       const linkUrl = normalizeMarkdownUrl(linkMatch[2]);
@@ -113,15 +130,33 @@ function renderInline(text: string) {
 }
 
 export function ForumRichText({ content }: { content: string }) {
+  const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const paragraphs = content.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
 
   return (
-    <div className="grid gap-3 text-sm leading-relaxed text-[#202020]">
-      {paragraphs.map((paragraph, index) => (
-        <p key={`${paragraph}-${index}`} className="whitespace-pre-wrap">
-          {renderInline(paragraph)}
-        </p>
-      ))}
-    </div>
+    <>
+      <div className="grid gap-3 text-sm leading-relaxed text-[#202020]">
+        {paragraphs.map((paragraph, index) => (
+          <p key={`${paragraph}-${index}`} className="whitespace-pre-wrap">
+            {renderInline(paragraph, setPreviewImage)}
+          </p>
+        ))}
+      </div>
+      <Modal
+        open={Boolean(previewImage)}
+        onCancel={() => setPreviewImage(null)}
+        footer={null}
+        centered
+        width="min(92vw, 1100px)"
+      >
+        {previewImage ? (
+          <img
+            src={previewImage.src}
+            alt={previewImage.alt}
+            className="max-h-[80vh] w-full rounded-md object-contain"
+          />
+        ) : null}
+      </Modal>
+    </>
   );
 }
