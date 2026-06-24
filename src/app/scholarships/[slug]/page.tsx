@@ -44,7 +44,6 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             <ScholarshipApplicationForm
               endpoint={`/api/scholarships/${scholarship.id}/apply`}
               requiresDocument={scholarship.applicationRequiresDocument}
-              documentLabel={scholarship.applicationDocumentLabel}
             />
           </div>
         </div>

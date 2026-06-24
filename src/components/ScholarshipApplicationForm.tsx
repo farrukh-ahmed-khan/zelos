@@ -6,11 +6,9 @@ import { api, isApiSuccess } from "@/lib/api/client";
 export function ScholarshipApplicationForm({
   endpoint,
   requiresDocument,
-  documentLabel,
 }: {
   endpoint: string;
   requiresDocument: boolean;
-  documentLabel: string | null;
 }) {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +42,7 @@ export function ScholarshipApplicationForm({
       <textarea name="personalStatement" required rows={6} placeholder="Personal statement" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
       {requiresDocument ? (
         <label className="grid gap-2 text-sm font-bold">
-          {documentLabel || "Application document"}
+          Required document
           <input name="document" required type="file" className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 font-normal" />
         </label>
       ) : (
