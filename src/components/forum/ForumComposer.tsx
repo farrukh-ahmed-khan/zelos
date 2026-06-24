@@ -21,25 +21,86 @@ export function ForumComposer({
   rows = 6,
 }: ForumComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
   const [value, setValue] = useState("");
+  const [hasContent, setHasContent] = useState(false);
 
-  function insertWrap(prefix: string, suffix = prefix, fallback = "text") {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  function escapeHtml(valueToEscape: string) {
+    return valueToEscape
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = value.slice(start, end) || fallback;
-    const nextValue = `${value.slice(0, start)}${prefix}${selected}${suffix}${value.slice(end)}`;
+  function serializeNode(node: ChildNode): string {
+    if (node.nodeType === 3) {
+      return node.textContent?.replace(/\u00a0/g, " ") ?? "";
+    }
+
+    if (node.nodeType !== 1) {
+      return "";
+    }
+
+    const element = node as HTMLElement;
+    const tagName = element.tagName.toLowerCase();
+    const children = Array.from(element.childNodes).map(serializeNode).join("");
+
+    if (tagName === "br") {
+      return "\n";
+    }
+
+    if (tagName === "img") {
+      const src = element.getAttribute("src");
+      if (!src) return "";
+      const alt = element.getAttribute("alt") || "Photo";
+      return `\n![${alt}](${src})\n`;
+    }
+
+    if (tagName === "a") {
+      const href = element.getAttribute("href");
+      if (!href) return children;
+      return `[${children || href}](${href})`;
+    }
+
+    if (tagName === "strong" || tagName === "b") {
+      return `**${children}**`;
+    }
+
+    if (tagName === "em" || tagName === "i") {
+      return `*${children}*`;
+    }
+
+    if (tagName === "div" || tagName === "p") {
+      return `${children}\n`;
+    }
+
+    return children;
+  }
+
+  function syncEditorValue() {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const nextValue = Array.from(editor.childNodes)
+      .map(serializeNode)
+      .join("")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
 
     setValue(nextValue);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
-    });
+    setHasContent(Boolean(nextValue));
+  }
+
+  function runEditorCommand(command: "bold" | "italic") {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    document.execCommand(command);
+    requestAnimationFrame(syncEditorValue);
   }
 
   function insertLink() {
@@ -52,15 +113,37 @@ export function ForumComposer({
       return;
     }
 
-    insertWrap("[", `](${safeUrl})`, "link text");
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) {
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<a href="${escapeHtml(safeUrl)}">link text</a>`,
+      );
+    } else {
+      document.execCommand("createLink", false, safeUrl);
+    }
+
+    requestAnimationFrame(syncEditorValue);
   }
 
   function insertPhoto(url: string) {
-    const textarea = textareaRef.current;
-    const start = textarea?.selectionStart ?? value.length;
+    const editor = editorRef.current;
+    if (!editor) return;
+
     const markdownUrl = encodeURI(url.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29");
-    setValue((currentValue) => `${currentValue.slice(0, start)}\n![Photo](${markdownUrl})\n${currentValue.slice(start)}`);
-    requestAnimationFrame(() => textareaRef.current?.focus());
+    editor.focus();
+    document.execCommand(
+      "insertHTML",
+      false,
+      `<img src="${escapeHtml(markdownUrl)}" alt="Photo" style="display:block;max-width:100%;max-height:220px;border-radius:6px;margin:12px 0;" />`,
+    );
+    requestAnimationFrame(syncEditorValue);
   }
 
   async function uploadPhoto(file: File) {
@@ -97,7 +180,8 @@ export function ForumComposer({
           aria-label="Bold"
           title="Bold"
           className={toolbarButtonClass}
-          onClick={() => insertWrap("**", "**", "bold text")}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => runEditorCommand("bold")}
         >
           <BoldOutlined />
         </button>
@@ -106,7 +190,8 @@ export function ForumComposer({
           aria-label="Italic"
           title="Italic"
           className={toolbarButtonClass}
-          onClick={() => insertWrap("*", "*", "italic text")}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => runEditorCommand("italic")}
         >
           <ItalicOutlined />
         </button>
@@ -115,6 +200,7 @@ export function ForumComposer({
           aria-label="Attach link"
           title="Attach link"
           className={toolbarButtonClass}
+          onMouseDown={(event) => event.preventDefault()}
           onClick={insertLink}
         >
           <LinkOutlined />
@@ -125,6 +211,7 @@ export function ForumComposer({
           title="Upload photo"
           className={toolbarButtonClass}
           disabled={isUploadingImage}
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => fileInputRef.current?.click()}
         >
           <PictureOutlined />
@@ -146,15 +233,31 @@ export function ForumComposer({
           {isUploadingImage ? "Uploading image..." : uploadMessage || "Public post"}
         </p>
       </div>
-      <textarea
-        ref={textareaRef}
+      <input
         name={name}
+        type="hidden"
         value={value}
-        onChange={(event) => setValue(event.target.value)}
-        rows={rows}
-        placeholder={placeholder}
-        className="w-full resize-y bg-white px-4 py-3 text-sm leading-relaxed outline-none placeholder:text-[#9a9489]"
+        readOnly
       />
+      <div className="relative">
+        {!hasContent ? (
+          <span className="pointer-events-none absolute left-4 top-3 text-sm leading-relaxed text-[#9a9489]">
+            {placeholder}
+          </span>
+        ) : null}
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          role="textbox"
+          aria-multiline="true"
+          aria-label={placeholder}
+          onInput={syncEditorValue}
+          onBlur={syncEditorValue}
+          className="w-full overflow-auto bg-white px-4 py-3 text-sm leading-relaxed outline-none"
+          style={{ minHeight: `${rows * 44}px` }}
+        />
+      </div>
     </div>
   );
 }
