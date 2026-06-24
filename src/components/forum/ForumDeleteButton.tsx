@@ -55,7 +55,7 @@ export function ForumDeleteButton({
         type="button"
         onClick={removeTarget}
         disabled={isDeleting}
-        className="rounded-md border border-[#f2b8b5] bg-[#fff4f3] px-3 py-2 text-xs font-black uppercase text-[#8c0504] disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-md border border-[#f2b8b5] bg-[#fff4f3] px-3 py-2 text-xs font-black uppercase text-[#8c0504] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#8c0504] hover:bg-[#8c0504] hover:text-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c0504] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:border-[#f2b8b5] disabled:hover:bg-[#fff4f3] disabled:hover:text-[#8c0504] disabled:hover:shadow-sm"
       >
         {isDeleting ? "Deleting..." : `Delete ${label}`}
       </button>
