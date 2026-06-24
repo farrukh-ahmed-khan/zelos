@@ -6,7 +6,7 @@ export const updateUserBanSchema = z.object({
 
 export const createVideoSchema = z.object({
   title: z.string().trim().min(2).max(160),
-  description: z.string().trim().min(10).max(2000),
+  description: z.string().trim().max(2000),
   ageTrack: z.string().trim().min(2).max(60),
   audience: z
     .enum(["subscriber", "teacher", "student", "public-preview"])
