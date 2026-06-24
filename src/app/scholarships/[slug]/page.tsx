@@ -18,7 +18,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
       <section className="container mt-12 max-w-[1040px]">
         <p className="eyebrow-red">{scholarship.field}</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">{scholarship.name}</h1>
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+        <div className="my-6 grid gap-6 lg:grid-cols-[1fr_0.8fr]">
           <article className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{scholarship.description}</p>
             <h2 className="mt-5 font-bebas text-3xl uppercase">Eligibility</h2>

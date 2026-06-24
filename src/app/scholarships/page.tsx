@@ -11,7 +11,7 @@ export default async function ScholarshipsPage() {
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
       <Header />
-      <section className="container mt-12">
+      <section className="container my-12">
         <p className="eyebrow-red">Scholarships</p>
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">Active Scholarships</h1>
         <Link href="/fund-a-scholarship" className="mt-4 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
