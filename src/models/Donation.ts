@@ -7,6 +7,14 @@ const DonationSchema = new Schema(
     lastName: { type: String, required: true, trim: true, maxlength: 80 },
     email: { type: String, required: true, lowercase: true, trim: true },
     dedication: { type: String, trim: true, maxlength: 300, default: null },
+    purpose: {
+      type: String,
+      enum: ["general", "scholarship"],
+      default: "general",
+      index: true,
+    },
+    scholarshipId: { type: String, default: null, index: true },
+    scholarshipName: { type: String, trim: true, maxlength: 180, default: null },
     status: {
       type: String,
       enum: ["pending", "paid", "failed", "refunded"],
@@ -19,6 +27,8 @@ const DonationSchema = new Schema(
   },
   { timestamps: true, versionKey: false },
 );
+
+DonationSchema.index({ scholarshipId: 1, status: 1, createdAt: -1 });
 
 type Donation = InferSchemaType<typeof DonationSchema>;
 export type DonationDocument = HydratedDocument<Donation>;

@@ -16,12 +16,13 @@ export async function POST(request: NextRequest) {
       type: "scholarship-inquiry",
       name: body.name,
       email: body.email,
-      category: body.budgetRange,
+      category: body.scholarshipAmount,
       message: body.scholarshipConcept,
       metadata: {
         contact: body.contact,
         intendedAudience: body.intendedAudience,
-        budgetRange: body.budgetRange,
+        scholarshipAmount: body.scholarshipAmount,
+        budgetRange: body.scholarshipAmount,
         notes: body.notes ?? "",
       },
     });

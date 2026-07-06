@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import {
+  canAccessForum,
+  getForumAccessDeniedReason,
   getActiveForumCategories,
   getForumCategorySummary,
   getForumThreads,
@@ -67,26 +69,28 @@ export default async function ForumPage({
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
   let canPost = false;
-  let readOnlyReason = "Visitors can read every thread. Sign in to create a public post.";
+  let canView = false;
+  let readOnlyReason = "Sign in with a Young Adults or account owner profile to access the forum.";
 
   if (payload?.sub) {
     await connectToDatabase();
-    const user = await User.findById(payload.sub).select("age forumPostingRevoked status isBanned");
+    const user = await User.findById(payload.sub).select("ageTrack role forumPostingRevoked status isBanned");
+    canView = canAccessForum(user);
 
     if (user?.isBanned || user?.status === "banned") {
       readOnlyReason = "Banned accounts can read the forum but cannot post or reply.";
     } else if (user?.forumPostingRevoked) {
       readOnlyReason = "Your forum posting access has been revoked.";
-    } else if (user && user.age < 16) {
-      readOnlyReason = "Accounts under 16 can read the forum but cannot post or reply.";
-    } else if (user) {
+    } else if (user && canView) {
       canPost = true;
       readOnlyReason = "";
+    } else if (user) {
+      readOnlyReason = getForumAccessDeniedReason(user);
     }
   }
 
-  const threads = await getForumThreads();
-  const categories = await getForumCategorySummary();
+  const threads = canView ? await getForumThreads() : [];
+  const categories = canView ? await getForumCategorySummary() : [];
   const normalizedSearch = searchQuery.toLowerCase();
   const filteredThreads = threads
     .filter((thread) => (activeCategory ? thread.category === activeCategory : true))
@@ -150,7 +154,7 @@ export default async function ForumPage({
       <section className="container py-10">
         {!payload?.sub ? (
           <div className="sticky top-2 z-20 mb-6 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black text-[#212121] shadow-[0_4px_0_#111]">
-            Visitors can read every thread. <Link href="/signup" className="!text-[#8c0504]">Sign up free</Link> or <Link href="/billing" className="!text-[#8c0504]">subscribe</Link> to post and reply.
+            {readOnlyReason} <Link href="/login" className="!text-[#8c0504]">Log in</Link>.
           </div>
         ) : !canPost ? (
           <div className="sticky top-2 z-20 mb-6 rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-3 text-sm font-black text-[#212121] shadow-[0_4px_0_#111]">

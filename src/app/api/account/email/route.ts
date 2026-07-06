@@ -11,6 +11,9 @@ export const runtime = "nodejs";
 export async function PATCH(request: NextRequest) {
   try {
     const user = await requireUser(request);
+    if (user.role === "child") {
+      throw new ApiError(403, "Child account email is managed by the account owner.");
+    }
     const body = updateEmailSchema.parse(await request.json());
 
     await connectToDatabase();

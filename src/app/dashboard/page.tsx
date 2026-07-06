@@ -84,6 +84,7 @@ export default async function DashboardPage() {
     mentorApplicationsResult,
     ordersResult,
     broadcastsResult,
+    childrenResult,
   ] = await Promise.allSettled([
     getEventsWithRsvpStatus(userId),
     getForumThreads(),
@@ -100,6 +101,11 @@ export default async function DashboardPage() {
       .limit(10)
       .lean(),
     BroadcastMessage.find().sort({ createdAt: -1 }).limit(5).lean(),
+    user.role === "parent"
+      ? User.find({ parentId: userId, role: "child" })
+          .select("name email ageTrack status createdAt updatedAt")
+          .sort({ createdAt: 1 })
+      : Promise.resolve([]),
   ]);
 
   const events = eventsResult.status === "fulfilled" ? eventsResult.value : [];
@@ -156,6 +162,10 @@ export default async function DashboardPage() {
           createdAt: broadcast.createdAt,
         }))
       : [];
+  const childAccounts =
+    childrenResult.status === "fulfilled"
+      ? childrenResult.value.map(serializeUser)
+      : [];
 
   return (
     <DashboardShell
@@ -169,6 +179,7 @@ export default async function DashboardPage() {
       subscriberResources={JSON.parse(JSON.stringify(subscriberResources))}
       orders={JSON.parse(JSON.stringify(orders))}
       broadcasts={JSON.parse(JSON.stringify(broadcasts))}
+      childAccounts={JSON.parse(JSON.stringify(childAccounts))}
       subscriptionLabel={resolveSubscriptionLabel(subscription)}
       hasVideoLibraryAccess={hasVideoLibraryAccess}
       needsVideoSubscription={needsVideoSubscription}

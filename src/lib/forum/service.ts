@@ -8,6 +8,28 @@ import ForumThread from "@/models/ForumThread";
 import User from "@/models/User";
 import { FORUM_CATEGORIES } from "@/lib/forum/constants";
 
+const FORUM_ADMIN_ROLES = new Set(["forum-moderator", "sub-admin", "super-admin"]);
+
+export function canAccessForum(user: Pick<UserDocument, "role" | "ageTrack"> | null) {
+  if (!user) {
+    return false;
+  }
+
+  return (
+    user.ageTrack === "young-adult" ||
+    user.role === "parent" ||
+    FORUM_ADMIN_ROLES.has(user.role)
+  );
+}
+
+export function getForumAccessDeniedReason(user: Pick<UserDocument, "role" | "ageTrack"> | null) {
+  if (!user) {
+    return "Sign in with a Young Adults or account owner profile to access the forum.";
+  }
+
+  return "Forum access is available to Young Adults track members and account owners only.";
+}
+
 function stripForumMarkdown(content: string) {
   return content
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, "[Photo]")
@@ -17,12 +39,12 @@ function stripForumMarkdown(content: string) {
 }
 
 export async function requireForumPostingEligibility(user: UserDocument) {
-  if (user.status === "banned" || user.isBanned) {
-    throw new ApiError(403, "Banned accounts can read the forum but cannot post or reply.");
+  if (!canAccessForum(user)) {
+    throw new ApiError(403, getForumAccessDeniedReason(user));
   }
 
-  if (user.age < 16) {
-    throw new ApiError(403, "Users under 16 cannot create forum posts.");
+  if (user.status === "banned" || user.isBanned) {
+    throw new ApiError(403, "Banned accounts can read the forum but cannot post or reply.");
   }
 
   if (user.forumPostingRevoked) {

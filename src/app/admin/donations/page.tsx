@@ -22,6 +22,8 @@ export default async function AdminDonationsPage() {
             email: donation.email,
             amountCents: donation.amountCents,
             dedication: donation.dedication,
+            purpose: donation.purpose ?? "general",
+            scholarshipName: donation.scholarshipName ?? null,
             status: donation.status,
             createdAt: donation.createdAt,
           }))}

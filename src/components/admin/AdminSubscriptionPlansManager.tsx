@@ -11,6 +11,11 @@ type Plan = {
   interval: "monthly" | "annual";
   priceCents: number;
   currency: string;
+  ageTrack: string | null;
+  planKind: "single" | "multi-discount" | "bundle";
+  bundleTracks: string[];
+  multiSubscriptionDiscountPercent: number;
+  allowSeatExpansion: boolean;
   stripePriceId: string | null;
   discountBadge: string | null;
   isPromotional: boolean;
@@ -41,6 +46,7 @@ export function AdminSubscriptionPlansManager({
   const [error, setError] = useState("");
   const [isSubmittingPlan, setIsSubmittingPlan] = useState(false);
   const [isSubmittingPromotion, setIsSubmittingPromotion] = useState(false);
+  const [planKind, setPlanKind] = useState<Plan["planKind"]>("single");
   const [promotionDiscountType, setPromotionDiscountType] =
     useState<PromotionCode["discountType"]>("percent");
   const [togglingPlanId, setTogglingPlanId] = useState<string | null>(null);
@@ -60,6 +66,16 @@ export function AdminSubscriptionPlansManager({
         interval: String(formData.get("interval") ?? "monthly"),
         priceCents: Math.round(Number(formData.get("priceDollars") ?? 0) * 100),
         currency: String(formData.get("currency") ?? "usd"),
+        ageTrack: String(formData.get("ageTrack") ?? ""),
+        planKind,
+        bundleTracks: String(formData.get("bundleTracks") ?? "")
+          .split(",")
+          .map((track) => track.trim())
+          .filter(Boolean),
+        multiSubscriptionDiscountPercent: Number(
+          formData.get("multiSubscriptionDiscountPercent") ?? 0,
+        ),
+        allowSeatExpansion: formData.get("allowSeatExpansion") === "on",
         stripePriceId: String(formData.get("stripePriceId") ?? ""),
         discountBadge: String(formData.get("discountBadge") ?? ""),
         isPromotional: formData.get("isPromotional") === "on",
@@ -75,6 +91,7 @@ export function AdminSubscriptionPlansManager({
       setItems((current) => [result.data.plan, ...current]);
       setMessage("Plan created.");
       form.reset();
+      setPlanKind("single");
     } finally {
       setIsSubmittingPlan(false);
     }
@@ -166,6 +183,57 @@ export function AdminSubscriptionPlansManager({
             <option value="annual">Annual</option>
           </select>
         </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Plan type
+          <select
+            value={planKind}
+            onChange={(event) => setPlanKind(event.target.value as Plan["planKind"])}
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+          >
+            <option value="single">Single learner</option>
+            <option value="multi-discount">Multi-subscription discount</option>
+            <option value="bundle">Pre-made bundle</option>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Single-plan age track
+          <select name="ageTrack" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+            <option value="">Chosen at checkout</option>
+            <option value="child">Children</option>
+            <option value="teen">Teens</option>
+            <option value="young-adult">Young Adults</option>
+          </select>
+        </label>
+        {planKind === "multi-discount" ? (
+          <>
+            <label className="grid gap-2 text-sm font-bold">
+              Multi-seat discount %
+              <input
+                name="multiSubscriptionDiscountPercent"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                defaultValue="0"
+                className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm font-bold">
+              <input name="allowSeatExpansion" type="checkbox" defaultChecked />
+              Allow extra seats over time
+            </label>
+          </>
+        ) : null}
+        {planKind === "bundle" ? (
+          <label className="grid gap-2 text-sm font-bold md:col-span-2">
+            Bundle tracks
+            <input
+              name="bundleTracks"
+              placeholder="Example: child, teen, young-adult"
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+            />
+          </label>
+        ) : null}
         <label className="grid gap-2 text-sm font-bold">
           Currency
           <input name="currency" defaultValue="usd" maxLength={3} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
@@ -268,12 +336,19 @@ export function AdminSubscriptionPlansManager({
               <div>
                 <p className="font-bold text-[#111827]">{plan.name}</p>
                 <p className="mt-1 text-xs font-bold uppercase text-[#667085]">
-                  {plan.interval}
+                  {plan.interval} / {plan.planKind}
                 </p>
               </div>
               {plan.discountBadge ? <span className="rounded-sm bg-[#eef2f7] px-2 py-1 text-xs font-black">{plan.discountBadge}</span> : null}
             </div>
             <p className="mt-3 text-sm text-[#555]">{plan.description}</p>
+            <p className="mt-2 text-xs font-bold text-[#667085]">
+              {plan.planKind === "bundle"
+                ? `Bundle tracks: ${plan.bundleTracks.join(", ") || "not set"}`
+                : plan.planKind === "multi-discount"
+                  ? `${plan.multiSubscriptionDiscountPercent}% multi-seat discount`
+                  : `Track: ${plan.ageTrack ?? "checkout choice"}`}
+            </p>
             <p className="mt-3 font-black">
               {(plan.priceCents / 100).toLocaleString(undefined, {
                 style: "currency",

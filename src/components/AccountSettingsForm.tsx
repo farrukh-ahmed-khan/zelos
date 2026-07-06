@@ -9,6 +9,7 @@ type AccountSettingsFormProps = {
     name: string;
     email: string;
     pendingEmail?: string | null;
+    role: string;
     age: number;
     ageTrack: string;
     interests: string[];
@@ -40,20 +41,6 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
   async function handleProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const formData = new FormData(form);
-    const nextAgeTrack = String(formData.get("ageTrack") ?? user.ageTrack);
-
-    if (nextAgeTrack !== user.ageTrack) {
-      Modal.confirm({
-        title: "Change age track?",
-        content: "Changing age track deletes prior lesson activity and progress for this account.",
-        okText: "Change Track",
-        okButtonProps: { danger: true },
-        onOk: () => submitProfileForm(form),
-      });
-      return;
-    }
-
     await submitProfileForm(form);
   }
 
@@ -64,7 +51,6 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
       await submitJson("/api/account/profile", {
         name: String(formData.get("name") ?? ""),
         age: Number(formData.get("age") ?? user.age),
-        ageTrack: String(formData.get("ageTrack") ?? user.ageTrack),
         interests: String(formData.get("interests") ?? "")
           .split(",")
           .map((item) => item.trim())
@@ -162,16 +148,8 @@ export function AccountSettingsForm({ user }: AccountSettingsFormProps) {
           Age
           <input name="age" type="number" min={1} max={120} defaultValue={user.age} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
-        <label className="grid gap-2 text-sm font-bold">
-          Age track
-          <select name="ageTrack" defaultValue={user.ageTrack} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
-            <option value="child">Children</option>
-            <option value="teen">Teens</option>
-            <option value="young-adult">Young Adults</option>
-          </select>
-        </label>
         <p className="-mt-2 text-xs font-semibold text-[#8c0504]">
-          Changing age track deletes prior lesson activity/progress.
+          Course track access is locked when a subscription or learner seat is purchased.
         </p>
         <label className="grid gap-2 text-sm font-bold">
           Interests

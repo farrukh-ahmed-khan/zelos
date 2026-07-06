@@ -11,8 +11,19 @@ type Plan = {
   interval: string;
   priceCents: number;
   currency: string;
+  ageTrack: string | null;
+  planKind: "single" | "multi-discount" | "bundle";
+  bundleTracks: string[];
+  multiSubscriptionDiscountPercent: number;
+  allowSeatExpansion: boolean;
   discountBadge: string | null;
   stripePriceId: string | null;
+};
+
+type LearnerSeat = {
+  label: string;
+  email: string;
+  ageTrack: "child" | "teen" | "young-adult";
 };
 
 type Subscription = {
@@ -24,24 +35,26 @@ type Subscription = {
   status: string;
   billingStatus: string;
   paymentStatus: string;
+  ageTrack?: string | null;
+  seatCount?: number;
 } | null;
 
 export function BillingPanel({
   plans,
   subscription,
   history,
-  userAgeTrack,
 }: {
   plans: Plan[];
   subscription: Subscription;
   history: Subscription[];
-  userAgeTrack: string;
 }) {
   const [message, setMessage] = useState("");
   const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null);
   const [giftCardCode, setGiftCardCode] = useState("");
   const [promoCode, setPromoCode] = useState("");
-  const [ageTrack, setAgeTrack] = useState(userAgeTrack || "teen");
+  const [seats, setSeats] = useState<LearnerSeat[]>([
+    { label: "Learner 1", email: "", ageTrack: "teen" },
+  ]);
   const [portalAction, setPortalAction] = useState<"portal" | "payment" | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
   const currentPlan = subscription
@@ -65,11 +78,21 @@ export function BillingPanel({
     setCheckoutPlanId(planId);
 
     try {
+      const plan = plans.find((item) => item.id === planId);
+      const checkoutSeats =
+        plan?.planKind === "bundle" && plan.bundleTracks.length
+          ? plan.bundleTracks.map((ageTrack, index) => ({
+              label: seats[index]?.label || `Learner ${index + 1}`,
+              email: seats[index]?.email || "",
+              ageTrack: ageTrack as LearnerSeat["ageTrack"],
+            }))
+          : seats;
       const response = await api.post("/api/billing/checkout", {
         planId,
         giftCardCode: giftCardCode.trim() || undefined,
         promoCode: promoCode.trim() || undefined,
-        ageTrack,
+        ageTrack: checkoutSeats[0]?.ageTrack ?? "teen",
+        seats: checkoutSeats,
       });
       const result = response.data;
 
@@ -81,6 +104,38 @@ export function BillingPanel({
       window.location.assign(result.data.checkoutUrl);
     } finally {
       setCheckoutPlanId(null);
+    }
+  }
+
+  function formatTrack(value: string) {
+    if (value === "child") return "Children";
+    if (value === "teen") return "Teens";
+    if (value === "young-adult") return "Young Adults";
+    return value;
+  }
+
+  function setSeat(index: number, updates: Partial<LearnerSeat>) {
+    setSeats((current) =>
+      current.map((seat, seatIndex) =>
+        seatIndex === index ? { ...seat, ...updates } : seat,
+      ),
+    );
+  }
+
+  function syncSeatsForPlan(plan: Plan) {
+    if (plan.planKind === "bundle" && plan.bundleTracks.length) {
+      setSeats(
+        plan.bundleTracks.map((ageTrack, index) => ({
+          label: seats[index]?.label || `Learner ${index + 1}`,
+          email: seats[index]?.email || "",
+          ageTrack: ageTrack as LearnerSeat["ageTrack"],
+        })),
+      );
+      return;
+    }
+
+    if (!seats.length) {
+      setSeats([{ label: "Learner 1", email: "", ageTrack: "teen" }]);
     }
   }
 
@@ -144,6 +199,8 @@ export function BillingPanel({
             <p className="font-black text-[#202020]">{currentPlanName}</p>
             <p><strong>Status:</strong> {subscription.status} / {subscription.billingStatus}</p>
             <p><strong>Renews or ends:</strong> {new Date(subscription.expiryDate).toLocaleDateString()}</p>
+            {subscription.ageTrack ? <p><strong>Locked track:</strong> {formatTrack(subscription.ageTrack)}</p> : null}
+            {subscription.seatCount ? <p><strong>Learner seats:</strong> {subscription.seatCount}</p> : null}
             <p className="text-[#555]">Subscriptions auto-renew through Stripe unless canceled. Cancellation keeps access through the current paid period.</p>
           </div>
         ) : (
@@ -179,18 +236,6 @@ export function BillingPanel({
       <section className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-4 rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111] md:col-span-2 md:grid-cols-3">
           <label className="grid gap-2 text-sm font-bold">
-            Age track
-            <select
-              value={ageTrack}
-              onChange={(event) => setAgeTrack(event.target.value)}
-              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
-            >
-              <option value="child">Children</option>
-              <option value="teen">Teens</option>
-              <option value="young-adult">Young Adults</option>
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">
             Gift card code
             <input
               value={giftCardCode}
@@ -209,7 +254,7 @@ export function BillingPanel({
             />
           </label>
           <p className="text-xs text-[#666] md:col-span-3">
-            Gift cards or promo codes can be applied to the first subscription checkout payment. Changing age track deletes prior activity/progress.
+            Gift cards or promo codes can be applied to the first subscription checkout payment. Learner tracks are locked once checkout completes.
             {planChangesLocked ? ` Plan changes unlock after ${currentPeriodEndsAt?.toLocaleDateString()}.` : ""}
           </p>
         </div>
@@ -223,6 +268,15 @@ export function BillingPanel({
               {plan.discountBadge ? <span className="rounded-sm bg-[#faff8d] px-2 py-1 text-xs font-black">{plan.discountBadge}</span> : null}
             </div>
             <p className="mt-3 text-sm text-[#555]">{plan.description}</p>
+            <p className="mt-2 text-xs font-black uppercase text-[#8c0504]">
+              {plan.planKind === "bundle"
+                ? `Bundle: ${plan.bundleTracks.map(formatTrack).join(" + ")}`
+                : plan.planKind === "multi-discount"
+                  ? `${plan.multiSubscriptionDiscountPercent}% multi-learner discount`
+                  : plan.ageTrack
+                    ? formatTrack(plan.ageTrack)
+                    : "Choose learner track"}
+            </p>
             <p className="mt-3 font-black">
               {(plan.priceCents / 100).toLocaleString(undefined, {
                 style: "currency",
@@ -231,6 +285,8 @@ export function BillingPanel({
             </p>
             <button
               onClick={() => checkout(plan.id)}
+              onMouseEnter={() => syncSeatsForPlan(plan)}
+              onFocus={() => syncSeatsForPlan(plan)}
               disabled={
                 !plan.stripePriceId ||
                 Boolean(checkoutPlanId) ||
@@ -252,6 +308,67 @@ export function BillingPanel({
                   ? "Opening Checkout..."
                   : "Checkout"}
             </button>
+            {!subscription && !planChangesLocked ? (
+              <div className="mt-4 grid gap-3 rounded-md border border-[#e4ded1] bg-[#fbf7ef] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-black uppercase text-[#8c0504]">Learner Profiles</p>
+                  {plan.planKind === "multi-discount" ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSeats((current) => [
+                          ...current,
+                          { label: `Learner ${current.length + 1}`, email: "", ageTrack: "teen" },
+                        ])
+                      }
+                      className="rounded-md border border-[#212121] bg-white px-2 py-1 text-xs font-black"
+                    >
+                      Add Seat
+                    </button>
+                  ) : null}
+                </div>
+                {(plan.planKind === "bundle" && plan.bundleTracks.length
+                  ? plan.bundleTracks.map((ageTrack, index) => ({
+                      label: seats[index]?.label || `Learner ${index + 1}`,
+                      email: seats[index]?.email || "",
+                      ageTrack,
+                    }))
+                  : seats.slice(0, plan.planKind === "multi-discount" ? 12 : 1)
+                ).map((seat, index) => (
+                  <div key={`${plan.id}-${index}`} className="grid gap-2 md:grid-cols-[1fr_1fr_140px]">
+                    <input
+                      value={seat.label}
+                      onChange={(event) => setSeat(index, { label: event.target.value })}
+                      placeholder="Learner name"
+                      className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
+                    />
+                    <input
+                      value={seat.email}
+                      onChange={(event) => setSeat(index, { email: event.target.value })}
+                      placeholder="Optional learner email"
+                      className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
+                    />
+                    {plan.planKind === "bundle" ? (
+                      <span className="rounded-md border border-[#d8d2c5] bg-white px-3 py-2 text-sm font-bold">
+                        {formatTrack(seat.ageTrack)}
+                      </span>
+                    ) : (
+                      <select
+                        value={seat.ageTrack}
+                        onChange={(event) =>
+                          setSeat(index, { ageTrack: event.target.value as LearnerSeat["ageTrack"] })
+                        }
+                        className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
+                      >
+                        <option value="child">Children</option>
+                        <option value="teen">Teens</option>
+                        <option value="young-adult">Young Adults</option>
+                      </select>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </article>
         ))}
       </section>

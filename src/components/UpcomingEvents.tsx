@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getEventsWithRsvpStatus } from "@/lib/events/service";
 
 function timeLabel(date: Date): string {
-  const day = date.getDate();
   const weekday = date.toLocaleString("en-US", { weekday: "long" });
   const hour = date.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit" });
   return `${weekday} : ${hour}`;

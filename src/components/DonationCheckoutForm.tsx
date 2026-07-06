@@ -8,12 +8,19 @@ type SelectedAmount = number | "custom";
 
 export function DonationCheckoutForm({
   donor,
+  scholarships = [],
+  selectedScholarshipId = "",
 }: {
   donor?: {
     firstName?: string;
     lastName?: string;
     email?: string;
   };
+  scholarships?: Array<{
+    id: string;
+    name: string;
+  }>;
+  selectedScholarshipId?: string;
 }) {
   const [selectedAmount, setSelectedAmount] = useState<SelectedAmount>(25);
   const [customAmount, setCustomAmount] = useState("");
@@ -40,6 +47,7 @@ export function DonationCheckoutForm({
         lastName: String(formData.get("lastName") ?? ""),
         email: String(formData.get("email") ?? ""),
         dedication: String(formData.get("dedication") ?? ""),
+        scholarshipId: String(formData.get("scholarshipId") ?? "") || undefined,
       });
       const result = response.data;
 
@@ -107,6 +115,21 @@ export function DonationCheckoutForm({
           />
         </label>
       ) : null}
+      <label className="grid gap-2 text-sm font-bold">
+        Donation purpose
+        <select
+          name="scholarshipId"
+          defaultValue={selectedScholarshipId}
+          className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
+        >
+          <option value="">Overall Zelos student program</option>
+          {scholarships.map((scholarship) => (
+            <option key={scholarship.id} value={scholarship.id}>
+              {scholarship.name}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           name="firstName"

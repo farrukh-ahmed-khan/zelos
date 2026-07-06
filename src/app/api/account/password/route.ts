@@ -10,6 +10,9 @@ export const runtime = "nodejs";
 export async function PATCH(request: NextRequest) {
   try {
     const authUser = await requireUser(request);
+    if (authUser.role === "child") {
+      throw new ApiError(403, "Child account password is managed by the account owner.");
+    }
     const body = updatePasswordSchema.parse(await request.json());
 
     const user = await User.findById(authUser._id).select("+password");

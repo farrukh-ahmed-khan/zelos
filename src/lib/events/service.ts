@@ -25,6 +25,7 @@ function serializeEvent(event: {
   speakers?: EventSpeaker[];
   recap?: string | null;
   recapImageUrl?: string | null;
+  recapVideoUrl?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
   meetingLink?: string | null;
@@ -42,6 +43,7 @@ function serializeEvent(event: {
     speakers: event.speakers ?? [],
     recap: event.recap ?? null,
     recapImageUrl: event.recapImageUrl ?? null,
+    recapVideoUrl: event.recapVideoUrl ?? null,
     meetingLink: event.meetingLink ?? null,
     createdAt: event.createdAt,
     updatedAt: event.updatedAt,
@@ -131,6 +133,7 @@ export async function createEvent(params: {
   speakers?: EventSpeaker[];
   recap?: string;
   recapImageUrl?: string;
+  recapVideoUrl?: string;
 }) {
   await connectToDatabase();
   return Event.create({
@@ -141,6 +144,7 @@ export async function createEvent(params: {
     speakers: params.speakers ?? [],
     recap: params.recap || null,
     recapImageUrl: params.recapImageUrl || null,
+    recapVideoUrl: params.recapVideoUrl || null,
     status: "scheduled",
   });
 }
@@ -201,6 +205,7 @@ export async function updateEventDetails(params: {
     speakers?: EventSpeaker[];
     recap?: string | null;
     recapImageUrl?: string | null;
+    recapVideoUrl?: string | null;
     status?: "scheduled" | "updated" | "cancelled";
   };
 }) {

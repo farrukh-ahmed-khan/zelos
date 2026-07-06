@@ -153,6 +153,8 @@ export async function getAdminAnalyticsOverview() {
       lastName: donation.lastName,
       email: donation.email,
       amountCents: donation.amountCents,
+      purpose: donation.purpose ?? "general",
+      scholarshipName: donation.scholarshipName ?? null,
       status: donation.status,
       createdAt: donation.createdAt,
     })),

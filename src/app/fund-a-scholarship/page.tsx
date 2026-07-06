@@ -29,7 +29,7 @@ export default function FundScholarshipPage() {
               { name: "contact", label: "Best contact method", required: true },
               { name: "scholarshipConcept", label: "Scholarship concept", textarea: true, required: true },
               { name: "intendedAudience", label: "Intended audience", required: true },
-              { name: "budgetRange", label: "Budget range", required: true },
+              { name: "scholarshipAmount", label: "Scholarship amount", required: true },
               { name: "notes", label: "Notes", textarea: true },
               { name: "companyWebsite", label: "", type: "hidden" },
             ]}

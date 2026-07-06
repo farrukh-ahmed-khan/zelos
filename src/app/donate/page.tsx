@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
+import { getActiveScholarships, serializeScholarship } from "@/lib/scholarships/service";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,21 @@ function splitName(name: string) {
   };
 }
 
-export default async function DonatePage() {
+export default async function DonatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scholarship?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
+  const scholarships = (await getActiveScholarships()).map(serializeScholarship);
+  const selectedScholarship =
+    scholarships.find(
+      (scholarship) =>
+        scholarship.id === resolvedSearchParams.scholarship ||
+        scholarship.slug === resolvedSearchParams.scholarship,
+    ) ?? null;
   const donor = payload
     ? {
         ...splitName(payload.name),
@@ -41,7 +54,14 @@ export default async function DonatePage() {
               501(c)(3) tax-deductible nonprofit. EIN: {process.env.NEXT_PUBLIC_NONPROFIT_EIN ?? "pending"}
             </p>
           </div>
-          <DonationCheckoutForm donor={donor} />
+          <DonationCheckoutForm
+            donor={donor}
+            scholarships={scholarships.map((scholarship) => ({
+              id: scholarship.id,
+              name: scholarship.name,
+            }))}
+            selectedScholarshipId={selectedScholarship?.id ?? ""}
+          />
         </div>
       </section>
       <Footer />

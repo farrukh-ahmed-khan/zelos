@@ -10,13 +10,12 @@ import { createCheckoutSessionSchema } from "@/lib/validation/billing";
 import GiftCard from "@/models/GiftCard";
 import PromotionCode from "@/models/PromotionCode";
 import SubscriptionPlan from "@/models/SubscriptionPlan";
-import VideoProgress from "@/models/VideoProgress";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireUser(request, ["subscriber"]);
+    const user = await requireUser(request, ["subscriber", "parent"]);
     const body = createCheckoutSessionSchema.parse(await request.json());
     const plan = await SubscriptionPlan.findById(body.planId);
 
@@ -95,10 +94,24 @@ export async function POST(request: NextRequest) {
       promotionCodeId = promotionCode.stripePromotionCodeId;
     }
 
-    if (user.ageTrack !== body.ageTrack) {
-      await VideoProgress.deleteMany({ userId: user._id.toString() });
-      user.ageTrack = body.ageTrack;
-      await user.save();
+    const planKind = plan.planKind ?? "single";
+    const seats =
+      planKind === "bundle" && plan.bundleTracks?.length
+        ? plan.bundleTracks.map((ageTrack, index) => ({
+            label: body.seats?.[index]?.label || `Learner ${index + 1}`,
+            email: body.seats?.[index]?.email || "",
+            ageTrack,
+          }))
+        : body.seats?.length
+          ? body.seats
+          : [{ label: user.name, email: user.email, ageTrack: body.ageTrack }];
+
+    if (planKind === "bundle" && seats.length !== (plan.bundleTracks?.length ?? 0)) {
+      throw new ApiError(422, "This bundle requires one learner profile per bundled track.");
+    }
+
+    if (planKind !== "multi-discount" && seats.length > 1 && planKind !== "bundle") {
+      throw new ApiError(422, "Choose a bundle or multi-subscription plan for multiple learner seats.");
     }
 
     const baseUrl =
@@ -112,6 +125,7 @@ export async function POST(request: NextRequest) {
         userId: user._id.toString(),
         planId: plan._id.toString(),
         ageTrack: body.ageTrack,
+        seats: JSON.stringify(seats),
         giftCardCode,
         giftCardAppliedCents: String(giftCardAppliedCents),
       },

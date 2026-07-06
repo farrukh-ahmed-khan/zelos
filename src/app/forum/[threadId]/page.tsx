@@ -7,7 +7,11 @@ import { ForumDeleteButton } from "@/components/forum/ForumDeleteButton";
 import { ForumReportButton } from "@/components/forum/ForumReportButton";
 import { ForumRichText } from "@/components/forum/ForumRichText";
 import { Header } from "@/components/Header";
-import { getForumThreadById } from "@/lib/forum/service";
+import {
+  canAccessForum,
+  getForumAccessDeniedReason,
+  getForumThreadById,
+} from "@/lib/forum/service";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { hasAdminPermission } from "@/lib/auth/roles";
@@ -25,24 +29,26 @@ export default async function ForumThreadPage({
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   const payload = token ? await verifyAuthToken(token).catch(() => null) : null;
   let canPost = false;
+  let canView = false;
   let canModerate = false;
-  let readOnlyReason = "Visitors can read every thread. Sign in to reply publicly.";
+  let readOnlyReason = "Sign in with a Young Adults or account owner profile to access the forum.";
 
   if (payload?.sub) {
     await connectToDatabase();
     const user = await User.findById(payload.sub).select(
-      "age adminPermissions emailVerifiedAt forumPostingRevoked isBanned role status",
+      "ageTrack adminPermissions emailVerifiedAt forumPostingRevoked isBanned role status",
     );
+    canView = canAccessForum(user);
 
     if (user?.isBanned || user?.status === "banned") {
       readOnlyReason = "Banned accounts can read the forum but cannot post or reply.";
     } else if (user?.forumPostingRevoked) {
       readOnlyReason = "Your forum posting access has been revoked.";
-    } else if (user && user.age < 16) {
-      readOnlyReason = "Accounts under 16 can read the forum but cannot post or reply.";
-    } else if (user) {
+    } else if (user && canView) {
       canPost = true;
       readOnlyReason = "";
+    } else if (user) {
+      readOnlyReason = getForumAccessDeniedReason(user);
     }
 
     canModerate = Boolean(
@@ -51,6 +57,25 @@ export default async function ForumThreadPage({
         !user.isBanned &&
         !["banned", "deactivated", "suspended"].includes(user.status ?? "") &&
         hasAdminPermission(user.role, user.adminPermissions, "forum.moderate"),
+    );
+  }
+
+  if (!canView) {
+    return (
+      <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
+        <Header />
+        <section className="container max-w-[720px] py-16">
+          <div className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
+            <p className="eyebrow-red">Community Forum</p>
+            <h1 className="font-bebas text-4xl uppercase leading-none">Track access required</h1>
+            <p className="mt-3 text-sm font-semibold text-[#555]">{readOnlyReason}</p>
+            <Link href="/login" className="mt-4 inline-flex rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111]">
+              Log in
+            </Link>
+          </div>
+        </section>
+        <Footer />
+      </main>
     );
   }
 
@@ -107,7 +132,7 @@ export default async function ForumThreadPage({
           <ForumReplyForm threadId={thread.id} canPost={canPost} readOnlyReason={readOnlyReason} />
           {!payload?.sub ? (
             <div className="rounded-md border-2 border-[#212121] bg-[#faff8d] p-4 text-sm font-black shadow-[0_4px_0_#111]">
-              Visitors: <Link href="/signup" className="!text-[#8c0504]">sign up free</Link> or <Link href="/billing" className="!text-[#8c0504]">subscribe</Link> to reply.
+              <Link href="/login" className="!text-[#8c0504]">Log in</Link> with a Young Adults or account owner profile to reply.
             </div>
           ) : null}
         </div>

@@ -1,14 +1,17 @@
 import { NextRequest } from "next/server";
-import { handleApiError, successResponse } from "@/lib/http";
+import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { reportPostSchema } from "@/lib/validation/forum";
-import { reportForumPost } from "@/lib/forum/service";
+import { canAccessForum, getForumAccessDeniedReason, reportForumPost } from "@/lib/forum/service";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser(request);
+    if (!canAccessForum(user)) {
+      throw new ApiError(403, getForumAccessDeniedReason(user));
+    }
     const body = reportPostSchema.parse(await request.json());
 
     const report = await reportForumPost({

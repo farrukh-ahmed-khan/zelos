@@ -33,6 +33,28 @@ const SubscriptionSchema = new Schema(
       trim: true,
       default: null,
     },
+    ageTrack: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
+    seatCount: {
+      type: Number,
+      min: 1,
+      default: 1,
+    },
+    seats: {
+      type: [
+        {
+          childUserId: { type: String, default: null, index: true },
+          label: { type: String, trim: true, maxlength: 120, default: "" },
+          ageTrack: { type: String, trim: true, required: true },
+          email: { type: String, lowercase: true, trim: true, default: "" },
+        },
+      ],
+      default: [],
+    },
     startDate: {
       type: Date,
       required: true,
@@ -93,6 +115,7 @@ const SubscriptionSchema = new Schema(
 );
 
 SubscriptionSchema.index({ userId: 1, createdAt: -1 });
+SubscriptionSchema.index({ userId: 1, ageTrack: 1, status: 1 });
 
 type Subscription = InferSchemaType<typeof SubscriptionSchema>;
 export type SubscriptionDocument = HydratedDocument<Subscription>;

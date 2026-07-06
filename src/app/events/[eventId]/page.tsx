@@ -76,9 +76,14 @@ export default async function EventDetailPage({
             </div>
           </>
         ) : null}
-        {event.recap || event.recapImageUrl ? (
+        {event.recap || event.recapImageUrl || event.recapVideoUrl ? (
           <section className="mt-8 rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
             <h2 className="font-bebas text-3xl uppercase">Event Recap</h2>
+            {event.recapVideoUrl ? (
+              <video className="mt-3 aspect-video w-full rounded-md bg-black" controls preload="metadata">
+                <source src={event.recapVideoUrl} />
+              </video>
+            ) : null}
             {event.recapImageUrl ? <img src={event.recapImageUrl} alt="" className="mt-3 aspect-video w-full rounded-md object-cover" /> : null}
             {event.recap ? <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#555]">{event.recap}</p> : null}
           </section>

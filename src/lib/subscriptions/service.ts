@@ -157,6 +157,8 @@ export async function createSubscriptionForUser(params: {
   planType: SubscriptionPlanType;
   planId?: string | null;
   planName?: string | null;
+  ageTrack?: string | null;
+  seatCount?: number;
   status?: "active" | "suspended" | "canceled";
 }) {
   const { user, planType, status = "active" } = params;
@@ -165,10 +167,10 @@ export async function createSubscriptionForUser(params: {
     throw new ApiError(403, "Child accounts cannot access billing.");
   }
 
-  if (user.role !== "subscriber") {
+  if (!["subscriber", "parent"].includes(user.role)) {
     throw new ApiError(
       403,
-      "Only users with the subscriber role can create subscriptions.",
+      "Only subscribers and account owners can create subscriptions.",
     );
   }
 
@@ -207,6 +209,8 @@ export async function createSubscriptionForUser(params: {
     planType,
     planId: params.planId ?? null,
     planName: params.planName ?? null,
+    ageTrack: params.ageTrack ?? user.ageTrack ?? null,
+    seatCount: params.seatCount ?? 1,
     startDate,
     expiryDate,
     status,

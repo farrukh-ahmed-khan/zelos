@@ -45,6 +45,26 @@ const SubscriptionPlanSchema = new Schema(
       default: null,
       index: true,
     },
+    planKind: {
+      type: String,
+      enum: ["single", "multi-discount", "bundle"],
+      default: "single",
+      index: true,
+    },
+    bundleTracks: {
+      type: [String],
+      default: [],
+    },
+    multiSubscriptionDiscountPercent: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    allowSeatExpansion: {
+      type: Boolean,
+      default: true,
+    },
     discountBadge: {
       type: String,
       trim: true,

@@ -73,6 +73,12 @@ const EventSchema = new Schema(
       maxlength: 2048,
       default: null,
     },
+    recapVideoUrl: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
+    },
     status: {
       type: String,
       enum: ["scheduled", "updated", "cancelled"],

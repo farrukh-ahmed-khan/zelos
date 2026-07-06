@@ -3,6 +3,7 @@ import { handleApiError, successResponse } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { createThreadSchema } from "@/lib/validation/forum";
 import {
+  canAccessForum,
   createForumThread,
   getForumThreads,
   requireForumPostingEligibility,
@@ -10,8 +11,12 @@ import {
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const user = await requireUser(request);
+    if (!canAccessForum(user)) {
+      await requireForumPostingEligibility(user);
+    }
     const threads = await getForumThreads();
 
     return successResponse({

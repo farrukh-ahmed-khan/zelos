@@ -6,9 +6,10 @@ import VideoProgress from "@/models/VideoProgress";
 import { getAssignedSchoolVideoIds } from "@/lib/schools/service";
 import School from "@/models/School";
 import ContentCategory from "@/models/ContentCategory";
+import { getLatestSubscriptionByUserId } from "@/lib/subscriptions/service";
 
 const REQUIRED_COMPLETION_PERCENTAGE = 95;
-const SUBSCRIPTION_VIDEO_ROLES = new Set(["subscriber", "child"]);
+const SUBSCRIPTION_VIDEO_ROLES = new Set(["subscriber", "parent", "child"]);
 
 export function requiresSubscriptionForVideos(user: UserDocument) {
   return SUBSCRIPTION_VIDEO_ROLES.has(user.role);
@@ -26,7 +27,7 @@ function getAgeTrackAliases(ageTrack: string) {
     Adults: ["adult", "Adults"],
   };
 
-  return aliases[ageTrack] ?? [ageTrack];
+  return [...new Set([...(aliases[ageTrack] ?? [ageTrack]), "all"])];
 }
 
 function schoolLicenseIsActive(school: {
@@ -66,6 +67,14 @@ async function getCandidateVideosForUser(user: UserDocument) {
   await connectToDatabase();
 
   const audience = resolveVideoAudienceForUser(user);
+  const parentTracks =
+    user.role === "parent"
+      ? await getPurchasedParentTracks(user._id.toString(), user.ageTrack)
+      : [];
+  const ageTrackValues =
+    user.role === "parent"
+      ? [...new Set(parentTracks.flatMap(getAgeTrackAliases))]
+      : getAgeTrackAliases(user.ageTrack);
 
   const query =
     audience === "teacher"
@@ -75,12 +84,25 @@ async function getCandidateVideosForUser(user: UserDocument) {
         }
       : {
           audience,
-          ageTrack: { $in: getAgeTrackAliases(user.ageTrack) },
+          ageTrack: { $in: ageTrackValues },
           releaseDate: { $not: { $gt: new Date() } },
           ...(user.role === "mentee" ? { isFreePreview: true } : {}),
         };
 
   return Video.find(query).sort({ order: 1, createdAt: 1 });
+}
+
+async function getPurchasedParentTracks(userId: string, fallbackTrack: string) {
+  const subscription = await getLatestSubscriptionByUserId(userId);
+  const tracks = (subscription?.seats ?? [])
+    .map((seat) => seat.ageTrack)
+    .filter(Boolean);
+
+  if (subscription?.ageTrack) {
+    tracks.push(subscription.ageTrack);
+  }
+
+  return tracks.length ? tracks : [fallbackTrack];
 }
 
 async function filterSchoolScopedVideos(user: UserDocument, videos: VideoDocument[]) {
@@ -334,7 +356,7 @@ export async function buildPaidIntroVideo(user: UserDocument) {
   const video = await Video.findOne({
     audience: "subscriber",
     isMissionVideo: true,
-    ageTrack: { $in: [...getAgeTrackAliases(user.ageTrack), "all"] },
+    ageTrack: { $in: getAgeTrackAliases(user.ageTrack) },
     releaseDate: { $not: { $gt: new Date() } },
   }).sort({ order: 1, createdAt: 1 });
 
@@ -403,10 +425,14 @@ export async function resolveCompletableVideo(params: {
   const video = await Video.findById(videoId);
 
   const audience = resolveVideoAudienceForUser(user);
+  const allowedTracks =
+    user.role === "parent"
+      ? [...new Set((await getPurchasedParentTracks(user._id.toString(), user.ageTrack)).flatMap(getAgeTrackAliases))]
+      : getAgeTrackAliases(user.ageTrack);
 
   if (
     !video ||
-    (audience !== "teacher" && !getAgeTrackAliases(user.ageTrack).includes(video.ageTrack)) ||
+    (audience !== "teacher" && !allowedTracks.includes(video.ageTrack)) ||
     video.audience !== audience
   ) {
     throw new ApiError(404, "Video not found for this user.");

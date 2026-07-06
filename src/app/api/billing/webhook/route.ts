@@ -9,6 +9,7 @@ import User from "@/models/User";
 import Donation from "@/models/Donation";
 import { markOrderPaid } from "@/lib/store/service";
 import GiftCard from "@/models/GiftCard";
+import { hashPassword } from "@/lib/auth/password";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,40 @@ function addInterval(startDate: Date, interval: "monthly" | "annual") {
   return expiryDate;
 }
 
+function parseCheckoutSeats(value: unknown, fallbackAgeTrack: string) {
+  if (typeof value !== "string" || !value) {
+    return [{ label: "Learner 1", email: "", ageTrack: fallbackAgeTrack }];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (!Array.isArray(parsed)) {
+      return [{ label: "Learner 1", email: "", ageTrack: fallbackAgeTrack }];
+    }
+
+    return parsed
+      .map((seat, index) => ({
+        label:
+          typeof seat?.label === "string" && seat.label.trim()
+            ? seat.label.trim()
+            : `Learner ${index + 1}`,
+        email: typeof seat?.email === "string" ? seat.email.trim().toLowerCase() : "",
+        ageTrack:
+          ["child", "teen", "young-adult"].includes(seat?.ageTrack)
+            ? seat.ageTrack
+            : fallbackAgeTrack,
+      }))
+      .slice(0, 12);
+  } catch {
+    return [{ label: "Learner 1", email: "", ageTrack: fallbackAgeTrack }];
+  }
+}
+
+function generatePassword() {
+  return `Zelos${Math.random().toString(36).slice(2, 8)}${Math.floor(1000 + Math.random() * 9000)}!`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
@@ -82,7 +117,10 @@ export async function POST(request: NextRequest) {
               donorName: `${donation.firstName} ${donation.lastName}`,
               amountCents: donation.amountCents,
               donationId: donation._id.toString(),
-              purpose: "Aiding students through Zelos programs",
+              purpose:
+                donation.purpose === "scholarship" && donation.scholarshipName
+                  ? donation.scholarshipName
+                  : "Aiding students through Zelos programs",
             },
           });
         }
@@ -111,11 +149,72 @@ export async function POST(request: NextRequest) {
 
         const startDate = new Date();
         const expiryDate = addInterval(startDate, plan.interval);
+        const fallbackAgeTrack = session.metadata?.ageTrack || user.ageTrack;
+        const checkoutSeats = parseCheckoutSeats(session.metadata?.seats, fallbackAgeTrack);
+        const createdSeats = [];
+
+        if (user.role === "parent") {
+          for (const [index, seat] of checkoutSeats.entries()) {
+            const password = generatePassword();
+            const childEmail =
+              seat.email ||
+              `${user.email.replace(/@/, `+learner${Date.now()}${index}@`)}`;
+            const existingChild = await User.findOne({ email: childEmail });
+
+            if (existingChild) {
+              createdSeats.push({
+                childUserId: existingChild._id.toString(),
+                label: seat.label,
+                ageTrack: existingChild.ageTrack,
+                email: existingChild.email,
+              });
+              continue;
+            }
+
+            const child = await User.create({
+              name: seat.label,
+              email: childEmail,
+              password: await hashPassword(password),
+              role: "child",
+              age: seat.ageTrack === "child" ? 10 : seat.ageTrack === "teen" ? 15 : 19,
+              ageTrack: seat.ageTrack,
+              parentId: user._id.toString(),
+              interests: [],
+              emailVerifiedAt: new Date(),
+              termsAcceptedAt: new Date(),
+              termsVersion: "v1",
+              status: "active",
+            });
+
+            createdSeats.push({
+              childUserId: child._id.toString(),
+              label: seat.label,
+              ageTrack: seat.ageTrack,
+              email: child.email,
+            });
+
+            await queueEmail({
+              template: "child-seat-credentials",
+              recipient: user.email,
+              payload: {
+                parentName: user.name,
+                childName: child.name,
+                childEmail: child.email,
+                temporaryPassword: password,
+                ageTrack: child.ageTrack,
+              },
+            });
+          }
+        }
+
         await Subscription.create({
           userId: user._id.toString(),
           planType: plan.interval,
           planId: plan._id.toString(),
           planName: plan.name,
+          ageTrack: user.role === "parent" ? null : fallbackAgeTrack,
+          seatCount: user.role === "parent" ? createdSeats.length : 1,
+          seats: user.role === "parent" ? createdSeats : checkoutSeats,
           startDate,
           expiryDate,
           status: "active",

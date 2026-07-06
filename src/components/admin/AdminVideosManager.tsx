@@ -48,6 +48,7 @@ type SchoolScope = "global" | "all-schools" | "specific-schools" | "district";
 const TEACHER_TRACK = "Teachers";
 const formLabelClass = "grid gap-2 text-sm font-bold text-[#202020]";
 const ageTrackOptions = [
+  { value: "all", label: "All Tracks" },
   { value: "child", label: "Children" },
   { value: "teen", label: "Teens" },
   { value: "young-adult", label: "Young Adults" },

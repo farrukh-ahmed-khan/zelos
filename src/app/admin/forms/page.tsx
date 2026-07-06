@@ -27,7 +27,7 @@ export default async function AdminFormsPage() {
               </div>
               <p className="mt-3 whitespace-pre-wrap">{submission.message}</p>
               <dl className="mt-3 grid gap-2 rounded-md bg-[#f8fafc] p-3 sm:grid-cols-2">
-                <div><dt className="font-bold">Budget range</dt><dd>{submission.metadata?.budgetRange as string}</dd></div>
+                <div><dt className="font-bold">Scholarship amount</dt><dd>{(submission.metadata?.scholarshipAmount ?? submission.metadata?.budgetRange) as string}</dd></div>
                 <div><dt className="font-bold">Contact</dt><dd>{submission.metadata?.contact as string}</dd></div>
                 <div><dt className="font-bold">Audience</dt><dd>{submission.metadata?.intendedAudience as string}</dd></div>
                 <div><dt className="font-bold">Notes</dt><dd>{(submission.metadata?.notes as string) || "-"}</dd></div>

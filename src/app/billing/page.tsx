@@ -46,7 +46,6 @@ export default async function BillingPage() {
               plans={JSON.parse(JSON.stringify(plans.map(serializeSubscriptionPlan)))}
               subscription={JSON.parse(JSON.stringify(serializeSubscription(currentSubscription)))}
               history={JSON.parse(JSON.stringify(history.map(serializeSubscription)))}
-              userAgeTrack={user.ageTrack}
             />
           </div>
         </div>

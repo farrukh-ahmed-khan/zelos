@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ScholarshipApplicationForm } from "@/components/ScholarshipApplicationForm";
-import { getScholarshipBySlug, serializeScholarship } from "@/lib/scholarships/service";
+import {
+  getScholarshipBySlug,
+  getScholarshipDonationTotals,
+  serializeScholarship,
+} from "@/lib/scholarships/service";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +16,8 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
   const scholarshipDoc = await getScholarshipBySlug(slug);
   if (!scholarshipDoc) notFound();
   const scholarship = serializeScholarship(scholarshipDoc);
+  const donationTotals = await getScholarshipDonationTotals([scholarship.id]);
+  const donationTotal = donationTotals.get(scholarship.id) ?? 0;
 
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
@@ -31,6 +38,10 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                 <dd>${(scholarship.awardAmountCents / 100).toLocaleString()}</dd>
               </div>
               <div>
+                <dt className="font-black uppercase text-[#8c0504]">Donated</dt>
+                <dd>${(donationTotal / 100).toLocaleString()}</dd>
+              </div>
+              <div>
                 <dt className="font-black uppercase text-[#8c0504]">Recipients</dt>
                 <dd>{scholarship.numberOfRecipients}</dd>
               </div>
@@ -41,6 +52,9 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             </dl>
           </article>
           <div className="grid gap-5">
+            <Link href={`/donate?scholarship=${scholarship.slug}`} className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-center text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
+              Donate to this scholarship
+            </Link>
             <ScholarshipApplicationForm
               endpoint={`/api/scholarships/${scholarship.id}/apply`}
               requiresDocument={scholarship.applicationRequiresDocument}

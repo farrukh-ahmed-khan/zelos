@@ -70,7 +70,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           name: String(formData.get("name") ?? ""),
           email: String(formData.get("email") ?? ""),
           password: String(formData.get("password") ?? ""),
-          role: "subscriber",
+          role: "parent",
           age: Number(formData.get("age") ?? 0),
           termsAccepted: formData.get("termsAccepted") === "on",
           termsVersion: "v1",

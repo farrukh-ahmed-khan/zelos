@@ -50,6 +50,13 @@ export const createSubscriptionPlanSchema = z.object({
   currency: z.string().trim().length(3).default("usd"),
   ageTrack: z.string().trim().max(60).optional(),
   stripePriceId: z.string().trim().max(180).optional(),
+  planKind: z.enum(["single", "multi-discount", "bundle"]).optional(),
+  bundleTracks: z
+    .array(z.enum(["child", "teen", "young-adult"]))
+    .max(12)
+    .optional(),
+  multiSubscriptionDiscountPercent: z.number().int().min(0).max(100).optional(),
+  allowSeatExpansion: z.boolean().optional(),
   discountBadge: z.string().trim().max(80).optional(),
   isPromotional: z.boolean().optional(),
   isActive: z.boolean().optional(),

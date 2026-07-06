@@ -454,6 +454,7 @@ export async function createAdminEvent(params: {
   speakers?: Array<{ name: string; title?: string; bio?: string; imageUrl?: string }>;
   recap?: string;
   recapImageUrl?: string;
+  recapVideoUrl?: string;
 }) {
   return createEvent(params);
 }

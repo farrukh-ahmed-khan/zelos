@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { type StoreProduct } from "@/components/StoreCart";
 
@@ -171,19 +172,19 @@ export function ProductAddToCart({ product }: { product: StoreProduct }) {
           {isOutOfStock ? "Out of Stock" : added ? "Added!" : "Add to Cart"}
         </button>
         {added ? (
-          <a
+          <Link
             href="/store/cart"
             className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-[#212121] bg-white px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_3px_0_#111] transition hover:bg-[#f9f6f1]"
           >
             View Cart →
-          </a>
+          </Link>
         ) : (
-          <a
+          <Link
             href="/store"
             className="block text-center text-sm font-medium !text-[#8c0504] underline underline-offset-2 hover:!text-[#7a0505]"
           >
             ← Back to Store
-          </a>
+          </Link>
         )}
       </div>
 

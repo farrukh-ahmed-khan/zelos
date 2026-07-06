@@ -15,6 +15,7 @@ type StripeDonationCheckoutParams = {
   amountCents: number;
   donorEmail: string;
   donationId: string;
+  description?: string;
   successUrl: string;
   cancelUrl: string;
 };
@@ -74,6 +75,11 @@ export async function createStripeCheckoutSession(params: StripeCheckoutParams) 
     "metadata[userId]": params.metadata?.userId ?? "",
     "metadata[planId]": params.metadata?.planId ?? "",
   };
+
+  for (const [key, value] of Object.entries(params.metadata ?? {})) {
+    values[`metadata[${key}]`] = value;
+    values[`subscription_data[metadata][${key}]`] = value;
+  }
 
   if (params.couponId) {
     values["discounts[0][coupon]"] = params.couponId;
@@ -142,7 +148,8 @@ export async function createStripeDonationCheckoutSession(params: StripeDonation
     mode: "payment",
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][product_data][name]": "Zelos donation",
-    "line_items[0][price_data][product_data][description]": "Aiding students through Zelos programs",
+    "line_items[0][price_data][product_data][description]":
+      params.description ?? "Aiding students through Zelos programs",
     "line_items[0][price_data][unit_amount]": String(params.amountCents),
     "line_items[0][quantity]": "1",
     customer_email: params.donorEmail,

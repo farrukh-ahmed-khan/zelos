@@ -4,6 +4,7 @@ import { queueEmail } from "@/lib/notifications/service";
 import mongoose from "mongoose";
 import Scholarship, { type ScholarshipDocument } from "@/models/Scholarship";
 import ScholarshipApplication from "@/models/ScholarshipApplication";
+import Donation from "@/models/Donation";
 
 export function serializeScholarship(scholarship: ScholarshipDocument) {
   return {
@@ -23,9 +24,35 @@ export function serializeScholarship(scholarship: ScholarshipDocument) {
     ownerEmail: scholarship.ownerEmail ?? null,
     status: scholarship.status,
     featured: scholarship.featured,
+    startingAmountCents: scholarship.awardAmountCents,
     createdAt: scholarship.createdAt,
     updatedAt: scholarship.updatedAt,
   };
+}
+
+export async function getScholarshipDonationTotals(scholarshipIds: string[]) {
+  await connectToDatabase();
+
+  if (!scholarshipIds.length) {
+    return new Map<string, number>();
+  }
+
+  const totals = await Donation.aggregate([
+    {
+      $match: {
+        scholarshipId: { $in: scholarshipIds },
+        status: "paid",
+      },
+    },
+    {
+      $group: {
+        _id: "$scholarshipId",
+        totalCents: { $sum: "$amountCents" },
+      },
+    },
+  ]);
+
+  return new Map(totals.map((item) => [String(item._id), item.totalCents]));
 }
 
 export async function getActiveScholarships(featuredOnly = false) {

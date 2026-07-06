@@ -1,6 +1,7 @@
 export const USER_ROLES = [
   "mentee",
   "subscriber",
+  "parent",
   "child",
   "teacher",
   "student",
@@ -11,7 +12,7 @@ export const USER_ROLES = [
 
 export type UserRole = (typeof USER_ROLES)[number];
 
-export const SELF_REGISTER_ROLES = ["mentee", "subscriber"] as const;
+export const SELF_REGISTER_ROLES = ["mentee", "subscriber", "parent"] as const;
 
 export const ADMIN_ROLES: UserRole[] = [
   "forum-moderator",

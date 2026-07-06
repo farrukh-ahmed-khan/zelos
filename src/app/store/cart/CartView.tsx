@@ -11,8 +11,10 @@ export function CartView({ imageMap }: { imageMap: Record<string, string> }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setCart(loadCart());
-    setMounted(true);
+    queueMicrotask(() => {
+      setCart(loadCart());
+      setMounted(true);
+    });
   }, []);
 
   useEffect(() => {

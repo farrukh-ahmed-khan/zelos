@@ -16,6 +16,11 @@ export function serializeSubscriptionPlan(plan: SubscriptionPlanDocument) {
     currency: plan.currency,
     ageTrack: plan.ageTrack ?? null,
     stripePriceId: plan.stripePriceId ?? null,
+    planKind: plan.planKind ?? "single",
+    bundleTracks: plan.bundleTracks ?? [],
+    multiSubscriptionDiscountPercent:
+      plan.multiSubscriptionDiscountPercent ?? 0,
+    allowSeatExpansion: plan.allowSeatExpansion ?? true,
     discountBadge: plan.discountBadge ?? null,
     isPromotional: plan.isPromotional,
     isActive: plan.isActive,
@@ -41,6 +46,10 @@ export async function createSubscriptionPlan(params: {
   currency?: string;
   ageTrack?: string;
   stripePriceId?: string;
+  planKind?: "single" | "multi-discount" | "bundle";
+  bundleTracks?: string[];
+  multiSubscriptionDiscountPercent?: number;
+  allowSeatExpansion?: boolean;
   discountBadge?: string;
   isPromotional?: boolean;
   isActive?: boolean;
@@ -52,6 +61,11 @@ export async function createSubscriptionPlan(params: {
     currency: params.currency ?? "usd",
     ageTrack: params.ageTrack || null,
     stripePriceId: params.stripePriceId || null,
+    planKind: params.planKind ?? "single",
+    bundleTracks: params.bundleTracks ?? [],
+    multiSubscriptionDiscountPercent:
+      params.multiSubscriptionDiscountPercent ?? 0,
+    allowSeatExpansion: params.allowSeatExpansion ?? true,
     discountBadge: params.discountBadge || null,
     isPromotional: params.isPromotional ?? false,
     isActive: params.isActive ?? true,
@@ -68,6 +82,10 @@ export async function updateSubscriptionPlan(
     currency: string;
     ageTrack: string;
     stripePriceId: string;
+    planKind: "single" | "multi-discount" | "bundle";
+    bundleTracks: string[];
+    multiSubscriptionDiscountPercent: number;
+    allowSeatExpansion: boolean;
     discountBadge: string;
     isPromotional: boolean;
     isActive: boolean;
@@ -85,6 +103,7 @@ export async function updateSubscriptionPlan(
     ...updates,
     ageTrack: updates.ageTrack === "" ? null : updates.ageTrack,
     stripePriceId: updates.stripePriceId === "" ? null : updates.stripePriceId,
+    bundleTracks: updates.bundleTracks,
     discountBadge: updates.discountBadge === "" ? null : updates.discountBadge,
   });
 

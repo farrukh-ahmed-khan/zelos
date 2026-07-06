@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       speakers: body.speakers,
       recap: body.recap,
       recapImageUrl: body.recapImageUrl,
+      recapVideoUrl: body.recapVideoUrl,
     });
 
     return successResponse(
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
           speakers: event.speakers,
           recap: event.recap,
           recapImageUrl: event.recapImageUrl,
+          recapVideoUrl: event.recapVideoUrl,
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
         },

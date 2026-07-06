@@ -17,12 +17,22 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Mission", href: "/mission-video" },
-  { label: "Program", href: "/financial-literacy" },
+  { label: "Programs", href: "/financial-literacy" },
   { label: "Events", href: "/events" },
   { label: "Scholarships", href: "/scholarships" },
   { label: "Forum", href: "/forum" },
   { label: "Store", href: "/store" },
   { label: "Contact", href: "/contact" },
+];
+
+const programLinks = [
+  { label: "Financial Literacy", href: "/financial-literacy" },
+  { label: "Children", href: "/financial-literacy?track=child" },
+  { label: "Teens", href: "/financial-literacy?track=teen" },
+  { label: "Young Adults", href: "/financial-literacy?track=young-adult" },
+  { label: "School Curriculum", href: "/school-curriculum" },
+  { label: "Mentoring", href: "/mentoring" },
+  { label: "Scholarship Incubator", href: "/scholarship-incubator" },
 ];
 
 function subscribeToHydration(callback: () => void) {
@@ -108,6 +118,31 @@ export function Header() {
                   ? pathname === item.href
                   : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
+              if (item.label === "Programs") {
+                return (
+                  <div key={item.href} className="group relative">
+                    <Link
+                      href={item.href}
+                      className={`${navLinkClass} ${isActive ? activeNavLinkClass : ""}`}
+                    >
+                      <span>{item.label}</span>
+                      <DownOutlined className="shrink-0 text-[11px] leading-none text-[#2C2E2A]!" />
+                    </Link>
+                    <div className="invisible absolute left-1/2 top-full z-30 grid w-64 -translate-x-1/2 gap-1 rounded-md border-2 border-[#212121] bg-white p-2 opacity-0 shadow-[0_4px_0_#111] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                      {programLinks.map((program) => (
+                        <Link
+                          key={program.href}
+                          href={program.href}
+                          className="rounded-sm px-3 py-2 text-sm font-bold !text-[#2C2E2A] hover:bg-[#efe6d8] hover:!text-[#cf1e1e]"
+                        >
+                          {program.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -115,9 +150,6 @@ export function Header() {
                   className={`${navLinkClass} ${isActive ? activeNavLinkClass : ""}`}
                 >
                   <span>{item.label}</span>
-                  {item.label === "Program" ? (
-                    <DownOutlined className="shrink-0 text-[11px] leading-none text-[#2C2E2A]!" />
-                  ) : null}
                 </Link>
               );
             })}
@@ -183,14 +215,27 @@ export function Header() {
                     ? pathname === item.href
                     : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
+                  <div key={item.href} className="contents">
                   <Link
-                    key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-md px-4 py-3 text-base font-semibold !text-[#2C2E2A] transition hover:bg-[#efe6d8] hover:!text-[#cf1e1e] ${isActive ? "bg-[#efe6d8] !text-[#cf1e1e]" : ""}`}
                   >
                     {item.label}
                   </Link>
+                  {item.label === "Programs"
+                    ? programLinks.map((program) => (
+                        <Link
+                          key={program.href}
+                          href={program.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="ml-4 rounded-md px-4 py-2 text-sm font-semibold !text-[#2C2E2A] hover:bg-[#efe6d8] hover:!text-[#cf1e1e]"
+                        >
+                          {program.label}
+                        </Link>
+                      ))
+                    : null}
+                  </div>
                 );
               })}
             </nav>

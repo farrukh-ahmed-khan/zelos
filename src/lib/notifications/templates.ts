@@ -1,6 +1,8 @@
 export const TRANSACTIONAL_EMAIL_TEMPLATES = [
   "welcome-mentee",
   "welcome-subscriber",
+  "welcome-parent",
+  "child-seat-credentials",
   "welcome-teacher",
   "welcome-student",
   "welcome-forum-moderator",

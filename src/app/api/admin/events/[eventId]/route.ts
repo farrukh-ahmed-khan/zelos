@@ -32,6 +32,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         speakers: body.speakers,
         recap: body.recap,
         recapImageUrl: body.recapImageUrl,
+        recapVideoUrl: body.recapVideoUrl,
         status: body.status,
       },
     });
@@ -55,6 +56,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         speakers: event.speakers,
         recap: event.recap,
         recapImageUrl: event.recapImageUrl,
+        recapVideoUrl: event.recapVideoUrl,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
       },

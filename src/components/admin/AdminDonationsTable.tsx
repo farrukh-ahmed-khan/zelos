@@ -10,6 +10,8 @@ type DonationRecord = {
   email: string;
   amountCents: number;
   dedication?: string | null;
+  purpose: "general" | "scholarship";
+  scholarshipName?: string | null;
   status: string;
   createdAt: string | Date;
 };
@@ -53,7 +55,10 @@ export function AdminDonationsTable({ donations }: { donations: DonationRecord[]
       title: "Purpose",
       key: "purpose",
       width: 260,
-      render: () => "Aiding students through Zelos programs",
+      render: (_, donation) =>
+        donation.purpose === "scholarship"
+          ? donation.scholarshipName ?? "Specific scholarship"
+          : "Aiding students through Zelos programs",
     },
     {
       title: "Dedication",

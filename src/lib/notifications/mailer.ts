@@ -74,6 +74,32 @@ const GENERIC_TEMPLATE_COPY: Record<string, Omit<TemplateCopy, "action"> & { act
     actionPath: "/dashboard",
     actionLabel: "Open dashboard",
   },
+  "welcome-parent": {
+    subject: "Welcome to Zelos",
+    preheader: "Your Zelos account owner access is ready.",
+    headerLabel: "Welcome",
+    eyebrow: "Welcome to Zelos",
+    heading: "Your family account is ready",
+    body: [
+      "Welcome to Zelos. Your account owner profile is active and ready to manage learner access.",
+      "Visit your dashboard to review learner profiles, course access, and billing.",
+    ],
+    actionPath: "/dashboard",
+    actionLabel: "Open dashboard",
+  },
+  "child-seat-credentials": {
+    subject: "A Zelos learner profile is ready",
+    preheader: "Here are the learner login details for your account.",
+    headerLabel: "Learner access",
+    eyebrow: "Learner profile",
+    heading: "A learner profile is ready",
+    body: [
+      "A learner profile has been created under your Zelos account.",
+      "Share these credentials only with the learner assigned to this profile. You can reset access from account management when needed.",
+    ],
+    actionPath: "/dashboard",
+    actionLabel: "Open dashboard",
+  },
   "welcome-teacher": {
     subject: "Welcome to Zelos",
     preheader: "Your Zelos teacher access is ready.",

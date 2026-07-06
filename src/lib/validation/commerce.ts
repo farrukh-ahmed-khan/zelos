@@ -54,6 +54,7 @@ export const donationSchema = z.object({
   lastName: z.string().trim().min(1).max(80),
   email: z.email().trim().toLowerCase(),
   dedication: z.string().trim().max(300).optional(),
+  scholarshipId: z.string().trim().max(80).optional(),
   captchaToken: z.string().trim().max(4000).optional(),
 });
 

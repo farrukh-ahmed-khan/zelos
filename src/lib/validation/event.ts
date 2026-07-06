@@ -20,6 +20,7 @@ export const createEventSchema = z.object({
     .optional(),
   recap: z.string().trim().max(3000).optional(),
   recapImageUrl: z.url().trim().optional(),
+  recapVideoUrl: z.url().trim().optional(),
 });
 
 export const updateEventSchema = z.object({
@@ -42,5 +43,6 @@ export const updateEventSchema = z.object({
     .optional(),
   recap: z.string().trim().max(3000).nullable().optional(),
   recapImageUrl: z.url().trim().nullable().optional(),
+  recapVideoUrl: z.url().trim().nullable().optional(),
   status: z.enum(["scheduled", "updated", "cancelled"]).optional(),
 });

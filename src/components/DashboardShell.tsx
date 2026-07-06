@@ -24,6 +24,10 @@ type DashboardUser = {
   adminPermissions?: string[];
 };
 
+type ChildAccount = DashboardUser & {
+  status?: string;
+};
+
 type DashboardVideo = {
   id: string;
   title: string;
@@ -132,6 +136,7 @@ type DashboardShellProps = {
   subscriberResources: DashboardSubscriberResource[];
   orders: DashboardOrder[];
   broadcasts: DashboardBroadcast[];
+  childAccounts: ChildAccount[];
   subscriptionLabel: string;
   hasVideoLibraryAccess: boolean;
   needsVideoSubscription: boolean;
@@ -147,6 +152,7 @@ const roleLabels: Record<string, string> = {
   "forum-moderator": "Forum Moderator",
   "sub-admin": "Sub-Admin",
   "super-admin": "Super Admin",
+  parent: "Account Owner",
 };
 
 function formatDate(value: string | Date) {
@@ -790,6 +796,84 @@ function NewsUpdatesPanel({ broadcasts }: { broadcasts: DashboardBroadcast[] }) 
   );
 }
 
+function ParentLearnersPanel({ learners }: { learners: ChildAccount[] }) {
+  const [items, setItems] = useState(learners);
+  const [savingChildId, setSavingChildId] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+
+  function formatTrack(value: string) {
+    if (value === "child") return "Children";
+    if (value === "teen") return "Teens";
+    if (value === "young-adult") return "Young Adults";
+    return value;
+  }
+
+  async function updateChild(childId: string, form: HTMLFormElement) {
+    const formData = new FormData(form);
+    const password = String(formData.get("password") ?? "");
+    setSavingChildId(childId);
+    setMessage("");
+
+    try {
+      const response = await api.patch(`/api/account/children/${childId}`, {
+        name: String(formData.get("name") ?? ""),
+        email: String(formData.get("email") ?? ""),
+        ...(password ? { password } : {}),
+      });
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        setMessage(result?.error?.message ?? "Unable to update learner.");
+        return;
+      }
+
+      setItems((current) =>
+        current.map((child) =>
+          child.id === childId ? { ...child, ...result.data.child } : child,
+        ),
+      );
+      form.reset();
+      setMessage("Learner profile updated.");
+    } finally {
+      setSavingChildId(null);
+    }
+  }
+
+  if (!items.length) {
+    return (
+      <p className="rounded-md bg-white px-4 py-3 text-sm text-[#4a4a4a]">
+        Learner profiles will appear here after a family checkout is completed.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {message ? <p className="rounded-md bg-white px-3 py-2 text-sm font-bold text-[#8c0504]">{message}</p> : null}
+      {items.map((child) => (
+        <form
+          key={child.id}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void updateChild(child.id, event.currentTarget);
+          }}
+          className="grid gap-3 rounded-md bg-white p-4 text-sm md:grid-cols-[1fr_1fr_1fr_auto]"
+        >
+          <input name="name" defaultValue={child.name} className="rounded-md border border-[#d8d2c5] px-3 py-2" />
+          <input name="email" type="email" defaultValue={child.email} className="rounded-md border border-[#d8d2c5] px-3 py-2" />
+          <input name="password" type="password" placeholder={`${formatTrack(child.ageTrack)} password reset`} className="rounded-md border border-[#d8d2c5] px-3 py-2" />
+          <button
+            disabled={savingChildId === child.id}
+            className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2 text-sm font-black shadow-[0_3px_0_#111] disabled:opacity-60"
+          >
+            {savingChildId === child.id ? "Saving..." : "Save"}
+          </button>
+        </form>
+      ))}
+    </div>
+  );
+}
+
 export function DashboardShell({
   user,
   videos,
@@ -801,6 +885,7 @@ export function DashboardShell({
   subscriberResources,
   orders,
   broadcasts,
+  childAccounts,
   subscriptionLabel,
   hasVideoLibraryAccess,
   needsVideoSubscription,
@@ -811,7 +896,7 @@ export function DashboardShell({
     .slice(0, 3);
   const isAdmin = ["forum-moderator", "sub-admin", "super-admin"].includes(user.role);
   const isSchoolUser = ["teacher", "student"].includes(user.role);
-  const isSubscriberUser = ["subscriber", "child"].includes(user.role);
+  const isSubscriberUser = ["subscriber", "parent", "child"].includes(user.role);
   const isFreeSubscriber = user.role === "subscriber" && needsVideoSubscription && !hasVideoLibraryAccess;
 
   return (
@@ -941,6 +1026,12 @@ export function DashboardShell({
               </SectionCard>
             ) : null}
 
+            {user.role === "parent" ? (
+              <SectionCard title="Learner Profiles">
+                <ParentLearnersPanel learners={childAccounts} />
+              </SectionCard>
+            ) : null}
+
             <SectionCard title="News & Updates">
               <NewsUpdatesPanel broadcasts={broadcasts} />
             </SectionCard>
@@ -990,7 +1081,7 @@ export function DashboardShell({
           </div>
 
           <aside className="grid content-start gap-6">
-            {user.role === "subscriber" ? (
+            {["subscriber", "parent"].includes(user.role) ? (
               <SectionCard
                 title="Subscription"
                 action={<CreditCardOutlined className="text-2xl text-[#b22222]" />}

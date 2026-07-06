@@ -27,6 +27,7 @@ type EventItem = {
   speakers: EventSpeaker[];
   recap: string | null;
   recapImageUrl: string | null;
+  recapVideoUrl: string | null;
   rsvpCount: number;
 };
 
@@ -97,6 +98,7 @@ function eventPayload(form: HTMLFormElement, options: { clearable?: boolean } = 
     speakers: parseSpeakers(formData.get("speakers")),
     recap: optionalTextField(formData, "recap", clearable),
     recapImageUrl: optionalTextField(formData, "recapImageUrl", clearable),
+    recapVideoUrl: optionalTextField(formData, "recapVideoUrl", clearable),
   };
 }
 
@@ -518,6 +520,10 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
           value={createRecapImageUrl}
         />
         <label className="grid gap-2 text-sm font-bold">
+          Recap video URL
+          <input name="recapVideoUrl" type="url" placeholder="Edited event footage URL" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
           Past event recap
           <textarea name="recap" rows={3} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
@@ -617,6 +623,10 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
               onUpload={(file) => uploadEventImage(file, "editRecap", setEditRecapImageUrl)}
               value={editRecapImageUrl}
             />
+            <label className="grid gap-2 text-sm font-bold">
+              Recap video URL
+              <input name="recapVideoUrl" type="url" defaultValue={editingEvent.recapVideoUrl ?? ""} placeholder="Edited event footage URL" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+            </label>
             <label className="grid gap-2 text-sm font-bold">
               Past event recap
               <textarea name="recap" rows={3} defaultValue={editingEvent.recap ?? ""} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
