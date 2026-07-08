@@ -52,9 +52,7 @@ export function BillingPanel({
   const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null);
   const [giftCardCode, setGiftCardCode] = useState("");
   const [promoCode, setPromoCode] = useState("");
-  const [seats, setSeats] = useState<LearnerSeat[]>([
-    { label: "Learner 1", email: "", ageTrack: "teen" },
-  ]);
+  const [seatDrafts, setSeatDrafts] = useState<Record<string, LearnerSeat[]>>({});
   const [portalAction, setPortalAction] = useState<"portal" | "payment" | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
   const currentPlan = subscription
@@ -79,14 +77,13 @@ export function BillingPanel({
 
     try {
       const plan = plans.find((item) => item.id === planId);
-      const checkoutSeats =
-        plan?.planKind === "bundle" && plan.bundleTracks.length
-          ? plan.bundleTracks.map((ageTrack, index) => ({
-              label: seats[index]?.label || `Learner ${index + 1}`,
-              email: seats[index]?.email || "",
-              ageTrack: ageTrack as LearnerSeat["ageTrack"],
-            }))
-          : seats;
+
+      if (!plan) {
+        antMessage.error("Plan not found.");
+        return;
+      }
+
+      const checkoutSeats = getSeatsForPlan(plan);
       const response = await api.post("/api/billing/checkout", {
         planId,
         giftCardCode: giftCardCode.trim() || undefined,
@@ -114,29 +111,70 @@ export function BillingPanel({
     return value;
   }
 
-  function setSeat(index: number, updates: Partial<LearnerSeat>) {
-    setSeats((current) =>
-      current.map((seat, seatIndex) =>
-        seatIndex === index ? { ...seat, ...updates } : seat,
-      ),
-    );
+  function defaultSeatForPlan(plan: Plan, index = 0): LearnerSeat {
+    return {
+      label: `Learner ${index + 1}`,
+      email: "",
+      ageTrack:
+        plan.planKind === "single" && plan.ageTrack
+          ? (plan.ageTrack as LearnerSeat["ageTrack"])
+          : "teen",
+    };
   }
 
-  function syncSeatsForPlan(plan: Plan) {
-    if (plan.planKind === "bundle" && plan.bundleTracks.length) {
-      setSeats(
-        plan.bundleTracks.map((ageTrack, index) => ({
-          label: seats[index]?.label || `Learner ${index + 1}`,
-          email: seats[index]?.email || "",
-          ageTrack: ageTrack as LearnerSeat["ageTrack"],
-        })),
-      );
-      return;
+  function normalizeSeatsForPlan(plan: Plan, draft: LearnerSeat[] = []) {
+    if (plan.planKind === "single" && plan.ageTrack) {
+      const first = draft[0] ?? defaultSeatForPlan(plan);
+      return [
+        {
+          label: first.label || "Learner 1",
+          email: first.email || "",
+          ageTrack: plan.ageTrack as LearnerSeat["ageTrack"],
+        },
+      ];
     }
 
-    if (!seats.length) {
-      setSeats([{ label: "Learner 1", email: "", ageTrack: "teen" }]);
+    if (plan.planKind === "bundle" && plan.bundleTracks.length) {
+      return plan.bundleTracks.map((ageTrack, index) => ({
+        label: draft[index]?.label || `Learner ${index + 1}`,
+        email: draft[index]?.email || "",
+        ageTrack: ageTrack as LearnerSeat["ageTrack"],
+      }));
     }
+
+    return draft.length ? draft : [defaultSeatForPlan(plan)];
+  }
+
+  function getSeatsForPlan(plan: Plan) {
+    return normalizeSeatsForPlan(plan, seatDrafts[plan.id]);
+  }
+
+  function setSeatForPlan(plan: Plan, index: number, updates: Partial<LearnerSeat>) {
+    setSeatDrafts((current) => {
+      const nextSeats = normalizeSeatsForPlan(plan, current[plan.id]).map((seat, seatIndex) =>
+        seatIndex === index ? { ...seat, ...updates } : seat,
+      );
+
+      return {
+        ...current,
+        [plan.id]: normalizeSeatsForPlan(plan, nextSeats),
+      };
+    });
+  }
+
+  function addSeatForPlan(plan: Plan) {
+    setSeatDrafts((current) => {
+      const currentSeats = normalizeSeatsForPlan(plan, current[plan.id]);
+      const nextSeats = [
+        ...currentSeats,
+        { label: `Learner ${currentSeats.length + 1}`, email: "", ageTrack: "teen" as const },
+      ];
+
+      return {
+        ...current,
+        [plan.id]: nextSeats.slice(0, 12),
+      };
+    });
   }
 
   async function openPortal(action: "portal" | "payment") {
@@ -285,8 +323,6 @@ export function BillingPanel({
             </p>
             <button
               onClick={() => checkout(plan.id)}
-              onMouseEnter={() => syncSeatsForPlan(plan)}
-              onFocus={() => syncSeatsForPlan(plan)}
               disabled={
                 !plan.stripePriceId ||
                 Boolean(checkoutPlanId) ||
@@ -315,55 +351,57 @@ export function BillingPanel({
                   {plan.planKind === "multi-discount" ? (
                     <button
                       type="button"
-                      onClick={() =>
-                        setSeats((current) => [
-                          ...current,
-                          { label: `Learner ${current.length + 1}`, email: "", ageTrack: "teen" },
-                        ])
-                      }
+                      onClick={() => addSeatForPlan(plan)}
                       className="rounded-md border border-[#212121] bg-white px-2 py-1 text-xs font-black"
                     >
                       Add Seat
                     </button>
                   ) : null}
                 </div>
-                {(plan.planKind === "bundle" && plan.bundleTracks.length
-                  ? plan.bundleTracks.map((ageTrack, index) => ({
-                      label: seats[index]?.label || `Learner ${index + 1}`,
-                      email: seats[index]?.email || "",
-                      ageTrack,
-                    }))
-                  : seats.slice(0, plan.planKind === "multi-discount" ? 12 : 1)
-                ).map((seat, index) => (
+                {getSeatsForPlan(plan)
+                  .slice(0, plan.planKind === "multi-discount" ? 12 : plan.planKind === "bundle" ? plan.bundleTracks.length : 1)
+                  .map((seat, index) => (
                   <div key={`${plan.id}-${index}`} className="grid gap-2 md:grid-cols-[1fr_1fr_140px]">
-                    <input
-                      value={seat.label}
-                      onChange={(event) => setSeat(index, { label: event.target.value })}
-                      placeholder="Learner name"
-                      className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
-                    />
-                    <input
-                      value={seat.email}
-                      onChange={(event) => setSeat(index, { email: event.target.value })}
-                      placeholder="Optional learner email"
-                      className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
-                    />
-                    {plan.planKind === "bundle" ? (
-                      <span className="rounded-md border border-[#d8d2c5] bg-white px-3 py-2 text-sm font-bold">
-                        {formatTrack(seat.ageTrack)}
-                      </span>
+                    <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                      Learner name
+                      <input
+                        value={seat.label}
+                        onChange={(event) => setSeatForPlan(plan, index, { label: event.target.value })}
+                        placeholder={`Learner ${index + 1}`}
+                        className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm font-normal normal-case text-[#202020]"
+                      />
+                    </label>
+                    <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                      Learner email
+                      <input
+                        value={seat.email}
+                        onChange={(event) => setSeatForPlan(plan, index, { email: event.target.value })}
+                        placeholder="Optional"
+                        className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm font-normal normal-case text-[#202020]"
+                      />
+                    </label>
+                    {plan.planKind === "bundle" || (plan.planKind === "single" && plan.ageTrack) ? (
+                      <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                        Track
+                        <span className="rounded-md border border-[#d8d2c5] bg-white px-3 py-2 text-sm font-bold normal-case text-[#202020]">
+                          {formatTrack(plan.planKind === "single" && plan.ageTrack ? plan.ageTrack : seat.ageTrack)}
+                        </span>
+                      </label>
                     ) : (
-                      <select
-                        value={seat.ageTrack}
-                        onChange={(event) =>
-                          setSeat(index, { ageTrack: event.target.value as LearnerSeat["ageTrack"] })
-                        }
-                        className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
-                      >
-                        <option value="child">Children</option>
-                        <option value="teen">Teens</option>
-                        <option value="young-adult">Young Adults</option>
-                      </select>
+                      <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                        Track
+                        <select
+                          value={seat.ageTrack}
+                          onChange={(event) =>
+                            setSeatForPlan(plan, index, { ageTrack: event.target.value as LearnerSeat["ageTrack"] })
+                          }
+                          className="rounded-md border border-[#d8d2c5] px-3 py-2 text-sm font-normal normal-case text-[#202020]"
+                        >
+                          <option value="child">Children</option>
+                          <option value="teen">Teens</option>
+                          <option value="young-adult">Young Adults</option>
+                        </select>
+                      </label>
                     )}
                   </div>
                 ))}

@@ -95,6 +95,8 @@ export async function POST(request: NextRequest) {
     }
 
     const planKind = plan.planKind ?? "single";
+    const lockedSingleTrack =
+      planKind === "single" && plan.ageTrack ? plan.ageTrack : null;
     const seats =
       planKind === "bundle" && plan.bundleTracks?.length
         ? plan.bundleTracks.map((ageTrack, index) => ({
@@ -103,8 +105,17 @@ export async function POST(request: NextRequest) {
             ageTrack,
           }))
         : body.seats?.length
-          ? body.seats
-          : [{ label: user.name, email: user.email, ageTrack: body.ageTrack }];
+          ? body.seats.map((seat) => ({
+              ...seat,
+              ageTrack: lockedSingleTrack ?? seat.ageTrack,
+            }))
+          : [
+              {
+                label: user.name,
+                email: user.email,
+                ageTrack: lockedSingleTrack ?? body.ageTrack,
+              },
+            ];
 
     if (planKind === "bundle" && seats.length !== (plan.bundleTracks?.length ?? 0)) {
       throw new ApiError(422, "This bundle requires one learner profile per bundled track.");
@@ -124,7 +135,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId: user._id.toString(),
         planId: plan._id.toString(),
-        ageTrack: body.ageTrack,
+        ageTrack: lockedSingleTrack ?? body.ageTrack,
         seats: JSON.stringify(seats),
         giftCardCode,
         giftCardAppliedCents: String(giftCardAppliedCents),
