@@ -18,6 +18,7 @@ export const createScholarshipSchema = z.object({
   eligibility: z.string().trim().min(10).max(3000),
   field: z.string().trim().min(2).max(120),
   awardAmountCents: z.number().int().min(0),
+  startingAmountCents: z.number().int().min(0).optional(),
   numberOfRecipients: z.number().int().min(1).max(100).optional(),
   applicationDeadline: z.string().datetime(),
   selectionCriteria: z.string().trim().min(10).max(3000),

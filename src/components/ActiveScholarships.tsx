@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getActiveScholarships, serializeScholarship } from "@/lib/scholarships/service";
+import { getActiveScholarships, getScholarshipDonationTotals, serializeScholarship } from "@/lib/scholarships/service";
 
 const fallbackImages = [
   "/assets/future-leader.png",
@@ -8,8 +8,17 @@ const fallbackImages = [
   "/assets/community-builder.png",
 ];
 
+function money(cents: number) {
+  return `$${(cents / 100).toLocaleString()}`;
+}
+
+function formatDeadline(value: string | Date) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
 export async function ActiveScholarships() {
   const scholarships = (await getActiveScholarships(true)).map(serializeScholarship).slice(0, 3);
+  const donationTotals = await getScholarshipDonationTotals(scholarships.map((scholarship) => scholarship.id));
 
   if (!scholarships.length) {
     return null;
@@ -40,33 +49,61 @@ export async function ActiveScholarships() {
         </div>
 
         <div className="row g-4 mx-auto max-w-[1320px]">
-          {scholarships.map((scholarship, index) => (
-            <div className="col-12 col-md-6 col-lg-4" key={scholarship.id}>
-              <Link href={`/scholarships/${scholarship.slug}`} className="block h-full overflow-hidden rounded-md bg-white p-3 !text-[#202020] shadow-[0_5px_0_rgba(0,0,0,0.18)]">
-                <div className="relative h-[384px] w-full overflow-hidden rounded-md bg-[#eee6d6] lg:max-w-[410px]">
-                  <Image
-                    src={fallbackImages[index % fallbackImages.length]}
-                    alt={scholarship.name}
-                    fill
-                    sizes="(min-width: 992px) 410px, (min-width: 768px) 48vw, 100vw"
-                    className="object-cover"
-                  />
-                </div>
+          {scholarships.map((scholarship, index) => {
+            const runningTotal = scholarship.startingAmountCents + (donationTotals.get(scholarship.id) ?? 0);
 
-                <div className="pt-3">
-                  <h3 className="font-bebas text-[34px] font-normal uppercase leading-[1.05] text-[#1E1E1E]">
-                    {scholarship.name}
-                  </h3>
-                  <p className="mt-2 font-sans text-[16px] font-normal leading-normal text-[#B22222]">
-                    {scholarship.field}
-                  </p>
-                  <p className="mt-2 font-sans text-[18px] font-normal leading-[26px] text-[#252628]">
-                    ${(scholarship.awardAmountCents / 100).toLocaleString()} award / {scholarship.numberOfRecipients} recipient{scholarship.numberOfRecipients === 1 ? "" : "s"}
-                  </p>
-                </div>
-              </Link>
-            </div>
-          ))}
+            return (
+              <div className="col-12 col-md-6 col-lg-4" key={scholarship.id}>
+                <Link href={`/scholarships/${scholarship.slug}`} className="block h-full overflow-hidden rounded-md bg-white p-3 !text-[#202020] shadow-[0_5px_0_rgba(0,0,0,0.18)]">
+                  <div className="relative h-[384px] w-full overflow-hidden rounded-md bg-[#eee6d6] lg:max-w-[410px]">
+                    <Image
+                      src={fallbackImages[index % fallbackImages.length]}
+                      alt={scholarship.name}
+                      fill
+                      sizes="(min-width: 992px) 410px, (min-width: 768px) 48vw, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <div className="pt-3">
+                    <h3 className="font-bebas text-[34px] font-normal uppercase leading-[1.05] text-[#1E1E1E]">
+                      {scholarship.name}
+                    </h3>
+                    <p className="mt-2 font-sans text-[16px] font-normal leading-normal text-[#B22222]">
+                      {scholarship.field}
+                    </p>
+                    <p className="mt-2 font-sans text-[18px] font-normal leading-[26px] text-[#252628]">
+                      {money(scholarship.awardAmountCents)} award / {scholarship.numberOfRecipients} recipient{scholarship.numberOfRecipients === 1 ? "" : "s"}
+                    </p>
+                    <dl className="mt-3 grid gap-2 font-sans text-sm leading-relaxed text-[#252628]">
+                      <div>
+                        <dt className="font-black uppercase text-[#8c0504]">Purpose</dt>
+                        <dd className="line-clamp-2">{scholarship.description}</dd>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <dt className="font-black uppercase text-[#8c0504]">Starting fund amount</dt>
+                          <dd>{money(scholarship.startingAmountCents)}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-black uppercase text-[#8c0504]">Running total</dt>
+                          <dd>{money(runningTotal)}</dd>
+                        </div>
+                      </div>
+                      <div>
+                        <dt className="font-black uppercase text-[#8c0504]">Deadline</dt>
+                        <dd>{formatDeadline(scholarship.applicationDeadline)}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-black uppercase text-[#8c0504]">Eligibility Criteria</dt>
+                        <dd className="line-clamp-2">{scholarship.eligibility}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

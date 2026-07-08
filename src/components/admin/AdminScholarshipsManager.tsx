@@ -13,6 +13,7 @@ type ScholarshipItem = {
   eligibility: string;
   field: string;
   awardAmountCents: number;
+  startingAmountCents: number;
   numberOfRecipients: number;
   applicationDeadline: string | Date;
   selectionCriteria: string;
@@ -55,6 +56,7 @@ const fieldLabels: Record<string, string> = {
   numberOfRecipients: "Number of recipients",
   applicationDeadline: "Application deadline",
   awardAmountCents: "Award amount",
+  startingAmountCents: "Starting fund amount",
   selectionCriteria: "Selection criteria",
 };
 
@@ -125,6 +127,7 @@ export function AdminScholarshipsManager({
         eligibility: String(formData.get("eligibility") ?? ""),
         field: String(formData.get("field") ?? ""),
         awardAmountCents: cents(formData.get("awardAmount")),
+        startingAmountCents: cents(formData.get("startingAmount")),
         numberOfRecipients: Number(formData.get("numberOfRecipients") || 1),
         applicationDeadline: isoDate(formData.get("applicationDeadline")),
         selectionCriteria: String(formData.get("selectionCriteria") ?? ""),
@@ -215,6 +218,7 @@ export function AdminScholarshipsManager({
       render: (_, scholarship) => (
         <div>
           <div className="font-bold">${(scholarship.awardAmountCents / 100).toLocaleString()}</div>
+          <div className="text-xs text-[#24551f]">${(scholarship.startingAmountCents / 100).toLocaleString()} starting fund</div>
           <div className="text-xs text-[#667085]">{scholarship.numberOfRecipients} recipient{scholarship.numberOfRecipients === 1 ? "" : "s"}</div>
         </div>
       ),
@@ -292,6 +296,7 @@ export function AdminScholarshipsManager({
         <textarea name="selectionCriteria" required rows={3} placeholder="Selection criteria" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="field" required placeholder="Field" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="awardAmount" required type="number" min="0" step="1" placeholder="Award amount in dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
+        <input name="startingAmount" required type="number" min="0" step="1" placeholder="Starting fund amount in dollars" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="numberOfRecipients" required type="number" min="1" max="100" defaultValue="1" placeholder="Number of recipients" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="applicationDeadline" required type="date" className="rounded-md border border-[#d8d2c5] px-3 py-3" />
         <input name="ownerName" placeholder="Scholarship owner name" className="rounded-md border border-[#d8d2c5] px-3 py-3" />

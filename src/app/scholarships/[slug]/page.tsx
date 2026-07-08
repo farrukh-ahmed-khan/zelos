@@ -11,6 +11,14 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+function money(cents: number) {
+  return `$${(cents / 100).toLocaleString()}`;
+}
+
+function formatDeadline(value: string | Date) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
 export default async function ScholarshipDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const scholarshipDoc = await getScholarshipBySlug(slug);
@@ -18,6 +26,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
   const scholarship = serializeScholarship(scholarshipDoc);
   const donationTotals = await getScholarshipDonationTotals([scholarship.id]);
   const donationTotal = donationTotals.get(scholarship.id) ?? 0;
+  const runningTotal = scholarship.startingAmountCents + donationTotal;
 
   return (
     <main className="min-h-screen bg-[#eee6d6] px-4 py-12 text-[#202020]">
@@ -27,19 +36,24 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
         <h1 className="font-bebas text-[clamp(3rem,7vw,5rem)] uppercase leading-[0.86]">{scholarship.name}</h1>
         <div className="my-6 grid gap-6 lg:grid-cols-[1fr_0.8fr]">
           <article className="rounded-md border-2 border-[#212121] bg-white p-5 shadow-[0_4px_0_#111]">
+            <h2 className="font-bebas text-3xl uppercase">Purpose</h2>
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{scholarship.description}</p>
-            <h2 className="mt-5 font-bebas text-3xl uppercase">Eligibility</h2>
+            <h2 className="mt-5 font-bebas text-3xl uppercase">Eligibility Criteria</h2>
             <p className="text-sm leading-relaxed">{scholarship.eligibility}</p>
             <h2 className="mt-5 font-bebas text-3xl uppercase">Selection Criteria</h2>
             <p className="text-sm leading-relaxed">{scholarship.selectionCriteria}</p>
             <dl className="mt-5 grid gap-3 rounded-md bg-[#f7f1e7] p-4 text-sm sm:grid-cols-3">
               <div>
                 <dt className="font-black uppercase text-[#8c0504]">Award</dt>
-                <dd>${(scholarship.awardAmountCents / 100).toLocaleString()}</dd>
+                <dd>{money(scholarship.awardAmountCents)}</dd>
               </div>
               <div>
-                <dt className="font-black uppercase text-[#8c0504]">Donated</dt>
-                <dd>${(donationTotal / 100).toLocaleString()}</dd>
+                <dt className="font-black uppercase text-[#8c0504]">Starting fund amount</dt>
+                <dd>{money(scholarship.startingAmountCents)}</dd>
+              </div>
+              <div>
+                <dt className="font-black uppercase text-[#8c0504]">Running total</dt>
+                <dd>{money(runningTotal)}</dd>
               </div>
               <div>
                 <dt className="font-black uppercase text-[#8c0504]">Recipients</dt>
@@ -47,7 +61,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
               </div>
               <div>
                 <dt className="font-black uppercase text-[#8c0504]">Deadline</dt>
-                <dd>{new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(scholarship.applicationDeadline))}</dd>
+                <dd>{formatDeadline(scholarship.applicationDeadline)}</dd>
               </div>
             </dl>
           </article>

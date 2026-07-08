@@ -8,6 +8,7 @@ const ScholarshipSchema = new Schema(
     eligibility: { type: String, required: true, trim: true, maxlength: 3000 },
     field: { type: String, required: true, trim: true, maxlength: 120, index: true },
     awardAmountCents: { type: Number, required: true, min: 0 },
+    startingAmountCents: { type: Number, required: true, min: 0, default: 0 },
     numberOfRecipients: { type: Number, required: true, min: 1, default: 1 },
     applicationDeadline: { type: Date, required: true, index: true },
     selectionCriteria: { type: String, required: true, trim: true, maxlength: 3000 },

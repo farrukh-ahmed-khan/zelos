@@ -15,6 +15,7 @@ export function serializeScholarship(scholarship: ScholarshipDocument) {
     eligibility: scholarship.eligibility,
     field: scholarship.field,
     awardAmountCents: scholarship.awardAmountCents,
+    startingAmountCents: scholarship.startingAmountCents ?? scholarship.awardAmountCents,
     numberOfRecipients: scholarship.numberOfRecipients,
     applicationDeadline: scholarship.applicationDeadline,
     selectionCriteria: scholarship.selectionCriteria,
@@ -24,7 +25,6 @@ export function serializeScholarship(scholarship: ScholarshipDocument) {
     ownerEmail: scholarship.ownerEmail ?? null,
     status: scholarship.status,
     featured: scholarship.featured,
-    startingAmountCents: scholarship.awardAmountCents,
     createdAt: scholarship.createdAt,
     updatedAt: scholarship.updatedAt,
   };

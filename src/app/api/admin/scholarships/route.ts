@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     const body = createScholarshipSchema.parse(await request.json());
     const scholarship = await createScholarship({
       ...body,
+      startingAmountCents: body.startingAmountCents ?? body.awardAmountCents,
       ownerEmail: body.ownerEmail || null,
       applicationDocumentLabel: body.applicationDocumentLabel || null,
       applicationDeadline: new Date(body.applicationDeadline),
