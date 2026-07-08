@@ -942,6 +942,14 @@ export function DashboardShell({
       </section>
 
       <div className="container py-8">
+        {isSubscriberUser ? (
+          <div className="mb-6">
+            <SectionCard title="News & Updates">
+              <NewsUpdatesPanel broadcasts={broadcasts} />
+            </SectionCard>
+          </div>
+        ) : null}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Account" value={roleLabels[user.role] ?? user.role} detail={user.email} />
           <StatCard label="Age Track" value={user.ageTrack} detail={`Age captured as ${user.age}`} />
@@ -1032,9 +1040,11 @@ export function DashboardShell({
               </SectionCard>
             ) : null}
 
-            <SectionCard title="News & Updates">
-              <NewsUpdatesPanel broadcasts={broadcasts} />
-            </SectionCard>
+            {!isSubscriberUser ? (
+              <SectionCard title="News & Updates">
+                <NewsUpdatesPanel broadcasts={broadcasts} />
+              </SectionCard>
+            ) : null}
 
             <SectionCard
               title="Store Orders"
