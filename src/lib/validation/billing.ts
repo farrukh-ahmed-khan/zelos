@@ -4,13 +4,13 @@ export const createCheckoutSessionSchema = z.object({
   planId: z.string().trim().min(1),
   giftCardCode: z.string().trim().max(80).optional(),
   promoCode: z.string().trim().max(80).optional(),
-  ageTrack: z.enum(["child", "teen", "young-adult"]),
+  ageTrack: z.enum(["child", "teen", "young-adult", "adult"]),
   seats: z
     .array(
       z.object({
         label: z.string().trim().min(1).max(120),
         email: z.email().trim().toLowerCase().optional().or(z.literal("")),
-        ageTrack: z.enum(["child", "teen", "young-adult"]),
+        ageTrack: z.enum(["child", "teen", "young-adult", "adult"]),
       }),
     )
     .min(1)

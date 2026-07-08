@@ -202,6 +202,7 @@ export function AdminSubscriptionPlansManager({
             <option value="child">Children</option>
             <option value="teen">Teens</option>
             <option value="young-adult">Young Adults</option>
+            <option value="adult">Adults</option>
           </select>
         </label>
         {planKind === "multi-discount" ? (
@@ -229,7 +230,7 @@ export function AdminSubscriptionPlansManager({
             Bundle tracks
             <input
               name="bundleTracks"
-              placeholder="Example: child, teen, young-adult"
+              placeholder="Example: child, teen, young-adult, adult"
               className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal"
             />
           </label>

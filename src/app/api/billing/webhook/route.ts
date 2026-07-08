@@ -79,7 +79,7 @@ function parseCheckoutSeats(value: unknown, fallbackAgeTrack: string) {
             : `Learner ${index + 1}`,
         email: typeof seat?.email === "string" ? seat.email.trim().toLowerCase() : "",
         ageTrack:
-          ["child", "teen", "young-adult"].includes(seat?.ageTrack)
+          ["child", "teen", "young-adult", "adult"].includes(seat?.ageTrack)
             ? seat.ageTrack
             : fallbackAgeTrack,
       }))
@@ -176,7 +176,14 @@ export async function POST(request: NextRequest) {
               email: childEmail,
               password: await hashPassword(password),
               role: "child",
-              age: seat.ageTrack === "child" ? 10 : seat.ageTrack === "teen" ? 15 : 19,
+              age:
+                seat.ageTrack === "child"
+                  ? 10
+                  : seat.ageTrack === "teen"
+                    ? 15
+                    : seat.ageTrack === "young-adult"
+                      ? 19
+                      : 30,
               ageTrack: seat.ageTrack,
               parentId: user._id.toString(),
               interests: [],

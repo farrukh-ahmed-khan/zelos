@@ -805,6 +805,7 @@ function ParentLearnersPanel({ learners }: { learners: ChildAccount[] }) {
     if (value === "child") return "Children";
     if (value === "teen") return "Teens";
     if (value === "young-adult") return "Young Adults";
+    if (value === "adult") return "Adults";
     return value;
   }
 

@@ -52,7 +52,7 @@ export const createSubscriptionPlanSchema = z.object({
   stripePriceId: z.string().trim().max(180).optional(),
   planKind: z.enum(["single", "multi-discount", "bundle"]).optional(),
   bundleTracks: z
-    .array(z.enum(["child", "teen", "young-adult"]))
+    .array(z.enum(["child", "teen", "young-adult", "adult"]))
     .max(12)
     .optional(),
   multiSubscriptionDiscountPercent: z.number().int().min(0).max(100).optional(),

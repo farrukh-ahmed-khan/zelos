@@ -23,7 +23,7 @@ type Plan = {
 type LearnerSeat = {
   label: string;
   email: string;
-  ageTrack: "child" | "teen" | "young-adult";
+  ageTrack: "child" | "teen" | "young-adult" | "adult";
 };
 
 type Subscription = {
@@ -108,6 +108,7 @@ export function BillingPanel({
     if (value === "child") return "Children";
     if (value === "teen") return "Teens";
     if (value === "young-adult") return "Young Adults";
+    if (value === "adult") return "Adults";
     return value;
   }
 
@@ -400,6 +401,7 @@ export function BillingPanel({
                           <option value="child">Children</option>
                           <option value="teen">Teens</option>
                           <option value="young-adult">Young Adults</option>
+                          <option value="adult">Adults</option>
                         </select>
                       </label>
                     )}
