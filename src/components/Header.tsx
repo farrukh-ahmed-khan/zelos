@@ -27,10 +27,10 @@ const navItems = [
 
 const programLinks = [
   { label: "Financial Literacy", href: "/financial-literacy" },
-  { label: "Children", href: "/financial-literacy?track=child" },
-  { label: "Teens", href: "/financial-literacy?track=teen" },
-  { label: "Young Adults", href: "/financial-literacy?track=young-adult" },
-  { label: "Adults", href: "/financial-literacy?track=adult" },
+  // { label: "Children", href: "/financial-literacy?track=child" },
+  // { label: "Teens", href: "/financial-literacy?track=teen" },
+  // { label: "Young Adults", href: "/financial-literacy?track=young-adult" },
+  // { label: "Adults", href: "/financial-literacy?track=adult" },
   { label: "School Curriculum", href: "/school-curriculum" },
   { label: "Mentoring", href: "/mentoring" },
   { label: "Scholarship Incubator", href: "/scholarship-incubator" },
