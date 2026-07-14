@@ -34,8 +34,8 @@ export function HeroBanner() {
                 With financial literacy, mentorship, scholarship, and opportunity.
               </p>
               <p className="mt-3 max-w-[680px] font-sans text-[18px] font-normal leading-[1.45] text-white sm:text-[20px] lg:max-w-[620px] 2xl:text-[24px]">
-                Giving young people the tools, guidance, and real-world exposure they
-                need to build strong futures - wherever they&apos;re starting from.
+                We empower young people with the knowledge, guidance, and hands-on experiences to make informed financial decisions, build lasting success, 
+                and become leaders in their chosen fields of endeavor.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3 2xl:mt-9">
