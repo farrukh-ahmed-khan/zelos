@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { CartButton } from "@/components/CartButton";
+import { CheckoutSuccessCleanup } from "@/components/CheckoutSuccessCleanup";
 import { getProducts, serializeProduct } from "@/lib/store/service";
 
 export const dynamic = "force-dynamic";
@@ -89,12 +90,15 @@ export default async function StorePage({
       <div className="container px-4 pb-20 sm:px-6">
         {/* Checkout status banners */}
         {checkout === "success" && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#b7e4c7] bg-[#eef8e8] px-5 py-4 text-sm font-bold text-[#1a5c2e]">
-            <span>✓ Order confirmed! Check your email for details.</span>
-            <Link href="/store/orders" className="text-sm font-black text-[#1a5c2e]! underline underline-offset-2">
-              View My Orders →
-            </Link>
-          </div>
+          <>
+            <CheckoutSuccessCleanup />
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#b7e4c7] bg-[#eef8e8] px-5 py-4 text-sm font-bold text-[#1a5c2e]">
+              <span>✓ Order confirmed! Check your email for details.</span>
+              <Link href="/store/orders" className="text-sm font-black text-[#1a5c2e]! underline underline-offset-2">
+                View My Orders →
+              </Link>
+            </div>
+          </>
         )}
         {checkout === "cancelled" && (
           <div className="mt-6 rounded-xl border border-[#f4c5c5] bg-[#fff3f3] px-5 py-4 text-sm font-bold text-[#8c0504]">

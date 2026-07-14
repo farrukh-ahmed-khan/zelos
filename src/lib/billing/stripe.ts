@@ -24,8 +24,7 @@ type StripeStoreCheckoutParams = {
   amountCents: number;
   customerEmail: string;
   orderId: string;
-  successUrl: string;
-  cancelUrl: string;
+  returnUrl: string;
   orderDescription?: string;
 };
 
@@ -34,7 +33,17 @@ type StripePortalParams = {
   returnUrl: string;
 };
 
-async function postStripeForm(path: string, values: Record<string, string>) {
+type StripeApiResource = {
+  id: string;
+  url?: string;
+  client_secret?: string | null;
+};
+
+async function postStripeForm(
+  path: string,
+  values: Record<string, string>,
+  idempotencyKey?: string,
+) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
 
   if (!secretKey) {
@@ -49,6 +58,7 @@ async function postStripeForm(path: string, values: Record<string, string>) {
     headers: {
       Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
     validateStatus: () => true,
   });
@@ -59,7 +69,7 @@ async function postStripeForm(path: string, values: Record<string, string>) {
     throw new ApiError(response.status, data?.error?.message ?? "Stripe request failed.", data);
   }
 
-  return data as { id: string; url?: string };
+  return data as StripeApiResource;
 }
 
 export async function createStripeCheckoutSession(params: StripeCheckoutParams) {
@@ -167,21 +177,22 @@ export async function createStripeDonationCheckoutSession(params: StripeDonation
 export async function createStripeStoreCheckoutSession(params: StripeStoreCheckoutParams) {
   const values: Record<string, string> = {
     mode: "payment",
+    ui_mode: "elements",
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][product_data][name]": "Zelos store order",
     "line_items[0][price_data][product_data][description]": params.orderDescription ?? "Zelos swag store purchase",
     "line_items[0][price_data][unit_amount]": String(params.amountCents),
     "line_items[0][quantity]": "1",
+    "payment_method_types[0]": "card",
     customer_email: params.customerEmail,
-    success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
+    return_url: params.returnUrl,
     "metadata[kind]": "store",
     "metadata[orderId]": params.orderId,
     "payment_intent_data[metadata][kind]": "store",
     "payment_intent_data[metadata][orderId]": params.orderId,
   };
 
-  return postStripeForm("checkout/sessions", values);
+  return postStripeForm("checkout/sessions", values, `store-checkout-${params.orderId}`);
 }
 
 export async function createStripeBillingPortalSession(params: StripePortalParams) {

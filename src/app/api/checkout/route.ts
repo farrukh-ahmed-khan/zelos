@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/cookies";
 import { verifyAuthToken } from "@/lib/auth/jwt";
-import { handleApiError, successResponse } from "@/lib/http";
+import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { checkoutSchema } from "@/lib/validation/commerce";
 import { verifyCaptchaToken } from "@/lib/captcha";
@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
         {
           message: "Order paid with gift card credit.",
           orderId: order._id.toString(),
-          checkoutUrl: null,
+          clientSecret: null,
+          paid: true,
+          totalCents: 0,
         },
         { status: 201 },
       );
@@ -47,19 +49,25 @@ export async function POST(request: NextRequest) {
       amountCents: order.totalCents,
       customerEmail: order.email,
       orderId: order._id.toString(),
-      successUrl: `${baseUrl}/store?checkout=success`,
-      cancelUrl: `${baseUrl}/store?checkout=cancelled`,
+      returnUrl: `${baseUrl}/store?checkout=success`,
       orderDescription: order.items.map((item) => `${item.quantity}x ${item.name}`).join(", "),
     });
+
+    if (!checkout.client_secret) {
+      throw new ApiError(502, "Stripe did not initialize the secure payment form.");
+    }
 
     order.stripeCheckoutSessionId = checkout.id;
     await order.save();
 
     return successResponse(
       {
-        message: "Order recorded. Opening secure checkout.",
+        message: "Order recorded. Payment is ready.",
         orderId: order._id.toString(),
-        checkoutUrl: checkout.url,
+        checkoutSessionId: checkout.id,
+        clientSecret: checkout.client_secret,
+        paid: false,
+        totalCents: order.totalCents,
       },
       { status: 201 },
     );

@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState, useSyncExternalStore } from "react";
+import { FormEvent, useMemo, useState, useSyncExternalStore } from "react";
+import { loadStripe, type StripeCheckoutContact } from "@stripe/stripe-js";
+import {
+  CheckoutElementsProvider,
+  PaymentElement,
+  useCheckoutElements,
+} from "@stripe/react-stripe-js/checkout";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { CART_KEY, type CartItem, saveCart, cartSubtotalCents, money } from "@/lib/cart";
@@ -12,6 +18,50 @@ type CheckoutContact = {
   lastName?: string;
   email?: string;
 };
+
+type Address = {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+};
+
+type PaymentSession = {
+  clientSecret: string;
+  orderId: string;
+  totalCents: number;
+  firstName: string;
+  lastName: string;
+  shippingAddress: Address;
+  billingAddress: Address;
+};
+
+declare global {
+  var zelosStripePromise:
+    | {
+        publishableKey: string;
+        promise: ReturnType<typeof loadStripe>;
+      }
+    | undefined;
+}
+
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+
+function getStripePromise() {
+  if (!stripePublishableKey) return null;
+
+  if (globalThis.zelosStripePromise?.publishableKey === stripePublishableKey) {
+    return globalThis.zelosStripePromise.promise;
+  }
+
+  const promise = loadStripe(stripePublishableKey);
+  globalThis.zelosStripePromise = { publishableKey: stripePublishableKey, promise };
+  return promise;
+}
+
+const stripePromise = getStripePromise();
 
 const EMPTY_CART: CartItem[] = [];
 let cachedCartRaw = "";
@@ -69,7 +119,13 @@ function AddressFields({ prefix }: { prefix: string }) {
       </div>
       <div>
         <label className={labelClass}>Country</label>
-        <input name={`${prefix}_country`} placeholder="United States" defaultValue="United States" className={inputClass} />
+        <select name={`${prefix}_country`} defaultValue="US" className={inputClass}>
+          <option value="US">United States</option>
+          <option value="CA">Canada</option>
+          <option value="GB">United Kingdom</option>
+          <option value="AU">Australia</option>
+          <option value="PK">Pakistan</option>
+        </select>
       </div>
     </div>
   );
@@ -82,8 +138,162 @@ function extractAddress(formData: FormData, prefix: string) {
     city: String(formData.get(`${prefix}_city`) ?? ""),
     state: String(formData.get(`${prefix}_state`) ?? ""),
     zip: String(formData.get(`${prefix}_zip`) ?? ""),
-    country: String(formData.get(`${prefix}_country`) ?? "United States") || "United States",
+    country: String(formData.get(`${prefix}_country`) ?? "US") || "US",
   };
+}
+
+function stripeContact(name: string, address: Address): StripeCheckoutContact {
+  return {
+    name,
+    address: {
+      line1: address.line1,
+      line2: address.line2 ?? null,
+      city: address.city,
+      state: address.state,
+      postal_code: address.zip,
+      country: address.country,
+    },
+  };
+}
+
+function PaymentForm({ session }: { session: PaymentSession }) {
+  const checkoutState = useCheckoutElements();
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+
+  async function handlePayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (checkoutState.type !== "success") return;
+
+    setPaymentError("");
+    setIsPaying(true);
+
+    try {
+      const fullName = `${session.firstName} ${session.lastName}`.trim();
+      const result = await checkoutState.checkout.confirm({
+        redirect: "if_required",
+        shippingAddress: stripeContact(fullName, session.shippingAddress),
+        billingAddress: stripeContact(fullName, session.billingAddress),
+      });
+
+      if (result.type === "error") {
+        setPaymentError(result.error.message || "Payment could not be completed.");
+        return;
+      }
+
+      saveCart([]);
+      window.location.assign(`/store?checkout=success&orderId=${session.orderId}`);
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error && error.message
+          ? error.message
+          : "Payment could not be completed. Please try again.",
+      );
+    } finally {
+      setIsPaying(false);
+    }
+  }
+
+  if (checkoutState.type === "loading") {
+    return (
+      <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
+        <div className="h-5 w-40 animate-pulse rounded bg-[#e8e3da]" />
+        <div className="mt-5 h-28 animate-pulse rounded-xl bg-[#f4f1e9]" />
+      </div>
+    );
+  }
+
+  if (checkoutState.type === "error") {
+    return (
+      <div className="rounded-xl border border-[#f4c5c5] bg-[#fff3f3] px-5 py-4 text-sm font-bold text-[#8c0504]">
+        {checkoutState.error.message}
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handlePayment}
+      className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]"
+    >
+      <h2 className="mb-2 font-bebas text-2xl uppercase">
+        <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#8c0504] text-sm text-white">
+          4
+        </span>
+        Secure Payment
+      </h2>
+      <p className="mb-5 text-sm leading-relaxed text-[#777]">
+        Complete payment here without leaving the Zelos checkout.
+      </p>
+
+      <PaymentElement
+        options={{
+          layout: "accordion",
+          fields: { billingDetails: "never" },
+        }}
+      />
+
+      {paymentError ? (
+        <p className="mt-4 rounded-lg bg-[#fff3f3] px-4 py-3 text-sm font-bold text-[#8c0504]">
+          {paymentError}
+        </p>
+      ) : null}
+
+      <button
+        type="submit"
+        disabled={isPaying || !checkoutState.checkout.canConfirm}
+        className="mt-5 w-full rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-4 text-base font-black text-[#212121]! shadow-[0_5px_0_#111] transition hover:bg-[#fff176] active:shadow-[0_2px_0_#111] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isPaying ? "Processing Payment…" : `Pay ${money(session.totalCents)}`}
+      </button>
+      <p className="mt-3 text-center text-xs text-[#999]">
+        Card details are encrypted and sent directly to Stripe.
+      </p>
+    </form>
+  );
+}
+
+function PaymentStep({ session }: { session: PaymentSession }) {
+  const options = useMemo(
+    () => ({
+      clientSecret: session.clientSecret,
+      defaultValues: {
+        shippingAddress: stripeContact(
+          `${session.firstName} ${session.lastName}`.trim(),
+          session.shippingAddress,
+        ),
+        billingAddress: stripeContact(
+          `${session.firstName} ${session.lastName}`.trim(),
+          session.billingAddress,
+        ),
+      },
+      elementsOptions: {
+        appearance: {
+          theme: "stripe" as const,
+          variables: {
+            colorPrimary: "#8c0504",
+            colorText: "#202020",
+            colorBackground: "#faf8f4",
+            colorDanger: "#8c0504",
+            borderRadius: "8px",
+            fontFamily: "Arial, sans-serif",
+          },
+        },
+      },
+    }),
+    [session],
+  );
+
+  return (
+    <CheckoutElementsProvider
+      key={session.clientSecret}
+      stripe={stripePromise}
+      options={options}
+    >
+      <PaymentForm session={session} />
+    </CheckoutElementsProvider>
+  );
 }
 
 export function CheckoutView({
@@ -98,6 +308,7 @@ export function CheckoutView({
   const [error, setError] = useState("");
   const [giftCodeOpen, setGiftCodeOpen] = useState(false);
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+  const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
 
   const subtotal = cartSubtotalCents(cart);
   const itemCount = cart.reduce((n, i) => n + i.quantity, 0);
@@ -111,6 +322,11 @@ export function CheckoutView({
       return;
     }
 
+    if (!stripePublishableKey) {
+      setError("Stripe is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to continue.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -119,11 +335,14 @@ export function CheckoutView({
       const billingAddress = billingSameAsShipping
         ? shippingAddress
         : extractAddress(formData, "billing");
+      const firstName = String(formData.get("firstName") ?? "");
+      const lastName = String(formData.get("lastName") ?? "");
+      const email = String(formData.get("email") ?? "");
 
       const response = await api.post("/api/checkout", {
-        firstName: String(formData.get("firstName") ?? ""),
-        lastName: String(formData.get("lastName") ?? ""),
-        email: String(formData.get("email") ?? ""),
+        firstName,
+        lastName,
+        email,
         giftCardCode: String(formData.get("giftCardCode") ?? "") || undefined,
         shippingAddress,
         billingAddress,
@@ -143,14 +362,26 @@ export function CheckoutView({
         return;
       }
 
-      saveCart([]);
-
-      if (result.data.checkoutUrl) {
-        window.location.assign(result.data.checkoutUrl);
+      if (result.data.paid) {
+        saveCart([]);
+        window.location.assign(`/store?checkout=success&orderId=${result.data.orderId}`);
         return;
       }
 
-      window.location.assign("/store?checkout=success");
+      if (!result.data.clientSecret) {
+        setError("Payment could not be initialized. Please try again.");
+        return;
+      }
+
+      setPaymentSession({
+        clientSecret: result.data.clientSecret,
+        orderId: result.data.orderId,
+        totalCents: result.data.totalCents,
+        firstName,
+        lastName,
+        shippingAddress,
+        billingAddress,
+      });
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -211,6 +442,7 @@ export function CheckoutView({
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                <fieldset disabled={Boolean(paymentSession)} className="space-y-5 disabled:opacity-70">
 
                 {/* 1 — Contact */}
                 <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
@@ -288,19 +520,29 @@ export function CheckoutView({
                   )}
                 </div>
 
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-4 text-base font-black text-[#212121]! shadow-[0_5px_0_#111] transition hover:bg-[#fff176] active:shadow-[0_2px_0_#111] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting ? "Opening Secure Checkout…" : `Place Order · ${money(subtotal)}`}
-                </button>
-
-                <p className="text-center text-xs text-[#aaa]">
-                  You&apos;ll be redirected to Stripe for secure payment. SSL encrypted.
-                </p>
+                  {/* Submit contact and delivery details before mounting secure payment fields. */}
+                  {paymentSession ? (
+                    <p className="rounded-xl bg-[#eef8e8] px-5 py-4 text-sm font-bold text-[#24551f]">
+                      Your details are saved. Complete the secure payment below.
+                    </p>
+                  ) : (
+                    <>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-4 text-base font-black text-[#212121]! shadow-[0_5px_0_#111] transition hover:bg-[#fff176] active:shadow-[0_2px_0_#111] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isSubmitting ? "Preparing Payment…" : `Continue to Payment · ${money(subtotal)}`}
+                      </button>
+                      <p className="text-center text-xs text-[#aaa]">
+                        Payment is completed securely on this Zelos page.
+                      </p>
+                    </>
+                  )}
+                </fieldset>
               </form>
+
+              {paymentSession ? <PaymentStep session={paymentSession} /> : null}
             </div>
 
             {/* Right: order review */}

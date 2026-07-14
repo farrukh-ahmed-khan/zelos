@@ -6,12 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:store": "node tools/seed-store-products.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",
     "@ant-design/nextjs-registry": "^1.3.0",
     "@aws-sdk/client-s3": "^3.1038.0",
+    "@stripe/react-stripe-js": "^6.7.0",
+    "@stripe/stripe-js": "^9.10.0",
     "@types/busboy": "^1.5.4",
     "antd": "^6.3.6",
     "axios": "^1.16.1",

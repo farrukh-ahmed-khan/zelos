@@ -59,12 +59,21 @@ export const donationSchema = z.object({
   captchaToken: z.string().trim().max(4000).optional(),
 });
 
+const productImageSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine(
+    (value) => value.startsWith("/") || z.url().safeParse(value).success,
+    "Product images must be an absolute URL or a root-relative public asset path.",
+  );
+
 export const createProductSchema = z.object({
   name: z.string().trim().min(2).max(160),
   slug: z.string().trim().min(2).max(180).regex(/^[a-z0-9-]+$/),
   description: z.string().trim().min(5).max(3000),
   priceCents: z.number().int().min(0),
-  images: z.array(z.url().trim().max(2048)).max(12).optional(),
+  images: z.array(productImageSchema).max(12).optional(),
   sizes: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
   colors: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   variants: z
