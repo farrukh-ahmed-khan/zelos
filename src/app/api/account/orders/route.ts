@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
         discountCents: order.discountCents,
         totalCents: order.totalCents,
         status: order.status,
+        printify: order.printify ?? null,
         paidAt: order.paidAt,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,

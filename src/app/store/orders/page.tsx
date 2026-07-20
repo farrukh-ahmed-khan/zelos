@@ -96,6 +96,7 @@ export default async function OrderHistoryPage() {
     })),
     shippingAddress: (order.shippingAddress as SerializedAddress) ?? null,
     billingAddress: (order.billingAddress as SerializedAddress) ?? null,
+    printify: order.printify ?? null,
     paidAt: order.paidAt?.toISOString() ?? null,
     createdAt: order.createdAt?.toISOString() ?? new Date().toISOString(),
   }));
@@ -258,6 +259,37 @@ export default async function OrderHistoryPage() {
                       </div>
                     )}
                   </div>
+
+                  {order.printify?.shipments?.length ? (
+                    <div className="mt-5 border-t border-[#e8e3da] pt-5">
+                      <p className="mb-3 text-[11px] font-black uppercase tracking-wider text-[#999]">Tracking</p>
+                      <div className="grid gap-2">
+                        {order.printify.shipments.map((shipment, index) => (
+                          <div key={`${shipment.number ?? index}`} className="rounded-lg bg-[#f9f6f1] px-4 py-3 text-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-bold text-[#202020]">
+                                {[shipment.carrier, shipment.number].filter(Boolean).join(" ")}
+                              </span>
+                              {shipment.url ? (
+                                <a href={shipment.url} target="_blank" rel="noreferrer" className="font-black text-[#8c0504]! underline underline-offset-2">
+                                  Track package
+                                </a>
+                              ) : null}
+                            </div>
+                            {shipment.deliveredAt ? (
+                              <p className="mt-1 text-xs text-[#667085]">
+                                Delivered {new Date(shipment.deliveredAt).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {/* Status progress */}
                   <div className="mt-5 border-t border-[#e8e3da] pt-5">

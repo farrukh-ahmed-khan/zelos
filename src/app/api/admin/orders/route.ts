@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
         giftCardCode: order.giftCardCode ?? null,
         status: order.status,
         shippingAddress: order.shippingAddress ?? null,
+        printify: order.printify ?? null,
         createdAt: order.createdAt,
       })),
     });

@@ -5,9 +5,20 @@ const ProductVariantSchema = new Schema(
     sku: { type: String, trim: true, maxlength: 80, default: null },
     size: { type: String, trim: true, maxlength: 30, default: null },
     color: { type: String, trim: true, maxlength: 40, default: null },
+    printifyVariantId: { type: Number, min: 1, default: null },
+    imageUrl: { type: String, trim: true, maxlength: 2048, default: null },
     inventoryCount: { type: Number, required: true, default: 0, min: 0 },
     priceAdjustmentCents: { type: Number, required: true, default: 0 },
     isActive: { type: Boolean, default: true, index: true },
+  },
+  { _id: false },
+);
+
+const ProductPrintifySchema = new Schema(
+  {
+    enabled: { type: Boolean, default: false, index: true },
+    productId: { type: String, trim: true, maxlength: 120, default: null },
+    defaultVariantId: { type: Number, min: 1, default: null },
   },
   { _id: false },
 );
@@ -26,6 +37,7 @@ const ProductSchema = new Schema(
     limitedEdition: { type: Boolean, default: false, index: true },
     isActive: { type: Boolean, default: true, index: true },
     isGiftCard: { type: Boolean, default: false, index: true },
+    printify: { type: ProductPrintifySchema, default: () => ({}) },
   },
   { timestamps: true, versionKey: false },
 );

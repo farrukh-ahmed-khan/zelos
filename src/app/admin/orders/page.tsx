@@ -4,12 +4,14 @@ import { requireSuperOrPermission } from "@/lib/super-admin-or-permission";
 import { connectToDatabase } from "@/lib/db";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
+import { submitPendingPrintifyOrders } from "@/lib/store/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
   const user = await requireSuperOrPermission("billing.read");
   await connectToDatabase();
+  await submitPendingPrintifyOrders();
   const [orders, products] = await Promise.all([
     Order.find().sort({ createdAt: -1 }).lean(),
     Product.find().sort({ createdAt: -1 }).lean(),
@@ -27,6 +29,9 @@ export default async function AdminOrdersPage() {
       unitPriceCents: item.unitPriceCents,
       size: item.size ?? null,
       color: item.color ?? null,
+      printifyProductId: item.printifyProductId ?? null,
+      printifyVariantId: item.printifyVariantId ?? null,
+      printifySku: item.printifySku ?? null,
     })),
     subtotalCents: order.subtotalCents,
     discountCents: order.discountCents ?? 0,
@@ -37,6 +42,7 @@ export default async function AdminOrdersPage() {
       line1: string; line2?: string | null; city: string;
       state: string; zip: string; country?: string | null;
     } | null) ?? null,
+    printify: order.printify ?? null,
     createdAt: order.createdAt,
   }));
 
@@ -58,6 +64,7 @@ export default async function AdminOrdersPage() {
             limitedEdition: product.limitedEdition,
             isActive: product.isActive,
             isGiftCard: product.isGiftCard,
+            printify: product.printify ?? { enabled: false, productId: null, defaultVariantId: null },
           }))))}
         />
       </AdminPanel>

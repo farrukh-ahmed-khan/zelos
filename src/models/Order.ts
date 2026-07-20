@@ -8,6 +8,9 @@ const OrderItemSchema = new Schema(
     unitPriceCents: { type: Number, required: true, min: 0 },
     size: { type: String, default: null },
     color: { type: String, default: null },
+    printifyProductId: { type: String, default: null },
+    printifyVariantId: { type: Number, default: null },
+    printifySku: { type: String, default: null },
   },
   { _id: false },
 );
@@ -20,6 +23,36 @@ const AddressSchema = new Schema(
     state: { type: String, required: true, trim: true, maxlength: 100 },
     zip: { type: String, required: true, trim: true, maxlength: 20 },
     country: { type: String, default: "US", trim: true, maxlength: 60 },
+  },
+  { _id: false },
+);
+
+const PrintifyShipmentSchema = new Schema(
+  {
+    carrier: { type: String, default: null },
+    number: { type: String, default: null },
+    url: { type: String, default: null },
+    deliveredAt: { type: Date, default: null },
+  },
+  { _id: false },
+);
+
+const OrderPrintifySchema = new Schema(
+  {
+    orderId: { type: String, default: null, index: true },
+    shopId: { type: String, default: null },
+    status: { type: String, default: null },
+    syncStatus: {
+      type: String,
+      enum: ["not_applicable", "pending", "submitted", "failed"],
+      default: "not_applicable",
+      index: true,
+    },
+    syncError: { type: String, default: null, maxlength: 2000 },
+    submittedAt: { type: Date, default: null },
+    lastSyncedAt: { type: Date, default: null },
+    lastEventId: { type: String, default: null },
+    shipments: { type: [PrintifyShipmentSchema], default: [] },
   },
   { _id: false },
 );
@@ -49,6 +82,7 @@ const OrderSchema = new Schema(
     paidAt: { type: Date, default: null },
     shippingAddress: { type: AddressSchema, default: null },
     billingAddress: { type: AddressSchema, default: null },
+    printify: { type: OrderPrintifySchema, default: () => ({}) },
   },
   { timestamps: true, versionKey: false },
 );

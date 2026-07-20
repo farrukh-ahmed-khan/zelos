@@ -16,6 +16,7 @@ export type StoreProduct = {
     sku?: string | null;
     size?: string | null;
     color?: string | null;
+    imageUrl?: string | null;
     inventoryCount: number;
     priceAdjustmentCents?: number;
     isActive?: boolean;
@@ -24,6 +25,11 @@ export type StoreProduct = {
   limitedEdition: boolean;
   isActive: boolean;
   isGiftCard: boolean;
+  printify?: {
+    enabled?: boolean;
+    productId?: string | null;
+    defaultVariantId?: number | null;
+  };
 };
 
 type CartItem = {

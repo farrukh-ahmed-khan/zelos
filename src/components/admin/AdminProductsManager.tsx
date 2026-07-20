@@ -12,6 +12,8 @@ type ProductVariant = {
   sku?: string | null;
   size?: string | null;
   color?: string | null;
+  printifyVariantId?: number | null;
+  imageUrl?: string | null;
   inventoryCount: number;
   priceAdjustmentCents?: number;
   isActive?: boolean;
@@ -31,6 +33,11 @@ type Product = {
   limitedEdition: boolean;
   isActive: boolean;
   isGiftCard: boolean;
+  printify?: {
+    enabled?: boolean;
+    productId?: string | null;
+    defaultVariantId?: number | null;
+  };
   createdAt: string;
 };
 
@@ -43,6 +50,9 @@ type ProductForm = {
   colors: string;
   inventoryCount: number;
   isActive: boolean;
+  printifyEnabled: boolean;
+  printifyProductId: string;
+  printifyDefaultVariantId: number | "";
 };
 
 function money(cents: number) {
@@ -62,6 +72,9 @@ function toProductForm(product: Product): ProductForm {
     colors: product.colors.join(", "),
     inventoryCount: product.inventoryCount,
     isActive: product.isActive,
+    printifyEnabled: product.printify?.enabled ?? false,
+    printifyProductId: product.printify?.productId ?? "",
+    printifyDefaultVariantId: product.printify?.defaultVariantId ?? "",
   };
 }
 
@@ -123,6 +136,13 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
       colors: form.colors.split(",").map((value) => value.trim()).filter(Boolean),
       inventoryCount: Number(form.inventoryCount),
       isActive: form.isActive,
+      printify: {
+        enabled: form.printifyEnabled,
+        productId: form.printifyProductId.trim() || null,
+        defaultVariantId: form.printifyDefaultVariantId
+          ? Number(form.printifyDefaultVariantId)
+          : null,
+      },
     };
 
     try {
@@ -222,6 +242,23 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
       render: (_, product) => <Tag color={product.isGiftCard ? "purple" : "blue"}>{product.isGiftCard ? "Gift card" : "Swag"}</Tag>,
     },
     {
+      title: "Printify",
+      key: "printify",
+      width: 150,
+      filters: [
+        { text: "Enabled", value: "enabled" },
+        { text: "Manual", value: "manual" },
+      ],
+      onFilter: (value, product) =>
+        value === "enabled" ? Boolean(product.printify?.enabled) : !product.printify?.enabled,
+      render: (_, product) =>
+        product.printify?.enabled ? (
+          <Tag color="geekblue">PRINTIFY</Tag>
+        ) : (
+          <Tag>MANUAL</Tag>
+        ),
+    },
+    {
       title: "Status",
       key: "status",
       width: 130,
@@ -289,7 +326,7 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
             columns={columns}
             dataSource={filteredItems}
             pagination={pagination}
-            scroll={{ x: 1430 }}
+            scroll={{ x: 1580 }}
             bordered
             locale={{ emptyText: "No products found" }}
           />
@@ -364,6 +401,54 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
               />
               Active
             </label>
+            <div className="grid gap-3 rounded-md border border-[#edf0f3] p-3">
+              <label className="flex items-center gap-3 text-sm font-semibold text-[#202020]">
+                <input
+                  type="checkbox"
+                  checked={form.printifyEnabled}
+                  onChange={(event) =>
+                    setForm((prev) =>
+                      prev ? { ...prev, printifyEnabled: event.target.checked } : prev,
+                    )
+                  }
+                  className="accent-[#8c0504]"
+                />
+                Printify fulfillment
+              </label>
+              <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                Printify product ID
+                <input
+                  value={form.printifyProductId}
+                  onChange={(event) =>
+                    setForm((prev) =>
+                      prev ? { ...prev, printifyProductId: event.target.value } : prev,
+                    )
+                  }
+                  className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
+                />
+              </label>
+              <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                Fallback Printify variant ID
+                <input
+                  type="number"
+                  min={1}
+                  value={form.printifyDefaultVariantId}
+                  onChange={(event) =>
+                    setForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            printifyDefaultVariantId: event.target.value
+                              ? Number(event.target.value)
+                              : "",
+                          }
+                        : prev,
+                    )
+                  }
+                  className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal text-[#202020] outline-none focus:border-[#8c0504]"
+                />
+              </label>
+            </div>
           </div>
         ) : null}
       </Modal>

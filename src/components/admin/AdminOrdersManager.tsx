@@ -26,6 +26,9 @@ type OrderItem = {
   unitPriceCents: number;
   size?: string | null;
   color?: string | null;
+  printifyProductId?: string | null;
+  printifyVariantId?: number | null;
+  printifySku?: string | null;
 };
 
 type OrderAddress = {
@@ -49,6 +52,18 @@ type Order = {
   giftCardCode: string | null;
   status: string;
   shippingAddress?: OrderAddress;
+  printify?: {
+    orderId?: string | null;
+    status?: string | null;
+    syncStatus?: "not_applicable" | "pending" | "submitted" | "failed";
+    syncError?: string | null;
+    shipments?: Array<{
+      carrier?: string | null;
+      number?: string | null;
+      url?: string | null;
+      deliveredAt?: string | Date | null;
+    }>;
+  } | null;
   createdAt: string | Date;
 };
 
@@ -66,12 +81,19 @@ type Product = {
   limitedEdition: boolean;
   isActive: boolean;
   isGiftCard: boolean;
+  printify?: {
+    enabled?: boolean;
+    productId?: string | null;
+    defaultVariantId?: number | null;
+  };
 };
 
 type ProductVariant = {
   sku?: string | null;
   size?: string | null;
   color?: string | null;
+  printifyVariantId?: number | null;
+  imageUrl?: string | null;
   inventoryCount: number;
   priceAdjustmentCents?: number;
   isActive?: boolean;
@@ -89,6 +111,9 @@ type ProductFormValues = {
   limitedEdition?: boolean;
   isGiftCard?: boolean;
   isActive?: boolean;
+  printifyEnabled?: boolean;
+  printifyProductId?: string;
+  printifyDefaultVariantId?: number | null;
 };
 
 const statuses = ["paid", "processing", "shipped", "delivered", "cancelled"] as const;
@@ -116,6 +141,7 @@ export function AdminOrdersManager({
   const [productActionId, setProductActionId] = useState<string | null>(null);
   const [isCreatingGiftCard, setIsCreatingGiftCard] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [printifyActionId, setPrintifyActionId] = useState<string | null>(null);
   const [form] = Form.useForm<ProductFormValues>();
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const productTypeFilters = [
@@ -194,6 +220,7 @@ export function AdminOrdersManager({
           .toUpperCase(),
         size,
         color,
+        printifyVariantId: null,
         inventoryCount: 0,
         priceAdjustmentCents: 0,
         isActive: true,
@@ -211,6 +238,7 @@ export function AdminOrdersManager({
         sku: variant.sku ?? "",
         size: variant.size ?? "",
         color: variant.color ?? "",
+        printifyVariantId: variant.printifyVariantId || null,
         inventoryCount: variant.inventoryCount,
         priceAdjustmentCents: variant.priceAdjustmentCents ?? 0,
         isActive: variant.isActive ?? true,
@@ -232,6 +260,11 @@ export function AdminOrdersManager({
         limitedEdition: Boolean(values.limitedEdition),
         isActive: values.isActive !== false,
         isGiftCard: Boolean(values.isGiftCard),
+        printify: {
+          enabled: Boolean(values.printifyEnabled),
+          productId: values.printifyProductId?.trim() || null,
+          defaultVariantId: values.printifyDefaultVariantId || null,
+        },
       });
       const result = response.data;
 
@@ -342,6 +375,40 @@ export function AdminOrdersManager({
     }
   }
 
+  async function sendOrderToPrintify(order: Order) {
+    setPrintifyActionId(order.id);
+
+    try {
+      const response = await api.post(`/api/admin/orders/${order.id}/printify`, {});
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to send order to Printify.");
+        return;
+      }
+
+      setItems((current) =>
+        current.map((item) =>
+          item.id === order.id
+            ? {
+                ...item,
+                status: result.data.order.status,
+                printify: result.data.order.printify,
+              }
+            : item,
+        ),
+      );
+      setSelectedOrder((current) =>
+        current?.id === order.id
+          ? { ...current, status: result.data.order.status, printify: result.data.order.printify }
+          : current,
+      );
+      antMessage.success("Order sent to Printify.");
+    } finally {
+      setPrintifyActionId(null);
+    }
+  }
+
   const productColumns: ColumnsType<Product> = [
     {
       title: "Product",
@@ -380,6 +447,26 @@ export function AdminOrdersManager({
           {product.variants?.length ?? 0} variants
         </Tag>
       ),
+    },
+    {
+      title: "Printify",
+      key: "printify",
+      width: 170,
+      filters: [
+        { text: "Enabled", value: "enabled" },
+        { text: "Disabled", value: "disabled" },
+      ],
+      onFilter: (value, product) =>
+        value === "enabled" ? Boolean(product.printify?.enabled) : !product.printify?.enabled,
+      render: (_, product) =>
+        product.printify?.enabled ? (
+          <div>
+            <Tag color="geekblue">Enabled</Tag>
+            <p className="mt-1 truncate text-xs text-[#667085]">{product.printify.productId}</p>
+          </div>
+        ) : (
+          <Tag>Manual</Tag>
+        ),
     },
     {
       title: "Type",
@@ -517,6 +604,47 @@ export function AdminOrdersManager({
       ),
     },
     {
+      title: "Printify",
+      key: "printify",
+      width: 210,
+      filters: [
+        { text: "Pending", value: "pending" },
+        { text: "Submitted", value: "submitted" },
+        { text: "Failed", value: "failed" },
+        { text: "N/A", value: "not_applicable" },
+      ],
+      onFilter: (value, order) => (order.printify?.syncStatus ?? "not_applicable") === value,
+      render: (_, order) => {
+        const syncStatus = order.printify?.syncStatus ?? "not_applicable";
+        const color =
+          syncStatus === "submitted"
+            ? "green"
+            : syncStatus === "failed"
+              ? "red"
+              : syncStatus === "pending"
+                ? "gold"
+                : "default";
+
+        return (
+          <div className="grid gap-2">
+            <Tag color={color}>{syncStatus.replace("_", " ").toUpperCase()}</Tag>
+            {order.printify?.orderId ? (
+              <span className="truncate text-xs text-[#667085]">{order.printify.orderId}</span>
+            ) : null}
+            {syncStatus === "pending" || syncStatus === "failed" ? (
+              <Button
+                size="small"
+                loading={printifyActionId === order.id}
+                onClick={() => sendOrderToPrintify(order)}
+              >
+                {syncStatus === "failed" ? "Retry" : "Send"}
+              </Button>
+            ) : null}
+          </div>
+        );
+      },
+    },
+    {
       title: "Date",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -629,6 +757,20 @@ export function AdminOrdersManager({
         </Button>
       ),
     },
+    {
+      title: "Printify Variant",
+      dataIndex: "printifyVariantId",
+      key: "printifyVariantId",
+      width: 150,
+      render: (_, variant, index) => (
+        <InputNumber
+          min={1}
+          value={variant.printifyVariantId ?? null}
+          onChange={(value) => updateVariant(index, { printifyVariantId: value ? Number(value) : null })}
+          className="w-full"
+        />
+      ),
+    },
   ];
 
   return (
@@ -641,7 +783,13 @@ export function AdminOrdersManager({
         <Form
           form={form}
           layout="vertical"
-          initialValues={{ images: [], isActive: true, limitedEdition: false, isGiftCard: false }}
+          initialValues={{
+            images: [],
+            isActive: true,
+            limitedEdition: false,
+            isGiftCard: false,
+            printifyEnabled: false,
+          }}
           onFinish={createProduct}
         >
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -737,6 +885,22 @@ export function AdminOrdersManager({
 
           <Divider />
 
+          <Card size="small" title="Printify Fulfillment" className="rounded-md">
+            <div className="grid gap-3 md:grid-cols-[160px_1fr_220px]">
+              <Form.Item name="printifyEnabled" label="Use Printify" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+              <Form.Item name="printifyProductId" label="Printify Product ID">
+                <Input placeholder="Printify product ID" />
+              </Form.Item>
+              <Form.Item name="printifyDefaultVariantId" label="Fallback Variant ID">
+                <InputNumber min={1} className="w-full" placeholder="Variant ID" />
+              </Form.Item>
+            </div>
+          </Card>
+
+          <Divider />
+
           <Card size="small" title="Options & Variations" className="rounded-md">
             <div className="grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
               <Form.Item name="sizes" label="Sizes">
@@ -755,7 +919,7 @@ export function AdminOrdersManager({
               dataSource={variants.map((variant, index) => ({ ...variant, key: index }))}
               rowKey="key"
               pagination={false}
-              scroll={{ x: 900 }}
+              scroll={{ x: 1050 }}
               locale={{ emptyText: "Add sizes/colors, then generate variants. Gift cards can be created without variants." }}
             />
           </Card>
@@ -790,7 +954,7 @@ export function AdminOrdersManager({
           columns={productColumns}
           dataSource={productItems}
           rowKey="id"
-          scroll={{ x: 1050 }}
+          scroll={{ x: 1220 }}
           pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50] }}
         />
       </div>
@@ -801,7 +965,7 @@ export function AdminOrdersManager({
           columns={orderColumns}
           dataSource={items}
           rowKey="id"
-          scroll={{ x: 1660 }}
+          scroll={{ x: 1850 }}
           pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50] }}
           locale={{ emptyText: "No store orders yet." }}
         />
@@ -877,6 +1041,52 @@ export function AdminOrdersManager({
                   <p className="flex justify-between border-t border-[#edf0f3] pt-2 font-black"><span>Total</span><span>{money(selectedOrder.totalCents)}</span></p>
                 </div>
               </div>
+            </div>
+
+            <div className="rounded-md border border-[#edf0f3] p-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase text-[#667085]">Printify</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Tag>
+                      {(selectedOrder.printify?.syncStatus ?? "not_applicable").replace("_", " ").toUpperCase()}
+                    </Tag>
+                    {selectedOrder.printify?.orderId ? (
+                      <span className="font-mono text-xs text-[#667085]">{selectedOrder.printify.orderId}</span>
+                    ) : null}
+                  </div>
+                  {selectedOrder.printify?.syncError ? (
+                    <p className="mt-2 text-xs font-semibold text-[#b42318]">
+                      {selectedOrder.printify.syncError}
+                    </p>
+                  ) : null}
+                </div>
+                {["pending", "failed"].includes(selectedOrder.printify?.syncStatus ?? "") ? (
+                  <Button
+                    size="small"
+                    loading={printifyActionId === selectedOrder.id}
+                    onClick={() => sendOrderToPrintify(selectedOrder)}
+                  >
+                    {selectedOrder.printify?.syncStatus === "failed" ? "Retry Printify" : "Send to Printify"}
+                  </Button>
+                ) : null}
+              </div>
+              {selectedOrder.printify?.shipments?.length ? (
+                <div className="mt-3 grid gap-2">
+                  {selectedOrder.printify.shipments.map((shipment, index) => (
+                    <div key={`${shipment.number ?? index}`} className="rounded-md bg-[#f8fafc] p-2 text-xs">
+                      <p className="font-bold text-[#202020]">
+                        {[shipment.carrier, shipment.number].filter(Boolean).join(" ") || "Shipment"}
+                      </p>
+                      {shipment.url ? (
+                        <a href={shipment.url} target="_blank" rel="noreferrer" className="font-bold !text-[#8c0504] underline underline-offset-2">
+                          Tracking link
+                        </a>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}

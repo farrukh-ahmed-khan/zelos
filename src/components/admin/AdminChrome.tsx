@@ -13,6 +13,7 @@ import {
   PlaySquareOutlined,
   SafetyCertificateOutlined,
   ShoppingOutlined,
+  ShopOutlined,
   TagsOutlined,
   TeamOutlined,
   UserAddOutlined,
@@ -45,6 +46,7 @@ const navItems = [
   { href: "/admin/mentor-applications", label: "Mentors", icon: TeamOutlined, permission: "users.manage-limited" },
   { href: "/admin/broadcasts", label: "News & Updates", icon: NotificationOutlined, permission: "content.manage" },
   { href: "/admin/products", label: "Store Products", icon: ShoppingOutlined, permission: "billing.read" },
+  { href: "/admin/printify", label: "Printify", icon: ShopOutlined, permission: "billing.read" },
   { href: "/admin/gift-cards", label: "Gift Cards", icon: GiftOutlined, permission: "billing.read" },
 ] satisfies AdminNavItem[];
 

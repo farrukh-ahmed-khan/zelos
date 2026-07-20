@@ -40,6 +40,7 @@ const modules = [
   { title: "Email Outbox", href: "/admin/emails", permission: "users.manage-limited", detail: "Transactional email queue visibility" },
   { title: "News & Updates", href: "/admin/broadcasts", permission: "content.manage", detail: "Push news and updates to all user dashboards" },
   { title: "Store Products", href: "/admin/products", permission: "billing.read", detail: "Add, edit, and delete swag store products" },
+  { title: "Printify", href: "/admin/printify", permission: "billing.read", detail: "Import products, install webhooks, and inspect catalog data" },
   { title: "Gift Cards", href: "/admin/gift-cards", permission: "billing.read", detail: "Generate and manage gift cards" },
   { title: "Donation History", href: "/admin/donations", permission: "billing.read", detail: "One-time donation records and receipts" },
   { title: "Store Orders", href: "/admin/orders", permission: "billing.read", detail: "Swag orders, statuses, gift-card credits, and revenue" },

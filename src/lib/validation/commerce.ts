@@ -82,6 +82,8 @@ export const createProductSchema = z.object({
         sku: z.string().trim().max(80).optional().or(z.literal("")),
         size: z.string().trim().max(30).optional().or(z.literal("")),
         color: z.string().trim().max(40).optional().or(z.literal("")),
+        printifyVariantId: z.number().int().min(1).nullable().optional(),
+        imageUrl: productImageSchema.nullable().optional().or(z.literal("")),
         inventoryCount: z.number().int().min(0),
         priceAdjustmentCents: z.number().int().min(-100000).max(100000).optional(),
         isActive: z.boolean().optional(),
@@ -93,6 +95,13 @@ export const createProductSchema = z.object({
   limitedEdition: z.boolean().optional(),
   isActive: z.boolean().optional(),
   isGiftCard: z.boolean().optional(),
+  printify: z
+    .object({
+      enabled: z.boolean().optional(),
+      productId: z.string().trim().max(120).nullable().optional().or(z.literal("")),
+      defaultVariantId: z.number().int().min(1).nullable().optional(),
+    })
+    .optional(),
 });
 
 const addressSchema = z.object({
