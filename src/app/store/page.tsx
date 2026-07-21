@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { CartButton } from "@/components/CartButton";
 import { CheckoutSuccessCleanup } from "@/components/CheckoutSuccessCleanup";
 import { getProducts, serializeProduct } from "@/lib/store/service";
+import { formatProductDescription } from "@/lib/store/format-product-description";
 
 export const dynamic = "force-dynamic";
 
@@ -304,6 +305,7 @@ export default async function StorePage({
 
 function ProductCard({ product }: { product: SerializedProduct }) {
   const image = product.images[0];
+  const description = formatProductDescription(product.description);
   const activeVariants = (product.variants ?? []).filter((v) => v.isActive !== false);
   const totalInventory = activeVariants.length
     ? activeVariants.reduce((t, v) => t + v.inventoryCount, 0)
@@ -353,9 +355,9 @@ function ProductCard({ product }: { product: SerializedProduct }) {
         <h2 className="font-bebas text-[1.75rem] uppercase leading-none text-[#1e1e1e]">
           {product.name}
         </h2>
-        {product.description && (
+        {description && (
           <p className="mt-1.5 flex-1 text-sm leading-relaxed text-[#777] line-clamp-2">
-            {product.description}
+            {description}
           </p>
         )}
         <div className="mt-4 flex items-center justify-between gap-3">

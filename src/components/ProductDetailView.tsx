@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CART_KEY, type CartItem, money } from "@/lib/cart";
 import { type StoreProduct } from "@/components/StoreCart";
+import { formatProductDescription } from "@/lib/store/format-product-description";
 
 type ProductVariant = NonNullable<StoreProduct["variants"]>[number];
 
@@ -19,30 +20,6 @@ function selectedVariant(product: StoreProduct, size: string, color: string) {
   return activeVariants(product).find(
     (variant) => (variant.size ?? "") === size && (variant.color ?? "") === color,
   );
-}
-
-function decodeHtml(value: string) {
-  return value
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&rsquo;/gi, "'")
-    .replace(/&ldquo;/gi, '"')
-    .replace(/&rdquo;/gi, '"')
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">");
-}
-
-function cleanDescription(description: string) {
-  return decodeHtml(description)
-    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<li[^>]*>/gi, "- ")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/[ \t]{2,}/g, " ")
-    .trim();
 }
 
 function loadCart(): CartItem[] {
@@ -107,7 +84,10 @@ export function ProductDetailView({
   const [added, setAdded] = useState(false);
   const mainImage = variant?.imageUrl ?? selectedImage ?? images[0] ?? "";
   const adjustedPrice = product.priceCents + (variant?.priceAdjustmentCents ?? 0);
-  const description = useMemo(() => cleanDescription(product.description), [product.description]);
+  const description = useMemo(
+    () => formatProductDescription(product.description),
+    [product.description],
+  );
   const paragraphs = description.split(/\n{2,}/).filter(Boolean).slice(0, 5);
   const visibleInventory = variants.length
     ? variants.reduce((total, entry) => total + entry.inventoryCount, 0)
