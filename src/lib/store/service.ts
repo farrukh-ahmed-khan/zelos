@@ -223,6 +223,7 @@ export async function importAllPrintifyProducts() {
   await connectToDatabase();
 
   const imported = [];
+  const importedPrintifyProductIds: string[] = [];
   let page = 1;
   let lastPage = 1;
 
@@ -231,6 +232,7 @@ export async function importAllPrintifyProducts() {
     lastPage = response.last_page || 1;
 
     for (const printifyProduct of response.data ?? []) {
+      importedPrintifyProductIds.push(printifyProduct.id);
       const slug = await uniqueProductSlug(printifyProduct.title, printifyProduct.id);
       const payload = mapPrintifyProductToLocalPayload(printifyProduct, slug);
       const product = await Product.findOneAndUpdate(
@@ -243,6 +245,19 @@ export async function importAllPrintifyProducts() {
 
     page += 1;
   } while (page <= lastPage);
+
+  await Product.updateMany(
+    {
+      "printify.enabled": true,
+      "printify.productId": { $nin: importedPrintifyProductIds },
+    },
+    {
+      $set: {
+        isActive: false,
+        "printify.enabled": false,
+      },
+    },
+  );
 
   return imported;
 }
@@ -632,6 +647,111 @@ async function attachExistingPrintifyOrder(order: OrderDocument) {
   return order;
 }
 
+async function getCurrentPrintifyProducts() {
+  const products: PrintifyProduct[] = [];
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const response = await listPrintifyProducts(page, 50);
+    products.push(...(response.data ?? []));
+    lastPage = response.last_page || 1;
+    page += 1;
+  } while (page <= lastPage);
+
+  return products;
+}
+
+function isOrderablePrintifyVariant(variant: PrintifyProductVariant) {
+  return variant.is_enabled !== false && variant.is_available !== false;
+}
+
+async function resolvePrintifyLineItems(order: OrderDocument) {
+  const fulfillmentItems = order.items.filter(
+    (item) => item.printifyProductId || item.printifyVariantId || item.printifySku,
+  );
+
+  if (!fulfillmentItems.length) {
+    return [];
+  }
+
+  const products = await getCurrentPrintifyProducts();
+  const productsById = new Map(products.map((product) => [product.id, product]));
+  const variantsBySku = new Map<
+    string,
+    Array<{ product: PrintifyProduct; variant: PrintifyProductVariant }>
+  >();
+
+  for (const product of products) {
+    for (const variant of product.variants ?? []) {
+      if (!variant.sku || !isOrderablePrintifyVariant(variant)) {
+        continue;
+      }
+
+      const matches = variantsBySku.get(variant.sku) ?? [];
+      matches.push({ product, variant });
+      variantsBySku.set(variant.sku, matches);
+    }
+  }
+
+  const lineItems: PrintifyExistingProductLineItem[] = [];
+
+  for (const [index, item] of order.items.entries()) {
+    if (!item.printifyProductId && !item.printifyVariantId && !item.printifySku) {
+      continue;
+    }
+
+    const product = item.printifyProductId
+      ? productsById.get(item.printifyProductId)
+      : undefined;
+    const variant = product?.variants?.find(
+      (entry) =>
+        entry.id === item.printifyVariantId && isOrderablePrintifyVariant(entry),
+    );
+    const externalId = `${order._id.toString()}-${index}`;
+
+    if (product && variant) {
+      lineItems.push({
+        product_id: product.id,
+        variant_id: variant.id,
+        quantity: item.quantity,
+        external_id: externalId,
+      });
+      continue;
+    }
+
+    const skuMatches = item.printifySku ? variantsBySku.get(item.printifySku) ?? [] : [];
+
+    if (skuMatches.length === 1 && item.printifySku) {
+      const [match] = skuMatches;
+      item.printifyProductId = match.product.id;
+      item.printifyVariantId = match.variant.id;
+      lineItems.push({
+        sku: item.printifySku,
+        quantity: item.quantity,
+        external_id: externalId,
+      });
+      continue;
+    }
+
+    const options = [item.size, item.color].filter(Boolean).join(" / ");
+    const itemLabel = options ? `${item.name} (${options})` : item.name;
+    const shopId = getPrintifyShopId();
+    const reason = skuMatches.length > 1
+      ? `SKU ${item.printifySku} matches multiple variants in Printify shop ${shopId}.`
+      : `Its saved product${item.printifyProductId ? ` ${item.printifyProductId}` : ""}${
+          item.printifySku ? ` and SKU ${item.printifySku}` : ""
+        } no longer exist as an orderable variant in Printify shop ${shopId}.`;
+
+    throw new ApiError(
+      409,
+      `Cannot send ${itemLabel} to Printify. ${reason} Restore the variant or assign the saved SKU to its replacement in Printify, sync the catalog, and retry.`,
+    );
+  }
+
+  return lineItems;
+}
+
 export async function submitPaidOrderToPrintify(orderId: string) {
   await connectToDatabase();
 
@@ -659,31 +779,20 @@ export async function submitPaidOrderToPrintify(orderId: string) {
     return existingPrintifyOrder;
   }
 
-  const lineItems = order.items.reduce<PrintifyExistingProductLineItem[]>(
-    (items, item, index) => {
-      if (item.printifyProductId && item.printifyVariantId) {
-        items.push({
-          product_id: item.printifyProductId,
-          variant_id: item.printifyVariantId,
-          quantity: item.quantity,
-          external_id: `${order._id.toString()}-${index}`,
-        });
-        return items;
-      }
+  let lineItems: PrintifyExistingProductLineItem[];
 
-      if (item.printifySku) {
-        items.push({
-          sku: item.printifySku,
-          quantity: item.quantity,
-          external_id: `${order._id.toString()}-${index}`,
-        });
-        return items;
-      }
-
-      return items;
-    },
-    [],
-  );
+  try {
+    lineItems = await resolvePrintifyLineItems(order);
+  } catch (error) {
+    order.printify = {
+      ...(order.printify ?? {}),
+      syncStatus: "failed",
+      syncError: getPrintifyErrorMessage(error),
+      lastSyncedAt: new Date(),
+    };
+    await order.save();
+    throw error;
+  }
 
   if (!lineItems.length) {
     order.printify = {

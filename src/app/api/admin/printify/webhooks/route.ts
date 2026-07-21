@@ -19,13 +19,23 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireAdminPermission(request, "billing.read");
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "");
+    const configuredUrl = configuredBaseUrl ? new URL(configuredBaseUrl) : null;
+    const isUnsafeProductionUrl =
+      process.env.NODE_ENV === "production" &&
+      configuredUrl &&
+      (configuredUrl.protocol !== "https:" ||
+        ["localhost", "127.0.0.1", "::1"].includes(configuredUrl.hostname));
     const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? request.nextUrl.origin;
+      configuredBaseUrl && !isUnsafeProductionUrl
+        ? configuredBaseUrl
+        : request.nextUrl.origin;
     const result = await ensurePrintifyWebhooks({ baseUrl });
+    const changedCount = result.created.length + result.updated.length;
 
     return successResponse({
-      message: result.created.length
-        ? "Printify webhooks installed."
+      message: changedCount
+        ? "Printify webhooks installed and updated."
         : "Printify webhooks already installed.",
       ...result,
     });

@@ -155,6 +155,28 @@ async function parsePrintifyResponse(response: Response) {
   }
 }
 
+function getPrintifyResponseMessage(data: unknown, status: number) {
+  if (typeof data !== "object" || !data) {
+    return `Printify request failed with status ${status}.`;
+  }
+
+  const response = data as {
+    message?: unknown;
+    errors?: { reason?: unknown } | null;
+  };
+  const reason = response.errors?.reason;
+
+  if (typeof reason === "string" && reason.trim()) {
+    return reason.trim();
+  }
+
+  if (typeof response.message === "string" && response.message.trim()) {
+    return response.message.trim();
+  }
+
+  return `Printify request failed with status ${status}.`;
+}
+
 export async function printifyRequest<T>(
   path: string,
   options: PrintifyRequestOptions = {},
@@ -177,11 +199,7 @@ export async function printifyRequest<T>(
   const data = await parsePrintifyResponse(response);
 
   if (!response.ok) {
-    const message =
-      typeof data === "object" && data && "message" in data && typeof data.message === "string"
-        ? data.message
-        : `Printify request failed with status ${response.status}.`;
-    throw new ApiError(response.status, message, data);
+    throw new ApiError(response.status, getPrintifyResponseMessage(data, response.status), data);
   }
 
   return data as T;
@@ -272,6 +290,22 @@ export async function createPrintifyWebhook(params: {
   });
 }
 
+export async function updatePrintifyWebhook(
+  webhookId: string,
+  params: { url: string; secret?: string },
+) {
+  return printifyRequest<PrintifyWebhook>(
+    getConfiguredShopPath(`/webhooks/${encodeURIComponent(webhookId)}.json`),
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        url: params.url,
+        ...(params.secret ? { secret: params.secret } : {}),
+      }),
+    },
+  );
+}
+
 export async function ensurePrintifyWebhooks(params: { baseUrl: string }) {
   const url = `${params.baseUrl.replace(/\/$/, "")}/api/printify/webhook`;
   const topics = [
@@ -286,22 +320,26 @@ export async function ensurePrintifyWebhooks(params: { baseUrl: string }) {
   ];
   const current = await listPrintifyWebhooks();
   const created: PrintifyWebhook[] = [];
+  const updated: PrintifyWebhook[] = [];
+  const secret = process.env.PRINTIFY_WEBHOOK_SECRET?.trim() || undefined;
 
   for (const topic of topics) {
-    const existing = current.find((webhook) => webhook.topic === topic && webhook.url === url);
+    const existing = current.find((webhook) => webhook.topic === topic);
 
     if (!existing) {
       created.push(
         await createPrintifyWebhook({
           topic,
           url,
-          secret: process.env.PRINTIFY_WEBHOOK_SECRET?.trim() || undefined,
+          secret,
         }),
       );
+    } else if (existing.url !== url) {
+      updated.push(await updatePrintifyWebhook(existing.id, { url, secret }));
     }
   }
 
-  return { url, topics, existing: current, created };
+  return { url, topics, existing: current, created, updated };
 }
 
 export async function listPrintifyBlueprints() {

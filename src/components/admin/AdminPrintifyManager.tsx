@@ -21,6 +21,9 @@ type PrintifyProduct = {
   id: string;
   title: string;
   visible?: boolean;
+  imported?: boolean;
+  localProductId?: string | null;
+  localIsActive?: boolean;
   variants?: Array<{
     id: number;
     sku?: string;
@@ -121,6 +124,18 @@ export function AdminPrintifyManager() {
         return;
       }
 
+      setProducts((current) =>
+        current.map((product) =>
+          product.id === productId
+            ? {
+                ...product,
+                imported: true,
+                localProductId: result.data.product.id,
+                localIsActive: result.data.product.isActive,
+              }
+            : product,
+        ),
+      );
       antMessage.success("Product imported.");
     } finally {
       setImportingId(null);
@@ -212,7 +227,7 @@ export function AdminPrintifyManager() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void loadStatus();
+      void Promise.all([loadStatus(), loadProducts()]);
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -256,13 +271,18 @@ export function AdminPrintifyManager() {
       render: (_, product) => <Tag color="cyan">{product.variants?.length ?? 0}</Tag>,
     },
     {
-      title: "API Status",
+      title: "Status",
       key: "status",
-      width: 120,
+      width: 190,
       render: (_, product) => (
-        <Tag color={product.visible === false ? "default" : "green"}>
-          {product.visible === false ? "HIDDEN" : "IMPORTABLE"}
-        </Tag>
+        <div className="flex flex-wrap gap-1">
+          <Tag color={product.visible === false ? "default" : "cyan"}>
+            {product.visible === false ? "HIDDEN" : "PRINTIFY LIVE"}
+          </Tag>
+          <Tag color={product.imported ? "green" : "orange"}>
+            {product.imported ? "IMPORTED" : "NOT IMPORTED"}
+          </Tag>
+        </div>
       ),
     },
     {
@@ -275,7 +295,7 @@ export function AdminPrintifyManager() {
           loading={importingId === product.id}
           onClick={() => importProduct(product.id)}
         >
-          Import
+          {product.imported ? "Sync" : "Import"}
         </Button>
       ),
     },
@@ -321,7 +341,7 @@ export function AdminPrintifyManager() {
                 extra={
                   <div className="flex gap-2">
                     <Button loading={loadingProducts} onClick={loadProducts}>
-                      Load
+                      Refresh
                     </Button>
                     <Button type="primary" loading={syncingProducts} onClick={importAllProducts}>
                       Import All
