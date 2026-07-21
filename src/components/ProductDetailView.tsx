@@ -82,7 +82,7 @@ export function ProductDetailView({
   const [selectedImage, setSelectedImage] = useState(images[0] ?? "");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const mainImage = variant?.imageUrl ?? selectedImage ?? images[0] ?? "";
+  const mainImage = selectedImage || variant?.imageUrl || images[0] || "";
   const adjustedPrice = product.priceCents + (variant?.priceAdjustmentCents ?? 0);
   const description = useMemo(
     () => formatProductDescription(product.description),
