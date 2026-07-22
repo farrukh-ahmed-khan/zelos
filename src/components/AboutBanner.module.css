@@ -1,0 +1,162 @@
+.banner {
+  isolation: isolate;
+  color: #fff;
+}
+
+.background {
+  z-index: -3;
+  object-fit: cover;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.copy {
+  width: min(51%, 660px);
+  padding-top: clamp(72px, 8vw, 150px);
+  padding-bottom: 72px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(0.85rem, 1.25vw, 1.35rem);
+  line-height: 1;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+  color: #eedec5;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.outline {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(4.6rem, 8vw, 9rem);
+  line-height: 0.83;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #fff;
+}
+
+.solid {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(3.25rem, 6vw, 6.75rem);
+  line-height: 0.91;
+  color: #fff;
+}
+
+.intro {
+  max-width: 365px;
+  margin: 12px 0 0;
+  font-size: clamp(0.875rem, 1.22vw, 1.2rem);
+  line-height: 1.35;
+  color: #fff;
+}
+
+.intro strong {
+  font-weight: 800;
+}
+
+.character {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: clamp(24px, 4.3vw, 82px);
+  width: clamp(410px, 40.5vw, 760px);
+  max-width: none;
+  height: auto;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  user-select: none;
+}
+
+@media (max-width: 991px) {
+  .copy {
+    width: 59%;
+  }
+
+  .character {
+    right: -28px;
+  }
+
+  .solid {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 767px) {
+  .banner {
+    min-height: 760px;
+  }
+
+  .content {
+    min-height: 680px;
+  }
+
+  .copy {
+    width: 100%;
+    padding-top: 66px;
+    padding-bottom: 330px;
+  }
+
+  .eyebrow {
+    margin-bottom: 12px;
+  }
+
+  .outline {
+    white-space: normal;
+    font-size: clamp(4.25rem, 21vw, 6rem);
+  }
+
+  .solid {
+    font-size: clamp(3rem, 14.4vw, 4.5rem);
+  }
+
+  .intro {
+    max-width: 36rem;
+    font-size: 0.95rem;
+  }
+
+  .character {
+    top: auto;
+    right: -62px;
+    bottom: -305px;
+    width: 430px;
+    opacity: 0.64;
+  }
+}
+
+@media (max-width: 420px) {
+  .banner {
+    min-height: 720px;
+  }
+
+  .content {
+    min-height: 640px;
+  }
+
+  .copy {
+    padding-top: 54px;
+  }
+
+  .outline {
+    font-size: 4rem;
+  }
+
+  .solid {
+    font-size: 2.75rem;
+  }
+
+  .character {
+    right: -90px;
+    bottom: -330px;
+  }
+}

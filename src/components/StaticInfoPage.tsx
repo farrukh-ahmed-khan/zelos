@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AboutBanner } from "@/components/AboutBanner";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
@@ -31,6 +32,7 @@ export async function StaticInfoPage({
   form,
   actions,
   cmsSlug,
+  heroVariant = "default",
 }: {
   eyebrow: string;
   title: string;
@@ -39,6 +41,7 @@ export async function StaticInfoPage({
   form?: FormConfig;
   actions?: { href: string; label: string }[];
   cmsSlug?: string;
+  heroVariant?: "default" | "about";
 }) {
   const cmsPage = await getPublishedStaticPage(cmsSlug ?? slugify(title)).catch(() => null);
   const pageEyebrow = cmsPage?.eyebrow ?? eyebrow;
@@ -48,33 +51,39 @@ export async function StaticInfoPage({
 
   return (
     <main className="min-h-screen bg-[#eee6d6] text-[#202020]">
-      <section className="rounded-b-[2rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.35)] sm:px-6">
-        <Header />
-        <div className="container py-14">
-          <p className="eyebrow-white">
-            {pageEyebrow}
-          </p>
-          <h1 className="max-w-4xl font-bebas text-[clamp(3.5rem,8vw,7rem)] uppercase leading-[0.86]">
-            {pageTitle}
-          </h1>
-          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-white/90">
-            {pageIntro}
-          </p>
-          {actions?.length ? (
-            <div className="mt-7 flex flex-wrap gap-3">
-              {actions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]"
-                >
-                  {action.label}
-                </Link>
-              ))}
-            </div>
-          ) : null}
+      {heroVariant === "about" ? (
+        <div className="padding-sections p-4 sm:p-6">
+          <AboutBanner eyebrow={pageEyebrow} title={pageTitle} intro={pageIntro} />
         </div>
-      </section>
+      ) : (
+        <section className="rounded-b-[2rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.35)] sm:px-6">
+          <Header />
+          <div className="container py-14">
+            <p className="eyebrow-white">
+              {pageEyebrow}
+            </p>
+            <h1 className="max-w-4xl font-bebas text-[clamp(3.5rem,8vw,7rem)] uppercase leading-[0.86]">
+              {pageTitle}
+            </h1>
+            <p className="mt-5 max-w-3xl text-lg leading-relaxed text-white/90">
+              {pageIntro}
+            </p>
+            {actions?.length ? (
+              <div className="mt-7 flex flex-wrap gap-3">
+                {actions.map((action) => (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]"
+                  >
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
 
       <section className="container grid gap-5 py-10 lg:grid-cols-3">
         <div className="grid gap-5 lg:col-span-2">

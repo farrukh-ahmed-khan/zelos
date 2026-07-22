@@ -4,9 +4,10 @@ export default function AboutPage() {
   return (
     <StaticInfoPage
       eyebrow="About Zelos"
-      title="Financial confidence for real life"
-      intro="Zelos brings financial literacy, mentoring pathways, school programming, scholarships, events, and community into one mission-led platform."
-      actions={[{ href: "/signup", label: "Join Free" }, { href: "/donate", label: "Support Zelos" }]}
+      title="Opportunity Shouldn’t Be An Accident Of Birth"
+      intro="Too many young people have the drive to succeed and none of the access and no one to explain how money works, no mentor who's walked the path, no scholarship with their name on it. Zelos was built to close that gap."
+      cmsSlug="about"
+      heroVariant="about"
       sections={[
         {
           title: "The Mission",
