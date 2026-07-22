@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { AboutBanner } from "@/components/AboutBanner";
+import { AboutHowWeTeach } from "@/components/AboutHowWeTeach";
+import { AboutMentors } from "@/components/AboutMentors";
+import { AboutNonprofitCommitment } from "@/components/AboutNonprofitCommitment";
+import { AboutOurVision } from "@/components/AboutOurVision";
+import { AboutWhatWeDo } from "@/components/AboutWhatWeDo";
+import { AboutWhoWeAre } from "@/components/AboutWhoWeAre";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
@@ -84,6 +90,13 @@ export async function StaticInfoPage({
           </div>
         </section>
       )}
+
+      {heroVariant === "about" ? <AboutWhoWeAre /> : null}
+      {heroVariant === "about" ? <AboutWhatWeDo /> : null}
+      {heroVariant === "about" ? <AboutHowWeTeach /> : null}
+      {heroVariant === "about" ? <AboutMentors /> : null}
+      {heroVariant === "about" ? <AboutNonprofitCommitment /> : null}
+      {heroVariant === "about" ? <AboutOurVision /> : null}
 
       <section className="container grid gap-5 py-10 lg:grid-cols-3">
         <div className="grid gap-5 lg:col-span-2">
