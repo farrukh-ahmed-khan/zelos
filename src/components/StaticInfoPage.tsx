@@ -34,7 +34,7 @@ export async function StaticInfoPage({
   eyebrow,
   title,
   intro,
-  sections,
+  sections = [],
   form,
   actions,
   cmsSlug,
@@ -43,7 +43,7 @@ export async function StaticInfoPage({
   eyebrow: string;
   title: string;
   intro: string;
-  sections: { title: string; body: string; points?: string[] }[];
+  sections?: { title: string; body: string; points?: string[] }[];
   form?: FormConfig;
   actions?: { href: string; label: string }[];
   cmsSlug?: string;
@@ -98,55 +98,57 @@ export async function StaticInfoPage({
       {heroVariant === "about" ? <AboutNonprofitCommitment /> : null}
       {heroVariant === "about" ? <AboutOurVision /> : null}
 
-      <section className="container grid gap-5 py-10 lg:grid-cols-3">
-        <div className="grid gap-5 lg:col-span-2">
-          {pageSections.map((section) => (
-            <article
-              key={section.title}
-              className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]"
-            >
-              <h2 className="font-bebas text-4xl uppercase leading-none text-[#202020]">
-                {section.title}
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-[#4a4a4a]">
-                {section.body}
-              </p>
-              {section.points?.length ? (
-                <div className="mt-5 grid gap-2">
-                  {section.points.map((point) => (
-                    <p
-                      key={point}
-                      className="rounded-md bg-[#f8f3e8] px-4 py-3 text-sm font-bold"
-                    >
-                      {point}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-            </article>
-          ))}
-        </div>
+      {heroVariant !== "about" ? (
+        <section className="container grid gap-5 py-10 lg:grid-cols-3">
+          <div className="grid gap-5 lg:col-span-2">
+            {pageSections.map((section) => (
+              <article
+                key={section.title}
+                className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]"
+              >
+                <h2 className="font-bebas text-4xl uppercase leading-none text-[#202020]">
+                  {section.title}
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-[#4a4a4a]">
+                  {section.body}
+                </p>
+                {section.points?.length ? (
+                  <div className="mt-5 grid gap-2">
+                    {section.points.map((point) => (
+                      <p
+                        key={point}
+                        className="rounded-md bg-[#f8f3e8] px-4 py-3 text-sm font-bold"
+                      >
+                        {point}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
 
-        <aside className="grid content-start gap-5">
-          {form ? (
-            <JsonPostForm
-              endpoint={form.endpoint}
-              fields={form.fields}
-              submitLabel={form.submitLabel}
-            />
-          ) : (
-            <article className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
-              <h2 className="font-bebas text-3xl uppercase leading-none">
-                Platform Note
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-[#555]">
-                This page is wired into the same public site shell as the home page,
-                with CMS-ready content areas and route-level separation.
-              </p>
-            </article>
-          )}
-        </aside>
-      </section>
+          <aside className="grid content-start gap-5">
+            {form ? (
+              <JsonPostForm
+                endpoint={form.endpoint}
+                fields={form.fields}
+                submitLabel={form.submitLabel}
+              />
+            ) : (
+              <article className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
+                <h2 className="font-bebas text-3xl uppercase leading-none">
+                  Platform Note
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-[#555]">
+                  This page is wired into the same public site shell as the home
+                  page, with CMS-ready content areas and route-level separation.
+                </p>
+              </article>
+            )}
+          </aside>
+        </section>
+      ) : null}
       <Footer />
     </main>
   );
