@@ -4,8 +4,9 @@ export default function ScholarshipIncubatorPage() {
   return (
     <StaticInfoPage
       eyebrow="Scholarship Incubator"
-      title="Zelos-managed scholarship listings"
-      intro="Scholarships are created by Zelos admins after an off-platform agreement with the funder. The public can browse active listings or apply without creating an account."
+      title="Scholarships That Create Lasting Impact"
+      intro="The Zelos Scholarship Incubator helps anyone turn a meaningful idea honoring a loved one, championing a cause, backing a certain kind of student into a real scholarship students can apply for."
+      heroVariant="scholarship"
       actions={[
         { href: "/scholarships", label: "Browse Scholarships" },
         { href: "/fund-a-scholarship", label: "Fund a Scholarship" },

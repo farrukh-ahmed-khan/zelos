@@ -117,7 +117,9 @@ export function Header() {
               const isActive =
                 item.href === "/"
                   ? pathname === item.href
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`) ||
+                    (item.label === "Scholarships" && pathname === "/scholarship-incubator");
 
               if (item.label === "Programs") {
                 return (
@@ -214,7 +216,9 @@ export function Header() {
                 const isActive =
                   item.href === "/"
                     ? pathname === item.href
-                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                    : pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`) ||
+                      (item.label === "Scholarships" && pathname === "/scholarship-incubator");
                 return (
                   <div key={item.href} className="contents">
                   <Link
