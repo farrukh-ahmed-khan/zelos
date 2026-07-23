@@ -1,0 +1,116 @@
+.section {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  margin-top: calc(-1 * clamp(22px, 3vw, 58px));
+  background: #540006;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  color: #fff;
+}
+
+.background {
+  z-index: 0;
+  object-fit: cover;
+}
+
+.copy {
+  position: absolute;
+  z-index: 1;
+  top: 14%;
+  right: 12%;
+  left: 16.5%;
+}
+
+.copy h2 {
+  margin: 0;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(2.2rem, 4.3vw, 5.3rem);
+  font-weight: 400;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.description {
+  max-width: 94%;
+  margin: clamp(8px, 1vw, 19px) 0 0;
+  font-size: clamp(0.58rem, 1.12vw, 1.4rem);
+  line-height: 1.25;
+}
+
+.link {
+  display: block;
+  width: fit-content;
+  margin-top: clamp(10px, 1.5vw, 29px);
+  border-bottom: 1px solid currentColor;
+  font-size: clamp(0.42rem, 0.65vw, 0.82rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #fff2a7 !important;
+}
+
+.why {
+  max-width: 94%;
+  margin-top: clamp(12px, 1.7vw, 32px);
+  font-size: clamp(0.42rem, 0.72vw, 0.88rem);
+  line-height: 1.3;
+}
+
+.why p {
+  margin: 0;
+}
+
+.why .whyLabel {
+  width: fit-content;
+  margin-bottom: clamp(8px, 0.9vw, 17px);
+  background: #e4692e;
+  padding: clamp(3px, 0.35vw, 7px) clamp(7px, 0.7vw, 13px);
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(0.48rem, 0.75vw, 0.95rem);
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .section {
+    grid-template-columns: 1fr;
+  }
+
+  .copy {
+    top: 13%;
+    right: 10%;
+    left: 11%;
+  }
+
+  .copy h2 {
+    font-size: clamp(3rem, 13vw, 4rem);
+  }
+
+  .description {
+    max-width: 88%;
+    font-size: 0.9rem;
+  }
+
+  .link {
+    margin-top: 14px;
+    font-size: 0.68rem;
+  }
+
+  .why {
+    max-width: 88%;
+    margin-top: 18px;
+    font-size: 0.67rem;
+  }
+
+  .why .whyLabel {
+    margin-bottom: 10px;
+    padding: 5px 9px;
+    font-size: 0.72rem;
+  }
+}

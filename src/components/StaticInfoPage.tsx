@@ -11,7 +11,10 @@ import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
 import { MentoringBanner } from "@/components/MentoringBanner";
 import { MentoringIntro } from "@/components/MentoringIntro";
+import { ScholarshipAudience } from "@/components/ScholarshipAudience";
 import { ScholarshipBanner } from "@/components/ScholarshipBanner";
+import { ScholarshipHowItWorks } from "@/components/ScholarshipHowItWorks";
+import { ScholarshipIntro } from "@/components/ScholarshipIntro";
 import { getPublishedStaticPage } from "@/lib/static-pages/service";
 
 type FormConfig = {
@@ -110,8 +113,11 @@ export async function StaticInfoPage({
       {heroVariant === "about" ? <AboutOurVision /> : null}
 
       {heroVariant === "mentoring" ? <MentoringIntro /> : null}
+      {heroVariant === "scholarship" ? <ScholarshipIntro /> : null}
+      {heroVariant === "scholarship" ? <ScholarshipHowItWorks /> : null}
+      {heroVariant === "scholarship" ? <ScholarshipAudience /> : null}
 
-      {heroVariant === "default" || heroVariant === "scholarship" ? (
+      {heroVariant === "default" ? (
         <section className="container grid gap-5 py-10 lg:grid-cols-3">
           <div className="grid gap-5 lg:col-span-2">
             {pageSections.map((section) => (
