@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
 import { MentoringBanner } from "@/components/MentoringBanner";
+import { MentoringIntro } from "@/components/MentoringIntro";
 import { getPublishedStaticPage } from "@/lib/static-pages/service";
 
 type FormConfig = {
@@ -103,7 +104,9 @@ export async function StaticInfoPage({
       {heroVariant === "about" ? <AboutNonprofitCommitment /> : null}
       {heroVariant === "about" ? <AboutOurVision /> : null}
 
-      {heroVariant !== "about" ? (
+      {heroVariant === "mentoring" ? <MentoringIntro /> : null}
+
+      {heroVariant === "default" ? (
         <section className="container grid gap-5 py-10 lg:grid-cols-3">
           <div className="grid gap-5 lg:col-span-2">
             {pageSections.map((section) => (

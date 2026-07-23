@@ -1,12 +1,32 @@
 .banner {
   isolation: isolate;
+  background:
+    radial-gradient(
+      circle 28vw at 79% 56%,
+      #ed111c 0%,
+      #c30a12 65%,
+      rgba(170, 7, 13, 0.65) 82%,
+      transparent 100%
+    ),
+    radial-gradient(circle at 30% 28%, #760001 0%, #360001 100%);
   color: #fff;
 }
 
 .background {
+  position: absolute;
   z-index: -3;
-  object-fit: cover;
-  object-position: center 38%;
+  inset: 0;
+  background-image: url("/assets/mentoring-banner-bg.gif");
+  background-position: center 38%;
+  background-repeat: repeat;
+  background-size: clamp(660px, 54vw, 1040px) auto;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.banner :global(header.container),
+.content {
+  max-width: 1600px !important;
 }
 
 .character {
@@ -53,7 +73,7 @@
 
 .copy {
   width: min(47%, 640px);
-  padding-top: clamp(72px, 8vw, 154px);
+  padding-top: clamp(110px, 13vw, 250px);
   padding-bottom: 72px;
 }
 

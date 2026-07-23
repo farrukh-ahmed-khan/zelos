@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Header } from "@/components/Header";
 import styles from "./MentoringBanner.module.css";
 
@@ -11,17 +10,9 @@ export function MentoringBanner({
 }) {
   return (
     <section
-      className={`${styles.banner} relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.25rem] bg-[#5f0508] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.38)] sm:min-h-[calc(100vh-3rem)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-16 2xl:px-24`}
+      className={`${styles.banner} relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.25rem] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.38)] sm:min-h-[calc(100vh-3rem)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-16 2xl:px-24`}
     >
-      <Image
-        src="/assets/mentoring-banner-bg.gif"
-        alt=""
-        fill
-        priority
-        unoptimized
-        sizes="100vw"
-        className={styles.background}
-      />
+      <div aria-hidden="true" className={styles.background} />
 
       <video
         className={styles.character}
