@@ -4,9 +4,10 @@ export default function MentoringPage() {
   return (
     <StaticInfoPage
       eyebrow="Mentoring"
-      title="Apply to support the mission"
-      intro="Mentor applicants do not receive a platform account or public profile. Applications go to the admin inbox for off-platform follow-up."
+      title="Mentorship Changes Everything"
+      intro="Zelos connects young people with mentors from every field — people who’ve walked the path and show up to share what they learned along the way."
       actions={[{ href: "/become-a-mentor", label: "Apply To Mentor" }]}
+      heroVariant="mentoring"
       sections={[
         {
           title: "Application Only",

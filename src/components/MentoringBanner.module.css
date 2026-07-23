@@ -1,0 +1,179 @@
+.banner {
+  isolation: isolate;
+  color: #fff;
+}
+
+.background {
+  z-index: -3;
+  object-fit: cover;
+  object-position: center 38%;
+}
+
+.character {
+  position: absolute;
+  z-index: 0;
+  top: clamp(42px, 3vw, 58px);
+  right: clamp(-18vw, calc(48vw - 123vh), -9vw);
+  width: auto;
+  max-width: none;
+  height: 100%;
+  border: 0;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 18%, #000 100%),
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 18%, #000 100%),
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 100%);
+  mask-composite: intersect;
+  mix-blend-mode: multiply;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.visualFade {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(49, 0, 3, 0.82) 0%,
+    rgba(65, 0, 3, 0.58) 32%,
+    rgba(74, 0, 3, 0.1) 54%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.copy {
+  width: min(47%, 640px);
+  padding-top: clamp(72px, 8vw, 154px);
+  padding-bottom: 72px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(0.82rem, 1vw, 1.15rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #eedec5;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.outline {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(2.8rem, 6vw, 7rem);
+  line-height: 0.88;
+  color: transparent;
+  -webkit-text-stroke: 1.35px #eedec5;
+}
+
+.solid {
+  display: block;
+  margin-top: 6px;
+  white-space: nowrap;
+  font-size: clamp(2.1rem, 4vw, 4.8rem);
+  line-height: 0.9;
+  color: #fff;
+}
+
+.intro {
+  max-width: 460px;
+  margin: 14px 0 0;
+  font-size: clamp(0.84rem, 1vw, 1.05rem);
+  line-height: 1.4;
+  color: #fff;
+}
+
+@media (max-width: 991px) {
+  .copy {
+    width: 50%;
+  }
+}
+
+@media (max-width: 767px) {
+  .banner {
+    min-height: 760px;
+  }
+
+  .content {
+    min-height: 680px;
+  }
+
+  .copy {
+    width: 100%;
+    padding-top: 62px;
+    padding-bottom: 390px;
+  }
+
+  .outline {
+    white-space: normal;
+    font-size: clamp(4rem, 19vw, 5.75rem);
+  }
+
+  .solid {
+    white-space: normal;
+    font-size: clamp(2.8rem, 13vw, 4rem);
+  }
+
+  .intro {
+    max-width: 34rem;
+    font-size: 0.95rem;
+  }
+
+  .character {
+    top: auto;
+    right: -74%;
+    bottom: -30px;
+    width: 190%;
+    height: auto;
+    opacity: 0.72;
+  }
+
+  .visualFade {
+    background: linear-gradient(
+      180deg,
+      rgba(49, 0, 3, 0.84) 0%,
+      rgba(61, 0, 3, 0.62) 48%,
+      rgba(61, 0, 3, 0.08) 72%,
+      transparent 100%
+    );
+  }
+}
+
+@media (max-width: 420px) {
+  .banner {
+    min-height: 720px;
+  }
+
+  .content {
+    min-height: 640px;
+  }
+
+  .copy {
+    padding-top: 52px;
+  }
+
+  .outline {
+    font-size: 3.75rem;
+  }
+
+  .solid {
+    font-size: 2.65rem;
+  }
+}

@@ -9,6 +9,7 @@ import { AboutWhoWeAre } from "@/components/AboutWhoWeAre";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
+import { MentoringBanner } from "@/components/MentoringBanner";
 import { getPublishedStaticPage } from "@/lib/static-pages/service";
 
 type FormConfig = {
@@ -47,7 +48,7 @@ export async function StaticInfoPage({
   form?: FormConfig;
   actions?: { href: string; label: string }[];
   cmsSlug?: string;
-  heroVariant?: "default" | "about";
+  heroVariant?: "default" | "about" | "mentoring";
 }) {
   const cmsPage = await getPublishedStaticPage(cmsSlug ?? slugify(title)).catch(() => null);
   const pageEyebrow = cmsPage?.eyebrow ?? eyebrow;
@@ -60,6 +61,10 @@ export async function StaticInfoPage({
       {heroVariant === "about" ? (
         <div className="padding-sections p-4 sm:p-6">
           <AboutBanner eyebrow={pageEyebrow} title={pageTitle} intro={pageIntro} />
+        </div>
+      ) : heroVariant === "mentoring" ? (
+        <div className="padding-sections p-4 sm:p-6">
+          <MentoringBanner eyebrow={pageEyebrow} intro={pageIntro} />
         </div>
       ) : (
         <section className="rounded-b-[2rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.35)] sm:px-6">
