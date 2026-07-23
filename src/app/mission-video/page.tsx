@@ -1,25 +1,20 @@
-import { StaticInfoPage } from "@/components/StaticInfoPage";
-import { WatchVideoSection } from "@/components/WatchVideoSection";
+import { Footer } from "@/components/Footer";
+import { MissionBanner } from "@/components/MissionBanner";
+import { MissionStatement } from "@/components/MissionStatement";
+import { MissionVideoIntro } from "@/components/MissionVideoIntro";
 import { getHomepageMissionVideo } from "@/lib/videos/service";
 
 export default async function MissionVideoPage() {
   const missionVideo = await getHomepageMissionVideo().catch(() => null);
 
   return (
-    <>
-      <StaticInfoPage
-        eyebrow="Mission Video"
-        title="See what Zelos is all about"
-        intro="The homepage mission video is managed from the admin content library and can be swapped without developer support."
-        actions={[{ href: "/signup", label: "Create Account" }, { href: "/become-a-mentor", label: "Apply To Mentor" }]}
-        sections={[
-          {
-            title: "Admin Swappable",
-            body: "Mission video records use the same content management API as the subscriber and school libraries, with a dedicated mission flag.",
-          },
-        ]}
-      />
-      <WatchVideoSection missionVideo={missionVideo} />
-    </>
+    <main className="min-h-screen bg-[#eee6d6] text-[#202020]">
+      <div className="p-4 sm:p-6">
+        <MissionBanner />
+      </div>
+      <MissionStatement />
+      <MissionVideoIntro missionVideo={missionVideo} />
+      <Footer />
+    </main>
   );
 }

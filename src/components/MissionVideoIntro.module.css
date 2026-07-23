@@ -1,0 +1,236 @@
+.section {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 2rem 2rem;
+  background: #eee6d6;
+  color: #1d1d1d;
+  padding: clamp(46px, 5.2vw, 100px) 0 clamp(44px, 5vw, 92px);
+}
+
+.inner {
+  position: relative;
+  width: min(75vw, 1440px);
+  margin: 0 auto;
+}
+
+.title {
+  position: relative;
+  z-index: 3;
+  width: fit-content;
+  margin: 0;
+  background: linear-gradient(198deg, #b22222 0%, #1d1d1d 25%);
+  background-clip: text;
+  color: transparent;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(2.75rem, 4.6vw, 5.5rem);
+  font-weight: 400;
+  line-height: 0.9;
+  text-transform: uppercase;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.orb {
+  position: absolute;
+  z-index: 0;
+  top: clamp(-12px, -0.5vw, 0px);
+  right: clamp(-42px, -4vw, -20px);
+  width: clamp(165px, 18.5vw, 350px);
+  max-width: none;
+  height: auto;
+  mix-blend-mode: darken;
+  pointer-events: none;
+  user-select: none;
+}
+
+.player {
+  position: relative;
+  z-index: 2;
+  margin-top: -2px;
+}
+
+.fallbackPlayer {
+  display: block;
+  width: 117.2%;
+  max-width: none;
+  height: auto;
+  margin-left: -8.6%;
+}
+
+.videoFrame {
+  margin-top: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: clamp(18px, 2vw, 32px) clamp(18px, 2vw, 32px) 0 0;
+  background: rgba(255, 255, 255, 0.66);
+  padding: clamp(14px, 1.5vw, 28px);
+  box-shadow: 0 22px 70px rgba(88, 72, 45, 0.07);
+  backdrop-filter: blur(12px);
+}
+
+.addressBar {
+  display: flex;
+  width: 78%;
+  min-height: clamp(30px, 2.7vw, 48px);
+  margin: 0 auto clamp(12px, 1.3vw, 24px);
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0 clamp(16px, 2vw, 34px);
+  font-size: clamp(0.65rem, 0.78vw, 0.9rem);
+  color: #202020;
+}
+
+.searchIcon {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.searchIcon::after {
+  position: absolute;
+  right: -5px;
+  bottom: -3px;
+  width: 6px;
+  height: 2px;
+  background: currentColor;
+  content: "";
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 8.65;
+  border-radius: clamp(14px, 1.5vw, 26px);
+  background: #111;
+  object-fit: cover;
+}
+
+.footer {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  margin-top: -2px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.footerWithVideo {
+  margin-top: clamp(22px, 2vw, 36px);
+}
+
+.footer p {
+  max-width: 620px;
+  margin: 0;
+  font-size: clamp(0.72rem, 0.9vw, 1rem);
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 18px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  min-height: clamp(42px, 3.8vw, 58px);
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #212121;
+  border-radius: 7px;
+  padding: 0 clamp(22px, 2.2vw, 40px);
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #212121 !important;
+  box-shadow: 0 3px 0 #111;
+}
+
+.primaryAction {
+  background: #faff8d;
+}
+
+.secondaryAction {
+  background: #f7f2e8;
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding-top: 52px;
+    padding-bottom: 58px;
+  }
+
+  .inner {
+    width: calc(100% - 32px);
+  }
+
+  .title {
+    font-size: clamp(3.25rem, 15vw, 4.75rem);
+  }
+
+  .orb {
+    top: 28px;
+    right: -46px;
+    width: 190px;
+    opacity: 0.84;
+  }
+
+  .player {
+    margin-top: 14px;
+  }
+
+  .fallbackPlayer {
+    width: 116%;
+    margin-left: -8%;
+  }
+
+  .videoFrame {
+    margin-top: 42px;
+    padding: 10px;
+  }
+
+  .addressBar {
+    width: 82%;
+    min-height: 28px;
+    margin-bottom: 9px;
+    padding: 0 14px;
+    font-size: 0.58rem;
+  }
+
+  .footer {
+    margin-top: 10px;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .footerWithVideo {
+    margin-top: 24px;
+  }
+
+  .footer p {
+    max-width: none;
+    font-size: 0.84rem;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    min-height: 50px;
+    padding: 0 20px;
+    font-size: 0.9rem;
+  }
+}

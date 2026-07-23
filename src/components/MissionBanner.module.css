@@ -1,0 +1,146 @@
+.banner {
+  isolation: isolate;
+  color: #fff;
+}
+
+.background {
+  z-index: -3;
+  object-fit: cover;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.copy {
+  width: min(48%, 610px);
+  padding-top: clamp(52px, 6vw, 108px);
+  padding-bottom: 72px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(0.82rem, 1vw, 1.15rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #eedec5;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.outline {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(3.5rem, 6vw, 7rem);
+  line-height: 0.86;
+  color: transparent;
+  -webkit-text-stroke: 1.35px #fff;
+}
+
+.solid {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(3.2rem, 5.5vw, 6.25rem);
+  line-height: 0.86;
+  color: #fff;
+}
+
+.intro {
+  max-width: 390px;
+  margin: 14px 0 0;
+  font-size: clamp(0.84rem, 1.08vw, 1.08rem);
+  line-height: 1.35;
+  color: #fff;
+}
+
+.character {
+  position: absolute;
+  z-index: 0;
+  top: clamp(-275px, calc(100px - 19.36vw), -96px);
+  right: clamp(64px, 12vw, 230px);
+  width: clamp(410px, 40.5vw, 780px);
+  max-width: none;
+  height: auto;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  user-select: none;
+}
+
+@media (max-width: 991px) {
+  .copy {
+    width: 51%;
+  }
+}
+
+@media (max-width: 767px) {
+  .banner {
+    min-height: 760px;
+  }
+
+  .content {
+    min-height: 680px;
+  }
+
+  .copy {
+    width: 100%;
+    padding-top: 58px;
+    padding-bottom: 360px;
+  }
+
+  .outline {
+    white-space: normal;
+    font-size: clamp(4rem, 19vw, 5.75rem);
+  }
+
+  .solid {
+    font-size: clamp(3.1rem, 15vw, 4.65rem);
+  }
+
+  .intro {
+    max-width: 35rem;
+    font-size: 0.95rem;
+  }
+
+  .character {
+    top: auto;
+    right: -55px;
+    bottom: -250px;
+    width: 420px;
+    opacity: 0.72;
+  }
+}
+
+@media (max-width: 420px) {
+  .banner {
+    min-height: 720px;
+  }
+
+  .content {
+    min-height: 640px;
+  }
+
+  .copy {
+    padding-top: 50px;
+  }
+
+  .outline {
+    font-size: 3.8rem;
+  }
+
+  .solid {
+    font-size: 2.95rem;
+  }
+
+  .character {
+    right: -82px;
+    bottom: -280px;
+  }
+}

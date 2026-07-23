@@ -1,0 +1,121 @@
+.section {
+  position: relative;
+  min-height: clamp(420px, 46vw, 860px);
+  overflow: hidden;
+  background: #fff;
+  color: #1e1e1e;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+}
+
+.copy {
+  width: min(53%, 680px);
+  margin-left: clamp(0px, 0.75vw, 14px);
+  padding-top: clamp(46px, 5.2vw, 96px);
+  padding-bottom: 44px;
+}
+
+.title {
+  margin: 0;
+  width: fit-content;
+  background: linear-gradient(198deg, #b22222 0%, #1d1d1d 25%);
+  background-clip: text;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(2.2rem, 4.5vw, 4.75rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.body {
+  margin: 8px 0 0;
+  font-size: clamp(1.4rem, 2.55vw, 2.55rem);
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: -0.025em;
+}
+
+.figure {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  right: 0;
+  width: 42vw;
+  max-width: none;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 991px) {
+  .copy {
+    width: 53%;
+  }
+}
+
+@media (max-width: 767px) {
+  .section {
+    min-height: 870px;
+  }
+
+  .copy {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 54px;
+    padding-bottom: 470px;
+  }
+
+  .title {
+    font-size: clamp(2.75rem, 13vw, 4rem);
+  }
+
+  .body {
+    max-width: 38rem;
+    margin-top: 12px;
+    font-size: clamp(1.2rem, 5.8vw, 1.55rem);
+    line-height: 1.45;
+    letter-spacing: -0.02em;
+  }
+
+  .figure {
+    top: auto;
+    right: -35%;
+    bottom: -100px;
+    width: 135%;
+    height: auto;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 420px) {
+  .section {
+    min-height: 830px;
+  }
+
+  .copy {
+    padding-top: 46px;
+  }
+
+  .title {
+    font-size: 2.8rem;
+  }
+
+  .body {
+    font-size: 1.18rem;
+  }
+
+  .figure {
+    right: -38%;
+    bottom: -90px;
+    width: 142%;
+  }
+}
