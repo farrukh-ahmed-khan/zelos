@@ -32,7 +32,7 @@ export function MentoringBanner({
 
       <div className={`container ${styles.content}`}>
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>{eyebrow}</p>
+          <p className={`${styles.eyebrow} banner-eyebrow`}>{eyebrow}</p>
           <h1 className={styles.title}>
             <span className={styles.outline}>Mentorship</span>
             <span className={styles.solid}>Changes Everything</span>

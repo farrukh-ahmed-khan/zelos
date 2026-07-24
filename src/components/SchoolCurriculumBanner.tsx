@@ -26,7 +26,7 @@ export function SchoolCurriculumBanner({
 
       <div className={`container ${styles.content}`}>
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>{eyebrow}</p>
+          <p className={`${styles.eyebrow} banner-eyebrow`}>{eyebrow}</p>
           <h1 className={styles.title}>
             <span className={styles.outline}>{outlinedTitle}</span>
             {solidLines ? (

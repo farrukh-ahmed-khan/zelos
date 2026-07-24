@@ -56,6 +56,11 @@ a {
   color: #b22222;
 }
 
+.banner-eyebrow {
+  font-size: 35px !important;
+  line-height: 35px !important;
+}
+
 @layer components {
   .home-section-heading {
     font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif !important;

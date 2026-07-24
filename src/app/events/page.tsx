@@ -21,7 +21,7 @@ export default async function EventsPage() {
         <div className="relative z-10">
           <Header />
           <div className="container py-16 lg:py-24">
-            <p className="eyebrow-white mb-3">Zelos Events</p>
+            <p className="eyebrow-white banner-eyebrow mb-3">Zelos Events</p>
             <h1 className="font-bebas text-[clamp(4rem,9vw,7rem)] uppercase leading-[0.84] text-white">
               Show Up.
               <span className="block text-transparent [-webkit-text-stroke:1.5px_white]">Level Up.</span>

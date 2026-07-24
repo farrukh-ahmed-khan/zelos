@@ -20,7 +20,7 @@ export function MissionBanner() {
 
       <div className={`container ${styles.content}`}>
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>Our Mission</p>
+          <p className={`${styles.eyebrow} banner-eyebrow`}>Our Mission</p>
           <h1 className={styles.title}>
             <span className={styles.outline}>Empowering</span>
             <span className={styles.solid}>Tomorrow&apos;s</span>

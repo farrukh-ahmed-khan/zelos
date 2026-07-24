@@ -22,7 +22,7 @@ export function HeroBanner() {
         <div className="row min-h-[calc(100vh-8rem)] items-center lg:min-h-[calc(100vh-7rem)]">
           <div className="col-12 col-lg-7">
             <div className="py-10 lg:py-0">
-              <p className="eyebrow-white mb-3">
+              <p className="eyebrow-white banner-eyebrow mb-3">
                 Welcome to Zelos
               </p>
               <h1 className="font-bebas text-[clamp(4rem,9vw,6.4rem)] font-bold uppercase leading-[0.86] text-white 2xl:text-[clamp(4rem,18vw,7.5rem)]">
