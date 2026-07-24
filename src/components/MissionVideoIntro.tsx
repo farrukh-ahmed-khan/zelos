@@ -16,7 +16,7 @@ export function MissionVideoIntro({
   return (
     <section id="video-intro" className={styles.section}>
       <div className={styles.inner}>
-        <h2 className={styles.title}>Video Intro</h2>
+        <h2 className={styles.title}>Mission Intro</h2>
 
         <Image
           src="/assets/mission-video-orb.gif"
