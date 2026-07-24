@@ -1,0 +1,157 @@
+.banner {
+  isolation: isolate;
+  background:
+    radial-gradient(
+      circle 55vw at 50% 22%,
+      rgba(121, 0, 2, 0.82) 0%,
+      rgba(78, 0, 2, 0.88) 50%,
+      #360001 100%
+    ),
+    #360001;
+  color: #fff;
+}
+
+.background {
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  background-image: url("/assets/school-curriculum-banner-bg.gif");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.visualFade {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(49, 0, 2, 0.42) 0%,
+    rgba(63, 0, 3, 0.14) 44%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+.banner :global(header.container),
+.content {
+  max-width: 1600px !important;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.copy {
+  width: min(55%, 760px);
+  padding-top: clamp(98px, 10vw, 192px);
+  padding-bottom: 72px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(0.82rem, 1vw, 1.15rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #eedec5;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.outline {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(3.4rem, 6.5vw, 7.7rem);
+  line-height: 0.85;
+  color: transparent;
+  -webkit-text-stroke: 1.35px #eedec5;
+}
+
+.solid {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(2.75rem, 5.25vw, 6.2rem);
+  line-height: 0.9;
+  color: #fff;
+}
+
+.intro {
+  max-width: 540px;
+  margin: 16px 0 0;
+  font-size: clamp(0.84rem, 1vw, 1.05rem);
+  line-height: 1.4;
+  color: #fff;
+}
+
+@media (max-width: 767px) {
+  .banner {
+    min-height: 700px;
+  }
+
+  .content {
+    min-height: 620px;
+  }
+
+  .copy {
+    width: 100%;
+    padding-top: 72px;
+    padding-bottom: 120px;
+  }
+
+  .outline {
+    white-space: normal;
+    font-size: clamp(3.3rem, 15vw, 4.75rem);
+  }
+
+  .solid {
+    white-space: normal;
+    font-size: clamp(2.8rem, 12vw, 3.75rem);
+  }
+
+  .intro {
+    max-width: 34rem;
+    font-size: 0.95rem;
+  }
+
+  .visualFade {
+    background: linear-gradient(
+      180deg,
+      rgba(49, 0, 2, 0.58) 0%,
+      rgba(63, 0, 3, 0.18) 70%,
+      transparent 100%
+    );
+  }
+}
+
+@media (max-width: 420px) {
+  .banner {
+    min-height: 660px;
+  }
+
+  .content {
+    min-height: 580px;
+  }
+
+  .copy {
+    padding-top: 58px;
+  }
+
+  .outline {
+    font-size: 3.1rem;
+  }
+
+  .solid {
+    font-size: 2.65rem;
+  }
+}

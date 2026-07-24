@@ -19,7 +19,7 @@ const navItems = [
   { label: "Mission", href: "/mission-video" },
   { label: "Programs", href: "/financial-literacy" },
   { label: "Events", href: "/events" },
-  { label: "Scholarships", href: "/scholarships" },
+  { label: "Scholarships", href: "/scholarship-incubator" },
   { label: "Forum", href: "/forum" },
   { label: "Store", href: "/store" },
   { label: "Contact", href: "/contact" },
@@ -119,6 +119,7 @@ export function Header() {
                   ? pathname === item.href
                   : pathname === item.href ||
                     pathname.startsWith(`${item.href}/`) ||
+                    (item.label === "Programs" && pathname === "/school-curriculum") ||
                     (item.label === "Scholarships" && pathname === "/scholarship-incubator");
 
               if (item.label === "Programs") {
@@ -218,6 +219,7 @@ export function Header() {
                     ? pathname === item.href
                     : pathname === item.href ||
                       pathname.startsWith(`${item.href}/`) ||
+                      (item.label === "Programs" && pathname === "/school-curriculum") ||
                       (item.label === "Scholarships" && pathname === "/scholarship-incubator");
                 return (
                   <div key={item.href} className="contents">

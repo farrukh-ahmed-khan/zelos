@@ -1,0 +1,125 @@
+.section {
+  background: #ed1c2a;
+}
+
+.surface {
+  position: relative;
+  min-height: clamp(390px, 39.5vw, 760px);
+  overflow: hidden;
+  border-radius: 0 0 clamp(24px, 2.7vw, 52px) clamp(24px, 2.7vw, 52px);
+  background: #eee6d6;
+  color: #1d1d1d;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(75vw, 1440px);
+  min-height: inherit;
+  margin: 0 auto;
+  align-items: center;
+  padding: clamp(42px, 4.8vw, 92px) 0;
+}
+
+.copy {
+  width: 53%;
+}
+
+.title {
+  width: fit-content;
+  margin: 0;
+  background: linear-gradient(198deg, #b22222 0%, #1d1d1d 25%);
+  background-clip: text;
+  color: transparent;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(2.55rem, 4.2vw, 5.2rem);
+  font-weight: 400;
+  line-height: 0.9;
+  text-transform: uppercase;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.body {
+  margin: clamp(12px, 1.2vw, 23px) 0 0;
+  font-size: clamp(1.15rem, 2vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.018em;
+}
+
+.artwork {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 50%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.65) 10%,
+    #000 25%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.65) 10%,
+    #000 25%
+  );
+}
+
+.image {
+  object-fit: cover;
+  object-position: center center;
+  user-select: none;
+}
+
+@media (max-width: 700px) {
+  .surface {
+    min-height: auto;
+  }
+
+  .inner {
+    display: block;
+    width: calc(100% - 32px);
+    min-height: auto;
+    padding: 48px 0 0;
+  }
+
+  .copy {
+    width: 100%;
+  }
+
+  .title {
+    font-size: 3.25rem;
+  }
+
+  .body {
+    font-size: 1.12rem;
+    line-height: 1.5;
+  }
+
+  .artwork {
+    position: relative;
+    inset: auto;
+    width: calc(100% + 32px);
+    height: min(86vw, 560px);
+    margin: 12px 0 0 -16px;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 18%,
+      #000 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 18%,
+      #000 100%
+    );
+  }
+
+  .image {
+    object-position: center top;
+  }
+}

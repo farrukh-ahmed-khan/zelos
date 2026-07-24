@@ -11,6 +11,10 @@ import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
 import { MentoringBanner } from "@/components/MentoringBanner";
 import { MentoringIntro } from "@/components/MentoringIntro";
+import { SchoolCurriculumBanner } from "@/components/SchoolCurriculumBanner";
+import { SchoolCurriculumIntro } from "@/components/SchoolCurriculumIntro";
+import { SchoolCurriculumReady } from "@/components/SchoolCurriculumReady";
+import { SchoolCurriculumTeachers } from "@/components/SchoolCurriculumTeachers";
 import { ScholarshipAudience } from "@/components/ScholarshipAudience";
 import { ScholarshipBanner } from "@/components/ScholarshipBanner";
 import { ScholarshipHowItWorks } from "@/components/ScholarshipHowItWorks";
@@ -53,7 +57,7 @@ export async function StaticInfoPage({
   form?: FormConfig;
   actions?: { href: string; label: string }[];
   cmsSlug?: string;
-  heroVariant?: "default" | "about" | "mentoring" | "scholarship";
+  heroVariant?: "default" | "about" | "mentoring" | "scholarship" | "school";
 }) {
   const cmsPage = await getPublishedStaticPage(cmsSlug ?? slugify(title)).catch(() => null);
   const pageEyebrow = cmsPage?.eyebrow ?? eyebrow;
@@ -74,6 +78,14 @@ export async function StaticInfoPage({
       ) : heroVariant === "scholarship" ? (
         <div className="padding-sections p-4 sm:p-6">
           <ScholarshipBanner eyebrow={pageEyebrow} title={pageTitle} intro={pageIntro} />
+        </div>
+      ) : heroVariant === "school" ? (
+        <div className="padding-sections p-4 sm:p-6">
+          <SchoolCurriculumBanner
+            eyebrow={pageEyebrow}
+            title={pageTitle}
+            intro={pageIntro}
+          />
         </div>
       ) : (
         <section className="rounded-b-[2rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.35)] sm:px-6">
@@ -116,6 +128,9 @@ export async function StaticInfoPage({
       {heroVariant === "scholarship" ? <ScholarshipIntro /> : null}
       {heroVariant === "scholarship" ? <ScholarshipHowItWorks /> : null}
       {heroVariant === "scholarship" ? <ScholarshipAudience /> : null}
+      {heroVariant === "school" ? <SchoolCurriculumIntro /> : null}
+      {heroVariant === "school" ? <SchoolCurriculumTeachers /> : null}
+      {heroVariant === "school" ? <SchoolCurriculumReady /> : null}
 
       {heroVariant === "default" ? (
         <section className="container grid gap-5 py-10 lg:grid-cols-3">
