@@ -33,7 +33,7 @@ export function AboutBanner({
 
       <Header />
 
-      <div className={`container ${styles.content}`}>
+      <div className={`banner-content-width ${styles.content}`}>
         <div className={styles.copy}>
           <p className={`${styles.eyebrow} banner-eyebrow`}>{eyebrow}</p>
           <h1 className={styles.title}>

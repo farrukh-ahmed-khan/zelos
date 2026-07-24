@@ -20,7 +20,7 @@ export default async function EventsPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_35%,rgba(194,0,0,0.72),rgba(70,0,0,0.96)_72%)]" />
         <div className="relative z-10">
           <Header />
-          <div className="container py-16 lg:py-24">
+          <div className="banner-content-width py-16 lg:py-24">
             <p className="eyebrow-white banner-eyebrow mb-3">Zelos Events</p>
             <h1 className="font-bebas text-[clamp(4rem,9vw,7rem)] uppercase leading-[0.84] text-white">
               Show Up.

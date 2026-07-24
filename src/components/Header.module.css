@@ -1,0 +1,60 @@
+.headerRoot {
+  width: min(100%, 1600px);
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.logoCrop {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  overflow: hidden;
+}
+
+.logoArtwork {
+  position: absolute;
+  top: -28px;
+  left: -37px;
+  width: 117px;
+  max-width: none;
+  height: auto;
+}
+
+.activeNav {
+  position: relative;
+  color: #ed2631 !important;
+}
+
+.activeNav::after {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #ed2631;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.profileImage {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+}
+
+@media (max-width: 420px) {
+  .logoCrop {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .logoArtwork {
+    top: -26px;
+    left: -34px;
+    width: 107px;
+  }
+}

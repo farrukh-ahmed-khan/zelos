@@ -61,6 +61,12 @@ a {
   line-height: 35px !important;
 }
 
+.banner-content-width {
+  width: min(100%, 1600px) !important;
+  max-width: 1600px !important;
+  margin-inline: auto;
+}
+
 @layer components {
   .home-section-heading {
     font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif !important;

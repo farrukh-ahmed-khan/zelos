@@ -18,8 +18,8 @@ export function HeroBanner() {
 
       <Header />
 
-      <div className="container relative z-10 pt-8 lg:pt-2">
-        <div className="row min-h-[calc(100vh-8rem)] items-center lg:min-h-[calc(100vh-7rem)]">
+      <div className="banner-content-width relative z-10 pt-8 lg:pt-2">
+        <div className="row gx-0 min-h-[calc(100vh-8rem)] items-center lg:min-h-[calc(100vh-7rem)]">
           <div className="col-12 col-lg-7">
             <div className="py-10 lg:py-0">
               <p className="eyebrow-white banner-eyebrow mb-3">

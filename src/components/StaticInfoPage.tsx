@@ -90,7 +90,7 @@ export async function StaticInfoPage({
       ) : (
         <section className="rounded-b-[2rem] bg-[#8c0504] px-4 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.35)] sm:px-6">
           <Header />
-          <div className="container py-14">
+          <div className="banner-content-width py-14">
             <p className="eyebrow-white banner-eyebrow">
               {pageEyebrow}
             </p>
