@@ -39,12 +39,14 @@ const footerGroups = [
 
 export function Footer() {
   return (
-    <footer className="bg-white px-4 py-12 text-[#202020] sm:px-6">
-      <div className="container">
-        <div className="row g-4">
+    <footer className="bg-white px-4 py-10 text-[#202020] sm:px-6 sm:py-12 lg:px-10">
+      <div className="mx-auto w-full max-w-[1600px]">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {footerGroups.map((group) => (
-            <div className="col-12 col-md-6 col-lg-3" key={group.title}>
-              <div className="h-full rounded-md border border-[#dedede] px-5 py-7 sm:px-8 sm:py-8">
+            <div
+              className="h-full min-w-0 rounded-md border border-[#dedede] px-5 py-7 sm:px-7 sm:py-8"
+              key={group.title}
+            >
                 <h2 className="font-bebas text-2xl uppercase leading-none text-[#1d1d1d]">
                   {group.title}
                 </h2>
@@ -59,18 +61,16 @@ export function Footer() {
                     </Link>
                   ))}
                 </nav>
-              </div>
             </div>
           ))}
 
-          <div className="col-12 col-md-6 col-lg-3">
-            <div className="h-full rounded-md border border-[#dedede] px-5 py-7 sm:px-8 sm:py-8">
+          <div className="h-full min-w-0 rounded-md border border-[#dedede] px-5 py-7 sm:px-7 sm:py-8">
               <h2 className="font-bebas text-2xl uppercase leading-none text-[#1d1d1d]">
                 Get In Touch
               </h2>
               <a
                 href="mailto:support@zelos.com"
-                className="mt-6 inline-flex items-center gap-2 text-sm uppercase !text-[#969696]"
+                className="mt-6 inline-flex max-w-full items-center gap-2 break-all text-sm uppercase !text-[#969696]"
               >
                 <MailOutlined />
                 support@zelos.com
@@ -99,7 +99,6 @@ export function Footer() {
                   <YoutubeFilled />
                 </a>
               </div>
-            </div>
           </div>
         </div>
 
@@ -121,7 +120,7 @@ export function Footer() {
           </svg>
         </div>
 
-        <div className="flex flex-col gap-5 py-8 font-bebas text-sm uppercase text-[#9a9a9a] md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-5 py-8 font-bebas text-sm uppercase text-[#9a9a9a] lg:flex-row lg:flex-wrap lg:items-center lg:justify-between xl:flex-nowrap">
           <p>
             Copyright © 2026 <span className="text-[#1d1d1d]">Zelos</span>. All Rights Reserved
           </p>

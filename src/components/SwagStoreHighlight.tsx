@@ -40,11 +40,26 @@ const FALLBACK_PRODUCTS: SlimProduct[] = [
   },
 ];
 
+function toPlainText(value: string) {
+  return value
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/(?:p|div|li|h[1-6])>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
   const display = products && products.length > 0 ? products : FALLBACK_PRODUCTS;
 
   const sliderRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(Math.min(1, display.length - 1));
+  const [activeIndex, setActiveIndex] = useState(0);
   const hasMountedRef = useRef(false);
 
   useEffect(() => {
@@ -97,15 +112,15 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
 
           <div
             ref={sliderRef}
-            className="flex snap-x gap-10 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-3 lg:gap-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {display.map((product, index) => (
               <article
                 key={product.id}
                 className={
                   activeIndex === index
-                    ? "min-w-[270px] snap-start rounded-md bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.14)] sm:min-w-[300px]"
-                    : "min-w-[270px] snap-start sm:min-w-[300px]"
+                    ? "w-[88%] shrink-0 snap-start rounded-md bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.14)] sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/2)]"
+                    : "w-[88%] shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/2)]"
                 }
               >
                 <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#f1f1f1]">
@@ -133,7 +148,9 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
                     <h3 className="font-bebas text-[1.45rem] uppercase leading-none text-[#202020]">
                       {product.name}
                     </h3>
-                    <p className="mt-1 text-sm text-[#9b9b9b]">{product.description}</p>
+                    <p className="mt-1 line-clamp-6 text-sm text-[#9b9b9b]">
+                      {toPlainText(product.description)}
+                    </p>
                   </div>
                   <p className="font-bebas text-[1.45rem] leading-none text-[#202020]">
                     ${(product.priceCents / 100).toFixed(0)}
