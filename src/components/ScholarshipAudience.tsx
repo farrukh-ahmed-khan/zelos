@@ -44,9 +44,9 @@ export function ScholarshipAudience() {
           <div className={styles.why}>
             <p className={styles.whyLabel}>Why It Matters</p>
             <p>
-              The Scholarship Incubator is a simple, meaningful way to open a
-              door for a student and a clear path to creating something that
-              lasts.
+              The Scholarship Incubator is a simple way to open a door and 
+              financially help a student who wants to pursue a path the 
+              scholarship creator is passionate about.
             </p>
           </div>
         </div>
