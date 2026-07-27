@@ -74,6 +74,44 @@
   user-select: none;
 }
 
+@media (min-width: 992px) {
+  .copy {
+    width: min(50%, 680px);
+    padding-top: clamp(104px, calc(14.583vw - 106px), 174px);
+  }
+
+  .eyebrow {
+    margin-bottom: clamp(25px, 1.563vw, 30px);
+    font-size: clamp(16px, 1.146vw, 22px) !important;
+    line-height: clamp(16px, 1.146vw, 22px) !important;
+  }
+
+  .outline {
+    font-size: clamp(5rem, 8.125vw, 9.75rem);
+    line-height: 0.7;
+    margin-bottom: clamp(14px, 0.938vw, 18px);
+  }
+
+  .solid {
+    font-size: clamp(4.9rem, 8vw, 9.5rem);
+    line-height: 0.64;
+    transform: scaleY(0.8);
+    transform-origin: left top;
+  }
+
+  .intro {
+    max-width: min(31.25vw, 600px);
+    margin-top: clamp(4px, 0.417vw, 8px);
+    font-size: clamp(16px, 1.146vw, 22px);
+  }
+
+  .character {
+    top: max(-241px, calc(1px - 13.75vw));
+    right: clamp(93px, 9.375vw, 180px);
+    width: clamp(440px, 44.53vw, 855px);
+  }
+}
+
 @media (max-width: 991px) {
   .copy {
     width: 51%;
