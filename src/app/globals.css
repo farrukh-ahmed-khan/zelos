@@ -67,6 +67,31 @@ a {
   margin-inline: auto;
 }
 
+@media (min-width: 768px) {
+  .page-banner-frame {
+    min-height: min(1000px, calc((100vw - 3rem) * 0.532), calc(100svh - 3rem));
+  }
+}
+
+.page-banner-frame > .site-header {
+  width: min(90%, 1600px);
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.page-banner-inner {
+  width: min(90%, 1600px) !important;
+  max-width: 1600px !important;
+  margin-inline: auto;
+}
+
+@media (max-width: 767px) {
+  .page-banner-frame > .site-header,
+  .page-banner-inner {
+    width: 100% !important;
+  }
+}
+
 @layer components {
   .home-section-heading {
     font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif !important;

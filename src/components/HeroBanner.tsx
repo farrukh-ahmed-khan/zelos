@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 
 export function HeroBanner() {
   return (
-    <section className="relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:min-h-[calc(100vh-3rem)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-16 2xl:px-24">
+    <section className="page-banner-frame relative mx-auto overflow-hidden rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-16 2xl:px-24">
       <video
         className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-multiply"
         autoPlay
@@ -18,27 +18,27 @@ export function HeroBanner() {
 
       <Header />
 
-      <div className="banner-content-width relative z-10 pt-8 lg:pt-2">
-        <div className="row gx-0 min-h-[calc(100vh-8rem)] items-center lg:min-h-[calc(100vh-7rem)]">
+      <div className="banner-content-width page-banner-inner relative z-10 pt-8 lg:pt-2 2xl:static">
+        <div className="row gx-0 items-center">
           <div className="col-12 col-lg-7">
-            <div className="py-10 lg:py-0">
+            <div className="py-10 lg:py-0 2xl:translate-y-[76px]">
               <p className="eyebrow-white banner-eyebrow mb-3">
                 Welcome to Zelos
               </p>
-              <h1 className="font-bebas text-[clamp(4rem,9vw,6.4rem)] font-bold uppercase leading-[0.86] text-white 2xl:text-[clamp(4rem,18vw,7.5rem)]">
+              <h1 className="font-bebas text-[clamp(4rem,9vw,6.4rem)] font-bold uppercase leading-[0.86] text-white">
                 Empowering the
                 <br />
                 Next <span className="text-transparent [-webkit-text-stroke:2px_#EEDEC5]">Generation</span>
               </h1>
-              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[20px] font-bold uppercase leading-tight text-[#B22222] sm:text-[24px] 2xl:text-[28px]">
+              <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[20px] font-bold uppercase leading-tight text-[#B22222] sm:text-[24px]">
                 With financial literacy, mentorship, scholarship, and opportunity.
               </p>
-              <p className="mt-3 max-w-[680px] font-sans text-[18px] font-normal leading-[1.45] text-white sm:text-[20px] lg:max-w-[620px] 2xl:text-[24px]">
+              <p className="mt-3 max-w-[680px] font-sans text-[18px] font-normal leading-[1.45] text-white sm:text-[20px] lg:max-w-[620px]">
                 We empower young people with the knowledge, guidance, and hands-on experiences to make informed financial decisions, build lasting success, 
                 and become leaders in their chosen fields of endeavor.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3 2xl:mt-9">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <a
                   href="/financial-literacy"
                   className="rounded-md bg-[#FAFF8D] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] border-2
@@ -60,14 +60,14 @@ export function HeroBanner() {
           </div>
 
           <div className="col-12 col-lg-5">
-            <div className="pointer-events-none relative min-h-75 overflow-hidden sm:min-h-135 lg:min-h-152.5 lg:overflow-visible">
+            <div className="pointer-events-none relative min-h-75 overflow-hidden sm:min-h-135 lg:min-h-152.5 lg:overflow-visible 2xl:static 2xl:min-h-[760px]">
               <Image
                 src="/assets/hero-gif.gif"
                 alt="Animated superhero standing on a cliff"
                 width={760}
                 height={711}
                 unoptimized
-                className="absolute bottom-0 -right-5 w-[min(520px,95vw)] max-w-none object-contain sm:-right-10 sm:w-[min(520px,88vw)] lg:-bottom-12 lg:-right-42.5 lg:w-[min(660px,116vw)] xl:-right-52.5 2xl:-right-70 2xl:w-[min(820px,118vw)]"
+                className="absolute bottom-0 -right-5 z-[5] w-[min(520px,95vw)] max-w-none object-contain sm:-right-10 sm:w-[min(520px,88vw)] lg:-bottom-12 lg:-right-42.5 lg:w-[min(660px,116vw)] xl:-right-52.5 2xl:-bottom-[176px] 2xl:right-0 2xl:w-[min(1100px,58vw)]"
               />
             </div>
           </div>

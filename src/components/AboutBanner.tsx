@@ -20,7 +20,7 @@ export function AboutBanner({
 
   return (
     <section
-      className={`${styles.banner} relative mx-auto min-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:min-h-[calc(100vh-3rem)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-16 2xl:px-24`}
+      className={`${styles.banner} page-banner-frame relative mx-auto overflow-hidden rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-16 2xl:px-24`}
     >
       <Image
         src="/assets/about-banner-bg.png"
@@ -33,7 +33,7 @@ export function AboutBanner({
 
       <Header />
 
-      <div className={`banner-content-width ${styles.content}`}>
+      <div className={`banner-content-width page-banner-inner ${styles.content}`}>
         <div className={styles.copy}>
           <p className={`${styles.eyebrow} banner-eyebrow`}>{eyebrow}</p>
           <h1 className={styles.title}>

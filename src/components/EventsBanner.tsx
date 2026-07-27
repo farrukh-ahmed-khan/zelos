@@ -4,13 +4,13 @@ import styles from "./EventsBanner.module.css";
 
 export function EventsBanner() {
   return (
-    <section className={styles.banner}>
+    <section className={`${styles.banner} page-banner-frame`}>
       <div className={styles.background} aria-hidden="true" />
       <div className={styles.shade} aria-hidden="true" />
 
       <Header />
 
-      <div className={`banner-content-width ${styles.content}`}>
+      <div className={`banner-content-width page-banner-inner ${styles.content}`}>
         <div className={styles.copy}>
           <p className={styles.eyebrow}>Events</p>
           <h1 className={styles.title}>

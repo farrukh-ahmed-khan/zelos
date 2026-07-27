@@ -15,14 +15,14 @@
 
 .copy {
   width: min(51%, 660px);
-  padding-top: clamp(72px, 8vw, 150px);
+  padding-top: clamp(72px, calc(13.333vw - 106px), 150px);
   padding-bottom: 72px;
 }
 
 .eyebrow {
   margin: 0 0 10px;
   font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
-  font-size: clamp(0.85rem, 1.25vw, 1.35rem);
+  font-size: clamp(0.85rem, calc(1.5vw - 7.2px), 1.35rem);
   line-height: 1;
   letter-spacing: 0.015em;
   text-transform: uppercase;
@@ -39,7 +39,7 @@
 .outline {
   display: block;
   white-space: nowrap;
-  font-size: clamp(4.6rem, 8vw, 9rem);
+  font-size: clamp(4.6rem, calc(11.46vw - 76px), 9rem);
   line-height: 0.83;
   color: transparent;
   -webkit-text-stroke: 1.5px #fff;
@@ -48,7 +48,7 @@
 .solid {
   display: block;
   white-space: nowrap;
-  font-size: clamp(3.25rem, 6vw, 6.75rem);
+  font-size: clamp(3.25rem, calc(7.5vw - 36px), 6.75rem);
   line-height: 0.91;
   color: #fff;
 }
@@ -56,7 +56,7 @@
 .intro {
   max-width: 365px;
   margin: 12px 0 0;
-  font-size: clamp(0.875rem, 1.22vw, 1.2rem);
+  font-size: clamp(0.875rem, 1vw, 1.2rem);
   line-height: 1.35;
   color: #fff;
 }
@@ -68,9 +68,9 @@
 .character {
   position: absolute;
   z-index: 0;
-  top: 0;
-  right: clamp(24px, 4.3vw, 82px);
-  width: clamp(410px, 40.5vw, 760px);
+  top: clamp(0px, calc(144px - 7.5vw), 48px);
+  right: clamp(48px, calc(154px - 3.75vw), 100px);
+  width: clamp(410px, calc(56.25vw - 320px), 760px);
   max-width: none;
   height: auto;
   pointer-events: none;

@@ -95,7 +95,7 @@ export function Header() {
     return (
       <div
         aria-hidden="true"
-        className={`${styles.headerRoot} relative z-20 h-[60px]`}
+        className={`${styles.headerRoot} site-header relative z-20 h-[60px]`}
         suppressHydrationWarning
       />
     );
@@ -103,7 +103,7 @@ export function Header() {
 
   return (
     <>
-      <header className={`${styles.headerRoot} relative z-20 flex min-w-0 items-center gap-2 sm:gap-3`}>
+      <header className={`${styles.headerRoot} site-header relative z-20 flex min-w-0 items-center gap-2 sm:gap-3`}>
         <nav className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 rounded-[7px] bg-white px-3 py-2 text-[#1b1b1b] shadow-[0_3px_0_#e02d36] sm:px-4">
           <Link href="/" aria-label="Zelos home" className={styles.logoCrop}>
             <Image

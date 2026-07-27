@@ -1,7 +1,6 @@
 .banner {
   position: relative;
   isolation: isolate;
-  min-height: min(820px, calc((100vw - 3rem) * 0.53), calc(100svh - 3rem));
   overflow: hidden;
   border-radius: 1.5rem;
   padding: 1rem 0.75rem;
