@@ -445,6 +445,7 @@ export async function createBroadcastMessage(params: {
 export async function createAdminEvent(params: {
   title: string;
   description: string;
+  information?: string;
   date: Date;
   location: string;
   type: "online" | "physical";

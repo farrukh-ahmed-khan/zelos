@@ -16,6 +16,7 @@ function serializeEvent(event: {
   _id: { toString(): string };
   title: string;
   description: string;
+  information?: string | null;
   coverImageUrl?: string | null;
   date: Date;
   timezone?: string | null;
@@ -34,6 +35,7 @@ function serializeEvent(event: {
     id: event._id.toString(),
     title: event.title,
     description: event.description,
+    information: event.information ?? null,
     coverImageUrl: event.coverImageUrl ?? null,
     date: event.date,
     timezone: event.timezone ?? "America/New_York",
@@ -124,6 +126,7 @@ export async function getEventAttendees(eventId: string) {
 export async function createEvent(params: {
   title: string;
   description: string;
+  information?: string;
   date: Date;
   location: string;
   type: "online" | "physical";
@@ -138,6 +141,7 @@ export async function createEvent(params: {
   await connectToDatabase();
   return Event.create({
     ...params,
+    information: params.information || null,
     coverImageUrl: params.coverImageUrl ?? null,
     meetingLink: params.meetingLink ?? null,
     timezone: params.timezone ?? "America/New_York",
@@ -196,6 +200,7 @@ export async function updateEventDetails(params: {
   updates: {
     title?: string;
     description?: string;
+    information?: string | null;
     date?: Date;
     timezone?: string;
     location?: string;

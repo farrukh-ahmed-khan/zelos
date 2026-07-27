@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const event = await createEvent({
       title: body.title,
       description: body.description,
+      information: body.information,
       date: new Date(body.date),
       location: body.location,
       type: body.type,
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
       speakers: body.speakers,
       recap: body.recap,
       recapImageUrl: body.recapImageUrl,
+      recapVideoUrl: body.recapVideoUrl,
     });
 
     return successResponse(
@@ -69,6 +71,7 @@ export async function POST(request: NextRequest) {
           id: event._id.toString(),
           title: event.title,
           description: event.description,
+          information: event.information,
           coverImageUrl: event.coverImageUrl,
           date: event.date,
           timezone: event.timezone,
@@ -78,6 +81,7 @@ export async function POST(request: NextRequest) {
           speakers: event.speakers,
           recap: event.recap,
           recapImageUrl: event.recapImageUrl,
+          recapVideoUrl: event.recapVideoUrl,
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
           hasRsvped: false,

@@ -14,6 +14,12 @@ const EventSchema = new Schema(
       trim: true,
       maxlength: 5000,
     },
+    information: {
+      type: String,
+      trim: true,
+      maxlength: 5000,
+      default: null,
+    },
     coverImageUrl: {
       type: String,
       trim: true,

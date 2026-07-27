@@ -123,10 +123,11 @@ export default async function EventDetailPage({
             {event.type === "online" ? "Digital" : "In-Person"} Event Information
           </h2>
           <div className={`${styles.informationGrid} mt-4`}>
-            <p className="text-sm leading-[1.75] text-[#393939]">
-              {event.type === "online"
-                ? "This event takes place online. RSVP to reserve your place and receive access information by email."
-                : `This event takes place at ${event.location}. RSVP to reserve your place and receive any event updates by email.`}
+            <p className="whitespace-pre-wrap text-sm leading-[1.75] text-[#393939]">
+              {event.information ||
+                (event.type === "online"
+                  ? "This event takes place online. RSVP to reserve your place and receive access information by email."
+                  : `This event takes place at ${event.location}. RSVP to reserve your place and receive any event updates by email.`)}
             </p>
             <ul className={`${styles.factList} text-sm leading-[1.6] text-[#393939]`}>
               <li>{formatDate(new Date(event.date))} at {formatTime(new Date(event.date))}</li>

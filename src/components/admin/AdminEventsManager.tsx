@@ -17,6 +17,7 @@ type EventItem = {
   id: string;
   title: string;
   description: string;
+  information: string | null;
   coverImageUrl: string | null;
   date: string | Date;
   timezone: string;
@@ -85,10 +86,12 @@ function eventPayload(form: HTMLFormElement, options: { clearable?: boolean } = 
   const formData = new FormData(form);
   const type = String(formData.get("type") ?? "physical") as "online" | "physical";
   const clearable = options.clearable ?? false;
+  const status = formData.get("status");
 
   return {
     title: String(formData.get("title") ?? ""),
     description: String(formData.get("description") ?? ""),
+    information: optionalTextField(formData, "information", clearable),
     date: new Date(String(formData.get("date") ?? "")).toISOString(),
     timezone: String(formData.get("timezone") ?? "America/New_York"),
     location: type === "online" ? "Online" : String(formData.get("location") ?? ""),
@@ -99,6 +102,7 @@ function eventPayload(form: HTMLFormElement, options: { clearable?: boolean } = 
     recap: optionalTextField(formData, "recap", clearable),
     recapImageUrl: optionalTextField(formData, "recapImageUrl", clearable),
     recapVideoUrl: optionalTextField(formData, "recapVideoUrl", clearable),
+    ...(status ? { status: String(status) } : {}),
   };
 }
 
@@ -206,6 +210,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
       [
         event.title,
         event.description,
+        event.information ?? "",
         event.location,
         event.type,
         event.status,
@@ -473,8 +478,14 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
           value={createCoverImageUrl}
         />
         <label className="grid gap-2 text-sm font-bold md:col-span-2">
-          Description
+          Card summary and About section
           <textarea name="description" required rows={4} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <span className="text-xs font-normal text-[#667085]">Shown on event cards and in the About section of the event page.</span>
+        </label>
+        <label className="grid gap-2 text-sm font-bold md:col-span-2">
+          Event information
+          <textarea name="information" rows={4} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <span className="text-xs font-normal text-[#667085]">Optional detailed copy for the Event Information section on the inner event page.</span>
         </label>
         <label className="grid gap-2 text-sm font-bold">
           Date and time
@@ -498,7 +509,7 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
         </label>
         <label className="grid gap-2 text-sm font-bold">
           Address or location
-          <input name="location" placeholder="Full address for physical events" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+          <input name="location" required={createEventType === "physical"} placeholder="Full address for physical events" className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
         </label>
         {createEventType === "online" ? (
           <label className="grid gap-2 text-sm font-bold md:col-span-2">
@@ -577,8 +588,14 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
               value={editCoverImageUrl}
             />
             <label className="grid gap-2 text-sm font-bold md:col-span-2">
-              Description
+              Card summary and About section
               <textarea name="description" required rows={4} defaultValue={editingEvent.description} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+              <span className="text-xs font-normal text-[#667085]">Shown on event cards and in the About section of the event page.</span>
+            </label>
+            <label className="grid gap-2 text-sm font-bold md:col-span-2">
+              Event information
+              <textarea name="information" rows={4} defaultValue={editingEvent.information ?? ""} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+              <span className="text-xs font-normal text-[#667085]">Optional detailed copy for the Event Information section on the inner event page.</span>
             </label>
             <label className="grid gap-2 text-sm font-bold">
               Date and time
@@ -602,7 +619,15 @@ export function AdminEventsManager({ events }: { events: EventItem[] }) {
             </label>
             <label className="grid gap-2 text-sm font-bold">
               Address or location
-              <input name="location" defaultValue={editingEvent.location} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+              <input name="location" required={editEventType === "physical"} defaultValue={editingEvent.location} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal" />
+            </label>
+            <label className="grid gap-2 text-sm font-bold">
+              Event status
+              <select name="status" defaultValue={editingEvent.status} className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal">
+                <option value="scheduled">Scheduled</option>
+                <option value="updated">Updated</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </label>
             {editEventType === "online" ? (
               <label className="grid gap-2 text-sm font-bold md:col-span-2">

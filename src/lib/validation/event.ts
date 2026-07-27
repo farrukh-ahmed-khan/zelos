@@ -3,6 +3,7 @@ import { z } from "zod";
 export const createEventSchema = z.object({
   title: z.string().trim().min(3).max(180),
   description: z.string().trim().min(10).max(5000),
+  information: z.string().trim().max(5000).optional(),
   date: z.iso.datetime(),
   timezone: z.string().trim().min(2).max(80).optional(),
   location: z.string().trim().min(2).max(255),
@@ -26,6 +27,7 @@ export const createEventSchema = z.object({
 export const updateEventSchema = z.object({
   title: z.string().trim().min(3).max(180).optional(),
   description: z.string().trim().min(10).max(5000).optional(),
+  information: z.string().trim().max(5000).nullable().optional(),
   date: z.iso.datetime().optional(),
   timezone: z.string().trim().min(2).max(80).optional(),
   location: z.string().trim().min(2).max(255).optional(),

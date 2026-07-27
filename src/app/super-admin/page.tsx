@@ -21,6 +21,7 @@ function dollars(cents: number) {
 const quickActions = [
   { href: "/admin/subscription-plans", label: "Manage Plans", detail: "Pricing, discounts, Stripe price IDs" },
   { href: "/admin/videos", label: "Manage Videos", detail: "Upload, sequence, drip, preview, mission video" },
+  { href: "/admin/events", label: "Manage Events", detail: "Cards, event details, recaps, status, and RSVPs" },
   { href: "/admin/users", label: "Manage Users", detail: "Statuses, RBAC, deletion" },
   { href: "/admin/invites", label: "Invite Admins", detail: "Moderator and sub-admin links" },
 ];

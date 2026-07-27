@@ -66,6 +66,15 @@ export default async function SuperAdminContentPage() {
             ))}
           </SuperAdminTable>
         </SuperAdminPanel>
+
+        <SuperAdminPanel
+          title="Events"
+          action={<Link href="/admin/events" className="rounded-md border border-[#cfd4dc] bg-white px-3 py-2 text-sm font-bold !text-[#202020] hover:border-[#8c0504]">Manage Events</Link>}
+        >
+          <p className="text-sm leading-relaxed text-[#667085]">
+            Create and edit event cards, inner-page information, speakers, schedules, locations, recap media, status, and RSVP attendee lists.
+          </p>
+        </SuperAdminPanel>
       </div>
 
       <div className="mt-6">

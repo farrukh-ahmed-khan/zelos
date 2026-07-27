@@ -23,6 +23,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       updates: {
         title: body.title,
         description: body.description,
+        information: body.information,
         date: body.date ? new Date(body.date) : undefined,
         timezone: body.timezone,
         location: body.location,
@@ -46,6 +47,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         id: event._id.toString(),
         title: event.title,
         description: event.description,
+        information: event.information,
         coverImageUrl: event.coverImageUrl,
         date: event.date,
         timezone: event.timezone,
