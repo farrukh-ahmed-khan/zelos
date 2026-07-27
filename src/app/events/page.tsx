@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { EventsBanner } from "@/components/EventsBanner";
 import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
 import { getEventsWithRsvpStatus } from "@/lib/events/service";
+import styles from "./events.module.css";
 
 export const dynamic = "force-dynamic";
+
+function formatEventDate(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
 
 export default async function EventsPage() {
   const events = await getEventsWithRsvpStatus();
@@ -12,63 +21,72 @@ export default async function EventsPage() {
   const past = events.filter((event) => new Date(event.date) < now || event.status === "cancelled");
 
   return (
-    <main className="min-h-screen bg-[#eee6d6] p-4 text-[#202020] sm:p-6">
-      <section className="relative overflow-hidden rounded-[2rem] bg-[#7a0505] px-5 py-5 text-white shadow-[inset_0_0_100px_rgba(0,0,0,0.45)] sm:px-9 lg:px-24">
-        <video className="absolute inset-0 h-full w-full object-cover opacity-55 mix-blend-multiply" autoPlay loop muted playsInline aria-hidden="true">
-          <source src="/assets/bg-video.mp4" type="video/quicktime" />
-        </video>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_35%,rgba(194,0,0,0.72),rgba(70,0,0,0.96)_72%)]" />
-        <div className="relative z-10">
-          <Header />
-          <div className="banner-content-width py-16 lg:py-24">
-            <p className="eyebrow-white banner-eyebrow mb-3">Zelos Events</p>
-            <h1 className="font-bebas text-[clamp(4rem,9vw,7rem)] uppercase leading-[0.84] text-white">
-              Show Up.
-              <span className="block text-transparent [-webkit-text-stroke:1.5px_white]">Level Up.</span>
-            </h1>
-            <p className="mt-3 inline-block bg-[#F2EBDA] px-2 py-1 font-bebas text-[22px] uppercase leading-none text-[#B22222]">
-              Physical and digital events for learning, career exposure, and community.
-            </p>
-          </div>
-        </div>
-      </section>
+    <main className="min-h-screen bg-white p-4 text-[#202020] sm:p-6">
+      <EventsBanner />
 
-      <section className="container py-10">
+      <div>
         {[
-          { title: "Upcoming Events", items: upcoming },
-          { title: "Past Events & Recaps", items: past },
+          { title: "Upcoming Events", items: upcoming, isPast: false },
+          { title: "Past Events", items: past, isPast: true },
         ].map((group) => (
-          <section key={group.title} className="mt-8">
-            <p className="eyebrow-red">Events</p>
-            <h2 className="home-section-heading bg-[linear-gradient(198deg,#B22222_0%,#1D1D1D_25%)] bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">{group.title}</h2>
-            <div className="mt-4 grid gap-5">
-              {group.items.length ? group.items.map((event) => (
-                <Link key={event.id} href={`/events/${event.id}`} className="grid gap-5 rounded-lg bg-[#c82124] p-6 !text-white shadow-[0_3px_0_rgba(0,0,0,0.18)] lg:grid-cols-[1.35fr_0.95fr_0.95fr_auto] lg:items-center lg:gap-0">
-                  <div className="lg:border-r lg:border-[#9d1a1b] lg:pr-8">
-                    <p className="text-xs font-black uppercase text-[#faff8d]">{event.type === "online" ? "Digital" : "Physical"} / {event.status}</p>
-                    <h3 className="mt-1 font-bebas text-3xl uppercase leading-none text-white">{event.title}</h3>
-                    <p className="mt-3 max-w-[360px] text-sm leading-relaxed text-white">{event.description}</p>
-                  </div>
-                  <div className="lg:border-r lg:border-[#9d1a1b] lg:px-8">
-                    <p className="font-bebas text-2xl uppercase leading-none text-white">{event.type === "online" ? "Online" : event.location}</p>
-                    <p className="mt-1 text-sm text-white/90">{event.timezone}</p>
-                  </div>
-                  <div className="lg:border-r lg:border-[#9d1a1b] lg:px-8">
-                    <p className="font-bebas text-4xl uppercase leading-none text-white">{new Date(event.date).getDate()}</p>
-                    <p className="font-bebas text-lg uppercase leading-none text-white">{new Date(event.date).toLocaleString("en", { month: "short", year: "numeric" })}</p>
-                    <p className="mt-1 text-sm text-white/90">{new Date(event.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</p>
-                  </div>
-                  <span className="inline-flex min-w-[98px] justify-center rounded-sm bg-[#faff8d] px-6 py-3 font-bebas text-lg uppercase leading-none !text-[#b22222] lg:ml-8">
-                    View
-                  </span>
-                </Link>
-              )) : (
-                <p className="rounded-md border-2 border-[#212121] bg-white px-4 py-3 text-sm text-[#555] shadow-[0_4px_0_#111]">No {group.title.toLowerCase()} yet.</p>
-              )}
+          <section
+            key={group.title}
+            className={
+              group.isPast
+                ? "-mx-4 bg-[#eee6d6] px-4 py-12 sm:-mx-6 sm:px-6 sm:py-16 lg:py-20"
+                : "py-12 sm:py-16 lg:py-20"
+            }
+          >
+            <div className="mx-auto w-full max-w-[1320px]">
+              <h2 className="text-center font-bebas text-[clamp(2.75rem,5vw,4.5rem)] uppercase leading-none text-[#202020]">
+                {group.title}
+              </h2>
+
+              <div className={`${styles.eventGrid} mt-8`}>
+                {group.items.length ? group.items.map((event) => (
+                  <article
+                    key={event.id}
+                    className="flex h-full min-w-0 flex-col overflow-hidden rounded-[7px] border border-[#dedede] bg-white"
+                  >
+                    <div className={styles.eventMedia}>
+                      {/* Event images can use any administrator-provided URL. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={event.coverImageUrl || "/assets/event-placeholder.svg"}
+                        alt={event.coverImageUrl ? `${event.title} event` : ""}
+                        className={styles.eventImage}
+                      />
+                    </div>
+
+                    <div className="flex flex-1 flex-col px-4 pb-5 pt-3">
+                      <p className="font-bebas text-sm uppercase leading-none text-[#202020]">
+                        {formatEventDate(new Date(event.date))}
+                      </p>
+                      <h3 className="mt-3 line-clamp-2 font-bebas text-[1.35rem] uppercase leading-[1.06] text-[#202020]">
+                        {event.title}
+                      </h3>
+                      <p className="mt-3 line-clamp-3 text-xs leading-[1.55] text-[#303030]">
+                        {event.description}
+                      </p>
+
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="mt-4 inline-flex w-fit min-w-[96px] items-center justify-center rounded-[4px] border border-[#202020] bg-[#faff8d] px-4 py-2 text-[11px] font-bold leading-none !text-[#202020] shadow-[0_2px_0_#202020] transition hover:-translate-y-px hover:bg-[#f5ff62] hover:shadow-[0_3px_0_#202020]"
+                      >
+                        Read More
+                      </Link>
+                    </div>
+                  </article>
+                )) : (
+                  <p className="col-span-full rounded-md border border-[#dedede] bg-[#fafafa] px-5 py-8 text-center text-sm text-[#666]">
+                    No {group.title.toLowerCase()} yet.
+                  </p>
+                )}
+              </div>
             </div>
           </section>
         ))}
-      </section>
+      </div>
       <Footer />
     </main>
   );

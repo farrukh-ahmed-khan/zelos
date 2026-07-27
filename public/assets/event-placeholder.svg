@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="1000" viewBox="0 0 1360 1000" role="img" aria-labelledby="title description">
+  <title id="title">Zelos Events placeholder</title>
+  <desc id="description">Abstract red event stage with a calendar symbol.</desc>
+  <defs>
+    <radialGradient id="background" cx="54%" cy="42%" r="78%">
+      <stop offset="0" stop-color="#bd0000"/>
+      <stop offset="0.56" stop-color="#760001"/>
+      <stop offset="1" stop-color="#360001"/>
+    </radialGradient>
+    <linearGradient id="spotlight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1360" height="1000" fill="url(#background)"/>
+  <circle cx="1090" cy="172" r="310" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="72"/>
+  <circle cx="1090" cy="172" r="150" fill="#fff" fill-opacity=".05"/>
+  <path d="M0 775 530 310 910 1000H0Z" fill="url(#spotlight)"/>
+  <path d="m1360 590-380-228-220 638h600Z" fill="#120000" fill-opacity=".2"/>
+
+  <g transform="translate(480 205)" fill="none" stroke="#fff" stroke-width="24">
+    <rect x="0" y="55" width="400" height="340" rx="42"/>
+    <path d="M0 155h400"/>
+    <path d="M102 0v105M298 0v105" stroke-linecap="round"/>
+    <path d="m108 255 62 62 130-136" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="680" y="735" fill="#fff" font-family="Arial Narrow, Arial, sans-serif" font-size="104" font-weight="700" letter-spacing="10" text-anchor="middle">ZELOS</text>
+  <text x="680" y="825" fill="#fff" fill-opacity=".82" font-family="Arial, sans-serif" font-size="40" font-weight="700" letter-spacing="18" text-anchor="middle">EVENTS</text>
+</svg>

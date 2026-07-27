@@ -1,0 +1,188 @@
+.banner {
+  position: relative;
+  isolation: isolate;
+  min-height: min(820px, calc((100vw - 3rem) * 0.53), calc(100svh - 3rem));
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 1rem 0.75rem;
+  color: #fff;
+  background: #360001;
+  box-shadow: inset 0 0 100px rgb(0 0 0 / 45%);
+}
+
+.background,
+.shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.background {
+  z-index: -2;
+  background-image: url("/assets/scholarship-banner-bg.gif");
+  background-position: center;
+  background-size: cover;
+  opacity: 0.5;
+}
+
+.shade {
+  z-index: -3;
+  background: radial-gradient(ellipse at center, #760001 0%, #360001 100%);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.copy {
+  width: min(50%, 670px);
+  padding-top: clamp(68px, 7vw, 112px);
+  padding-bottom: 64px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-size: clamp(0.82rem, 1vw, 1.08rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-bebas-neue), "Bebas Neue", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.outline,
+.solid {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(3.7rem, 5.55vw, 6.65rem);
+  line-height: 0.92;
+}
+
+.outline {
+  color: transparent;
+  -webkit-text-stroke: 1.35px #fff;
+}
+
+.solid {
+  color: #fff;
+}
+
+.intro {
+  width: 100%;
+  max-width: 425px;
+  margin: 16px 0 0;
+  font-size: clamp(0.86rem, 1vw, 1.08rem);
+  line-height: 1.35;
+  color: #fff;
+}
+
+.character {
+  position: absolute;
+  z-index: 0;
+  top: clamp(72px, 7vw, 134px);
+  right: clamp(24px, 7.5vw, 144px);
+  width: clamp(350px, 36vw, 690px);
+  max-width: none;
+  height: auto;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  user-select: none;
+}
+
+@media (min-width: 640px) {
+  .banner {
+    padding: 1.25rem 2.25rem;
+    border-radius: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .banner {
+    padding-inline: 4rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .banner {
+    padding-inline: 6rem;
+  }
+}
+
+@media (max-width: 991px) {
+  .copy {
+    width: 56%;
+  }
+
+  .character {
+    right: -12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .banner {
+    min-height: 750px;
+  }
+
+  .content {
+    min-height: 670px;
+  }
+
+  .copy {
+    width: 100%;
+    padding-top: 56px;
+    padding-bottom: 350px;
+  }
+
+  .outline,
+  .solid {
+    white-space: normal;
+    font-size: clamp(3.35rem, 15.5vw, 5.4rem);
+    line-height: 0.88;
+  }
+
+  .intro {
+    max-width: 33rem;
+    font-size: 0.92rem;
+  }
+
+  .character {
+    top: auto;
+    right: -65px;
+    bottom: -200px;
+    width: 430px;
+    opacity: 0.78;
+  }
+}
+
+@media (max-width: 420px) {
+  .banner {
+    min-height: 720px;
+  }
+
+  .content {
+    min-height: 640px;
+  }
+
+  .copy {
+    padding-top: 48px;
+  }
+
+  .outline,
+  .solid {
+    font-size: 3.28rem;
+  }
+
+  .character {
+    right: -92px;
+    bottom: -220px;
+  }
+}
