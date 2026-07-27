@@ -17,7 +17,7 @@ export function EventRsvpButton({
 
   if (!canRsvp) {
     return (
-      <p className="text-sm font-bold text-[#667085]">
+      <p className="text-xs font-semibold leading-relaxed text-[#667085]">
         View-only access — moderators do not RSVP to events.
       </p>
     );
@@ -40,11 +40,11 @@ export function EventRsvpButton({
         type="button"
         onClick={rsvp}
         disabled={hasRsvped || isSubmitting}
-        className="w-fit rounded-md border-2 border-[#212121] bg-[#faff8d] px-6 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111] disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full rounded-[4px] border border-[#212121] bg-[#faff8d] px-4 py-2.5 text-xs font-black uppercase tracking-[0.04em] !text-[#212121] shadow-[0_2px_0_#111] transition hover:-translate-y-px hover:bg-[#f5ff62] hover:shadow-[0_3px_0_#111] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
       >
         {isSubmitting ? "Saving RSVP..." : hasRsvped ? "RSVPed" : "RSVP"}
       </button>
-      {message ? <p className="text-sm font-bold text-[#b22222]">{message}</p> : null}
+      {message ? <p className="text-xs font-semibold leading-relaxed text-[#b22222]">{message}</p> : null}
     </div>
   );
 }
