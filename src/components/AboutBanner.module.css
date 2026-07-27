@@ -75,6 +75,7 @@
   height: auto;
   pointer-events: none;
   mix-blend-mode: multiply;
+  transform: scaleX(-1);
   user-select: none;
 }
 
