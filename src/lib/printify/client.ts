@@ -58,6 +58,7 @@ export type PrintifyProduct = {
   id: string;
   title: string;
   description?: string;
+  tags?: string[];
   visible?: boolean;
   variants?: PrintifyProductVariant[];
   options?: Array<{

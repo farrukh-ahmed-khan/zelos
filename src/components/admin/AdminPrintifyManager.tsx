@@ -20,6 +20,8 @@ type PrintifyWebhook = {
 type PrintifyProduct = {
   id: string;
   title: string;
+  category?: string;
+  tags?: string[];
   visible?: boolean;
   imported?: boolean;
   localProductId?: string | null;
@@ -256,6 +258,17 @@ export function AdminPrintifyManager() {
       ),
     },
     {
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      width: 150,
+      render: (category: string | undefined, product) => (
+        <Tag color={category ? "blue" : "default"} title={(product.tags ?? []).join(", ")}>
+          {category || "Uncategorized"}
+        </Tag>
+      ),
+    },
+    {
       title: "Price",
       key: "price",
       width: 130,
@@ -354,7 +367,7 @@ export function AdminPrintifyManager() {
                   columns={productColumns}
                   dataSource={products}
                   loading={loadingProducts}
-                  scroll={{ x: 900 }}
+                  scroll={{ x: 1050 }}
                   pagination={{ pageSize: 10 }}
                 />
               </Card>

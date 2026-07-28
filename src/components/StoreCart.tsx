@@ -8,6 +8,8 @@ export type StoreProduct = {
   name: string;
   slug: string;
   description: string;
+  category?: string;
+  tags?: string[];
   priceCents: number;
   images: string[];
   sizes: string[];
@@ -252,7 +254,11 @@ export function StoreCart({
           <div className="aspect-[4/3] rounded-md bg-[#f4f1e9]" />
         )}
         <p className="text-xs font-black uppercase text-[#b22222]">
-          {product.isGiftCard ? "Gift Card" : product.limitedEdition ? "Limited Edition" : "Zelos Gear"}
+          {product.isGiftCard
+            ? "Gift Card"
+            : product.limitedEdition
+              ? "Limited Edition"
+              : product.category || "Zelos Gear"}
         </p>
         <h2 className="font-bebas text-3xl uppercase leading-none">{product.name}</h2>
         <p className="text-sm leading-relaxed text-[#555]">{product.description}</p>

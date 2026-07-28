@@ -24,6 +24,8 @@ type Product = {
   name: string;
   slug: string;
   description: string;
+  category: string;
+  tags: string[];
   priceCents: number;
   images: string[];
   sizes: string[];
@@ -44,6 +46,8 @@ type Product = {
 type ProductForm = {
   name: string;
   description: string;
+  category: string;
+  tags: string;
   priceCents: number;
   images: string;
   sizes: string;
@@ -66,6 +70,8 @@ function toProductForm(product: Product): ProductForm {
   return {
     name: product.name,
     description: product.description,
+    category: product.category,
+    tags: product.tags.join(", "),
     priceCents: product.priceCents,
     images: product.images.join(", "),
     sizes: product.sizes.join(", "),
@@ -97,6 +103,8 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
         product.name,
         product.slug,
         product.description,
+        product.category,
+        product.tags.join(" "),
         product.sizes.join(" "),
         product.colors.join(" "),
         product.isActive ? "active" : "inactive",
@@ -130,6 +138,8 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
+      category: form.category.trim(),
+      tags: form.tags.split(",").map((value) => value.trim()).filter(Boolean),
       priceCents: Number(form.priceCents),
       images: form.images.split(",").map((value) => value.trim()).filter(Boolean),
       sizes: form.sizes.split(",").map((value) => value.trim()).filter(Boolean),
@@ -206,6 +216,19 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
           <div className="text-xs text-[#667085]">{product.slug}</div>
           <div className="line-clamp-2 text-xs text-[#667085]">{product.description}</div>
         </div>
+      ),
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      width: 150,
+      filters: Array.from(new Set(items.map((product) => product.category).filter(Boolean)))
+        .sort()
+        .map((category) => ({ text: category, value: category })),
+      onFilter: (value, product) => product.category === value,
+      render: (category: string) => (
+        <Tag color={category ? "blue" : "default"}>{category || "Uncategorized"}</Tag>
       ),
     },
     {
@@ -313,7 +336,7 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
           <Input
             allowClear
             prefix={<SearchOutlined />}
-            placeholder="Search products by name, slug, status, type, size, or color"
+            placeholder="Search products by name, category, tag, slug, status, size, or color"
             value={searchTerm}
             onChange={(event) => {
               setSearchTerm(event.target.value);
@@ -326,7 +349,7 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
             columns={columns}
             dataSource={filteredItems}
             pagination={pagination}
-            scroll={{ x: 1580 }}
+            scroll={{ x: 1730 }}
             bordered
             locale={{ emptyText: "No products found" }}
           />
@@ -357,6 +380,26 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
                 />
               </label>
             ))}
+            <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+              Category
+              <input
+                value={form.category}
+                onChange={(event) =>
+                  setForm((prev) => (prev ? { ...prev, category: event.target.value } : prev))
+                }
+                className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
+              />
+            </label>
+            <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+              Tags <span className="font-normal normal-case text-[#667085]">(comma-separated)</span>
+              <input
+                value={form.tags}
+                onChange={(event) =>
+                  setForm((prev) => (prev ? { ...prev, tags: event.target.value } : prev))
+                }
+                className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
+              />
+            </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
                 Price (cents)

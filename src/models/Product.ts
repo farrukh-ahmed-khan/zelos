@@ -28,6 +28,11 @@ const ProductSchema = new Schema(
     name: { type: String, required: true, trim: true, maxlength: 160 },
     slug: { type: String, required: true, unique: true, trim: true, index: true },
     description: { type: String, required: true, trim: true, maxlength: 3000 },
+    category: { type: String, trim: true, maxlength: 80, default: "", index: true },
+    tags: {
+      type: [{ type: String, trim: true, maxlength: 80 }],
+      default: [],
+    },
     priceCents: { type: Number, required: true, min: 0 },
     images: { type: [String], default: [] },
     sizes: { type: [String], default: [] },

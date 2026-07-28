@@ -194,7 +194,11 @@ export function ProductDetailView({
         <section className="min-w-0 rounded-md border border-[#ded6c8] bg-[#f9f6ee] p-5 shadow-sm sm:p-7">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-sm bg-[#8c0504] px-2 py-1 text-[11px] font-black uppercase text-white">
-              {product.isGiftCard ? "Gift Card" : product.limitedEdition ? "Limited" : "Zelos Store"}
+              {product.isGiftCard
+                ? "Gift Card"
+                : product.limitedEdition
+                  ? "Limited"
+                  : product.category || "Zelos Store"}
             </span>
             {product.printify?.enabled ? (
               <span className="rounded-sm border border-[#d8d2c5] bg-white px-2 py-1 text-[11px] font-black uppercase text-[#555]">
@@ -347,7 +351,9 @@ export function ProductDetailView({
                 </div>
                 <div className="mt-4">
                   <p className="mb-1 text-xs font-bold uppercase text-[#b22222]">
-                    {relProd.limitedEdition ? "Limited Edition" : "Zelos Gear"}
+                    {relProd.limitedEdition
+                      ? "Limited Edition"
+                      : relProd.category || "Zelos Gear"}
                   </p>
                   <h3 className="font-bebas text-[1.6rem] uppercase leading-none text-[#202020]">{relProd.name}</h3>
                   <div className="mt-3 flex items-center justify-between">

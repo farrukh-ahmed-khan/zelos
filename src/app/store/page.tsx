@@ -28,6 +28,8 @@ function productMatchesQuery(product: SerializedProduct, query: string) {
     product.name,
     product.slug,
     product.description,
+    product.category,
+    product.tags.join(" "),
     product.sizes.join(" "),
     product.colors.join(" "),
     product.limitedEdition ? "limited edition" : "",
@@ -350,7 +352,11 @@ function ProductCard({ product }: { product: SerializedProduct }) {
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
         <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-[#b22222]">
-          {product.isGiftCard ? "Gift Card" : product.limitedEdition ? "Limited Edition" : "Zelos Gear"}
+          {product.isGiftCard
+            ? "Gift Card"
+            : product.limitedEdition
+              ? "Limited Edition"
+              : product.category || "Zelos Gear"}
         </p>
         <h2 className="font-bebas text-[1.75rem] uppercase leading-none text-[#1e1e1e]">
           {product.name}

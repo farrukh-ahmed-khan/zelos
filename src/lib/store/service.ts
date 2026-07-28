@@ -24,6 +24,8 @@ export function serializeProduct(product: ProductDocument) {
     name: product.name,
     slug: product.slug,
     description: product.description,
+    category: product.category ?? "",
+    tags: product.tags ?? [],
     priceCents: product.priceCents,
     images: product.images ?? [],
     sizes: product.sizes ?? [],
@@ -103,6 +105,75 @@ function slugifyProductName(value: string) {
     .slice(0, 160);
 }
 
+const PRINTIFY_CATEGORY_TITLE_RULES: Array<[RegExp, string]> = [
+  [/\bpolo\b/i, "Polos"],
+  [/\bhoodie\b/i, "Hoodies"],
+  [/\bsweatshirt\b|\bpullover\b/i, "Sweatshirts"],
+  [/\blong[\s-]?sleeve\b/i, "Long Sleeves"],
+  [/\bt[\s-]?shirt\b|\btee\b/i, "T-Shirts"],
+  [/\bcap\b|\bsnapback\b|\bhat\b/i, "Hats"],
+  [/\btumbler\b|\bwater bottle\b|\bbottle\b/i, "Drinkware"],
+  [/\btowel\b/i, "Towels"],
+];
+
+const PRINTIFY_CATEGORY_TAGS = new Map(
+  [
+    ["polo", "Polos"],
+    ["hoodies", "Hoodies"],
+    ["sweatshirts", "Sweatshirts"],
+    ["long sleeves", "Long Sleeves"],
+    ["t-shirts", "T-Shirts"],
+    ["hats", "Hats"],
+    ["tumblers", "Drinkware"],
+    ["bottles", "Drinkware"],
+    ["towels", "Towels"],
+    ["sportswear", "Sportswear"],
+    ["accessories", "Accessories"],
+    ["home & living", "Home & Living"],
+    ["kids' clothing", "Kids' Clothing"],
+    ["men's clothing", "Men's Clothing"],
+    ["women's clothing", "Women's Clothing"],
+  ].map(([tag, category]) => [tag.toLowerCase(), category]),
+);
+
+export function normalizePrintifyProductTags(tags?: string[]) {
+  const seen = new Set<string>();
+
+  return (tags ?? [])
+    .map((tag) => tag.trim())
+    .filter((tag) => {
+      const key = tag.toLowerCase();
+
+      if (!tag || seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 30);
+}
+
+export function getPrintifyProductCategory(product: Pick<PrintifyProduct, "title" | "tags">) {
+  for (const [pattern, category] of PRINTIFY_CATEGORY_TITLE_RULES) {
+    if (pattern.test(product.title)) {
+      return category;
+    }
+  }
+
+  const tags = normalizePrintifyProductTags(product.tags);
+
+  for (const tag of tags) {
+    const category = PRINTIFY_CATEGORY_TAGS.get(tag.toLowerCase());
+
+    if (category) {
+      return category;
+    }
+  }
+
+  return tags[0] ?? "";
+}
+
 function getPrintifyOptionValue(product: PrintifyProduct, variant: PrintifyProductVariant, type: string) {
   const optionIds = new Set(variant.options ?? []);
 
@@ -144,6 +215,7 @@ async function uniqueProductSlug(title: string, printifyProductId: string) {
 
 function mapPrintifyProductToLocalPayload(product: PrintifyProduct, slug: string) {
   const enabledVariants = (product.variants ?? []).filter((variant) => variant.is_enabled !== false);
+  const tags = normalizePrintifyProductTags(product.tags);
   const imageForVariant = new Map<number, string>();
 
   for (const image of product.images ?? []) {
@@ -187,6 +259,8 @@ function mapPrintifyProductToLocalPayload(product: PrintifyProduct, slug: string
     name: product.title,
     slug,
     description: product.description || product.title,
+    category: getPrintifyProductCategory(product),
+    tags,
     priceCents,
     images,
     sizes,

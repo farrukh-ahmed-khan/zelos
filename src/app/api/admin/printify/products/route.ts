@@ -6,8 +6,10 @@ import { handleApiError, successResponse } from "@/lib/http";
 import { listPrintifyProducts } from "@/lib/printify/client";
 import Product from "@/models/Product";
 import {
+  getPrintifyProductCategory,
   importAllPrintifyProducts,
   importPrintifyProduct,
+  normalizePrintifyProductTags,
   serializeProduct,
 } from "@/lib/store/service";
 
@@ -43,6 +45,8 @@ export async function GET(request: NextRequest) {
 
         return {
           ...product,
+          category: getPrintifyProductCategory(product),
+          tags: normalizePrintifyProductTags(product.tags),
           imported: Boolean(localProduct?.printify?.enabled),
           localProductId: localProduct?._id.toString() ?? null,
           localIsActive: localProduct?.isActive ?? false,
