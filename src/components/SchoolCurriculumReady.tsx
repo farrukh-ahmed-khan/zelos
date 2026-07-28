@@ -34,11 +34,9 @@ export function SchoolCurriculumReady() {
 
           <div className={styles.actions}>
             <Link href="/contact" className={styles.primaryAction}>
-              Request a Demo
+              Contact Now
             </Link>
-            <Link href="/schools" className={styles.secondaryAction}>
-              Bring Zelos to Your School
-            </Link>
+          
           </div>
         </div>
       </div>

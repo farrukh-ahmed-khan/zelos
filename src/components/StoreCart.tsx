@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api, isApiSuccess } from "@/lib/api/client";
+import { notifyCartChange } from "@/lib/cart";
 
 export type StoreProduct = {
   id: string;
@@ -103,6 +104,7 @@ export function StoreCart({
 
   useEffect(() => {
     window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    notifyCartChange();
   }, [cart]);
 
   const visibleProducts = featuredProduct ? [featuredProduct] : products;

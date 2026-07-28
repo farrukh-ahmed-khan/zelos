@@ -12,7 +12,6 @@ const footerGroups = [
   {
     title: "Program",
     links: [
-      { label: "Financial Literacy", href: "/financial-literacy" },
       { label: "School Curriculum", href: "/school-curriculum" },
       { label: "Mentoring", href: "/mentoring" },
       { label: "Scholarship", href: "/scholarships" },
@@ -32,7 +31,7 @@ const footerGroups = [
       { label: "Contact Us", href: "/contact" },
       { label: "About", href: "/about" },
       { label: "Donate", href: "/donate" },
-      { label: "Mission", href: "/mission-video" },
+      { label: "Mission", href: "/mission" },
     ],
   },
 ];

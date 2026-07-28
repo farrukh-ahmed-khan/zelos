@@ -114,14 +114,10 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
             ref={sliderRef}
             className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-3 lg:gap-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {display.map((product, index) => (
+            {display.map((product) => (
               <article
                 key={product.id}
-                className={
-                  activeIndex === index
-                    ? "w-[88%] shrink-0 snap-start rounded-md bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.14)] sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/2)]"
-                    : "w-[88%] shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/2)]"
-                }
+                className="w-[88%] shrink-0 snap-start rounded-md bg-white p-4 transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.14)] focus-within:-translate-y-1 focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.14)] sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-5rem)/3)]"
               >
                 <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#f1f1f1]">
                   {product.images[0] ? (

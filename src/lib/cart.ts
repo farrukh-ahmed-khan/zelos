@@ -21,8 +21,24 @@ export function loadCart(): CartItem[] {
   }
 }
 
+/**
+ * `storage` only fires in other tabs, so writers dispatch a synthetic event to
+ * keep same-tab listeners (the header cart badge) in sync.
+ */
+export function notifyCartChange(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new StorageEvent("storage", {
+      key: CART_KEY,
+      newValue: window.localStorage.getItem(CART_KEY),
+      storageArea: window.localStorage,
+    }),
+  );
+}
+
 export function saveCart(cart: CartItem[]): void {
   window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  notifyCartChange();
 }
 
 export function cartItemCount(cart: CartItem[]): number {

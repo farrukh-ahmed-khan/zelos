@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { type StoreProduct } from "@/components/StoreCart";
+import { notifyCartChange } from "@/lib/cart";
 
 const CART_KEY = "zelos-store-cart";
 
@@ -41,6 +42,7 @@ function loadCart(): CartItem[] {
 
 function saveCart(cart: CartItem[]) {
   window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  notifyCartChange();
 }
 
 export function ProductAddToCart({ product }: { product: StoreProduct }) {

@@ -39,7 +39,7 @@ export function ScholarshipAudience() {
             Ready to start? Tell us about the scholarship you have in mind.
           </p>
           <Link href="/fund-a-scholarship" className={styles.link}>
-            View Scholarship Opportunities
+            Create a Scholarship
           </Link>
           <div className={styles.why}>
             <p className={styles.whyLabel}>Why It Matters</p>

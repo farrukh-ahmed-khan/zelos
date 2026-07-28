@@ -10,18 +10,23 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { api, isApiSuccess } from "@/lib/api/client";
+import { HeaderCartButton } from "@/components/HeaderCartButton";
 import styles from "./Header.module.css";
 
 const navItems = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "Mission", href: "/mission-video" },
   { label: "Programs", href: "/financial-literacy" },
   { label: "Events", href: "/events" },
-  { label: "Scholarships", href: "/scholarship" },
+  { label: "Scholarships", href: "/scholarships" },
   { label: "Forum", href: "/forum" },
   { label: "Store", href: "/store" },
   { label: "Contact", href: "/contact" },
+];
+
+const aboutLinks = [
+  { label: "About Zelos", href: "/about" },
+  { label: "The Mission", href: "/mission" },
 ];
 
 const programLinks = [
@@ -124,10 +129,13 @@ export function Header() {
                   ? pathname === item.href
                   : pathname === item.href ||
                     pathname.startsWith(`${item.href}/`) ||
+                    (item.label === "About" && pathname === "/mission") ||
                     (item.label === "Programs" && pathname === "/school-curriculum") ||
-                    (item.label === "Scholarships" && pathname === "/scholarship-incubator");
+                    (item.label === "Scholarships" && pathname === "/scholarships");
 
-              if (item.label === "Programs") {
+              if (item.label === "About" || item.label === "Programs") {
+                const dropdownLinks = item.label === "About" ? aboutLinks : programLinks;
+
                 return (
                   <div key={item.href} className="group relative">
                     <Link
@@ -138,13 +146,13 @@ export function Header() {
                       <DownOutlined className="shrink-0 text-[11px] leading-none text-[#2C2E2A]!" />
                     </Link>
                     <div className="invisible absolute left-1/2 top-full z-30 grid w-64 -translate-x-1/2 gap-1 rounded-md border-2 border-[#212121] bg-white p-2 opacity-0 shadow-[0_4px_0_#111] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                      {programLinks.map((program) => (
+                      {dropdownLinks.map((dropdownItem) => (
                         <Link
-                          key={program.href}
-                          href={program.href}
+                          key={dropdownItem.href}
+                          href={dropdownItem.href}
                           className="rounded-sm px-3 py-2 text-sm font-bold !text-[#2C2E2A] hover:bg-[#efe6d8] hover:!text-[#cf1e1e]"
                         >
-                          {program.label}
+                          {dropdownItem.label}
                         </Link>
                       ))}
                     </div>
@@ -163,6 +171,8 @@ export function Header() {
               );
             })}
           </div>
+
+          <HeaderCartButton className="ml-auto xl:ml-0" />
 
           <Link
             href={isLoggedIn ? "/dashboard" : "/login"}
@@ -246,8 +256,16 @@ export function Header() {
                     ? pathname === item.href
                     : pathname === item.href ||
                       pathname.startsWith(`${item.href}/`) ||
+                      (item.label === "About" && pathname === "/mission-video") ||
                       (item.label === "Programs" && pathname === "/school-curriculum") ||
                       (item.label === "Scholarships" && pathname === "/scholarship-incubator");
+                const dropdownLinks =
+                  item.label === "About"
+                    ? aboutLinks
+                    : item.label === "Programs"
+                      ? programLinks
+                      : [];
+
                 return (
                   <div key={item.href} className="contents">
                   <Link
@@ -257,15 +275,15 @@ export function Header() {
                   >
                     {item.label}
                   </Link>
-                  {item.label === "Programs"
-                    ? programLinks.map((program) => (
+                  {dropdownLinks.length
+                    ? dropdownLinks.map((dropdownItem) => (
                         <Link
-                          key={program.href}
-                          href={program.href}
+                          key={dropdownItem.href}
+                          href={dropdownItem.href}
                           onClick={() => setMobileOpen(false)}
                           className="ml-4 rounded-md px-4 py-2 text-sm font-semibold !text-[#2C2E2A] hover:bg-[#efe6d8] hover:!text-[#cf1e1e]"
                         >
-                          {program.label}
+                          {dropdownItem.label}
                         </Link>
                       ))
                     : null}

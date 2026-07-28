@@ -143,9 +143,6 @@ export default async function ForumPage({
               <Link href="/signup" className="rounded-md border-2 border-[#212121] bg-[#FAFF8D] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
                 Sign Up Free
               </Link>
-              <Link href="/billing" className="rounded-md border-2 border-[#212121] bg-[#f4f1e9] px-5 py-3 text-sm font-black !text-[#212121] shadow-[0_4px_0_#111]">
-                Subscribe
-              </Link>
             </div>
           </div>
         </div>

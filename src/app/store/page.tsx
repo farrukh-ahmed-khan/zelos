@@ -329,7 +329,7 @@ export default async function StorePage({
                 people the tools to build real wealth.
               </p>
               <Link
-                href="/mission-video"
+                href="/mission"
                 className="mt-6 inline-flex items-center gap-2 rounded-md border-2 border-[#faff8d] bg-[#faff8d] px-5 py-2.5 text-sm font-black text-[#212121]! shadow-[0_4px_0_rgba(250,255,141,0.3)] transition hover:bg-[#fff176]"
               >
                 Learn Our Mission →

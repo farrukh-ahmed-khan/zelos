@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CART_KEY, type CartItem, money } from "@/lib/cart";
+import { CART_KEY, type CartItem, money, notifyCartChange } from "@/lib/cart";
 import { type StoreProduct } from "@/components/StoreCart";
 import { formatProductDescription } from "@/lib/store/format-product-description";
 
@@ -33,6 +33,7 @@ function loadCart(): CartItem[] {
 
 function saveCart(cart: CartItem[]) {
   window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  notifyCartChange();
 }
 
 function swatchStyle(color: string) {

@@ -6,6 +6,7 @@ import { AboutNonprofitCommitment } from "@/components/AboutNonprofitCommitment"
 import { AboutOurVision } from "@/components/AboutOurVision";
 import { AboutWhatWeDo } from "@/components/AboutWhatWeDo";
 import { AboutWhoWeAre } from "@/components/AboutWhoWeAre";
+import { ContactGetInTouch } from "@/components/ContactGetInTouch";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { JsonPostForm } from "@/components/JsonPostForm";
@@ -49,12 +50,14 @@ export async function StaticInfoPage({
   actions,
   cmsSlug,
   heroVariant = "default",
+  showGetInTouch = false,
 }: {
   eyebrow: string;
   title: string;
   intro: string;
   sections?: { title: string; body: string; points?: string[] }[];
   form?: FormConfig;
+  showGetInTouch?: boolean;
   actions?: { href: string; label: string }[];
   cmsSlug?: string;
   heroVariant?: "default" | "about" | "mentoring" | "scholarship" | "school";
@@ -133,34 +136,41 @@ export async function StaticInfoPage({
       {heroVariant === "school" ? <SchoolCurriculumReady /> : null}
 
       {heroVariant === "default" ? (
-        <section className="container grid gap-5 py-10 lg:grid-cols-3">
-          <div className="grid gap-5 lg:col-span-2">
-            {pageSections.map((section) => (
-              <article
-                key={section.title}
-                className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]"
-              >
-                <h2 className="font-bebas text-4xl uppercase leading-none text-[#202020]">
-                  {section.title}
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-[#4a4a4a]">
-                  {section.body}
-                </p>
-                {section.points?.length ? (
-                  <div className="mt-5 grid gap-2">
-                    {section.points.map((point) => (
-                      <p
-                        key={point}
-                        className="rounded-md bg-[#f8f3e8] px-4 py-3 text-sm font-bold"
-                      >
-                        {point}
-                      </p>
-                    ))}
-                  </div>
-                ) : null}
-              </article>
-            ))}
-          </div>
+        <section
+          className={`container grid gap-5 py-10 ${
+            pageSections.length || showGetInTouch ? "lg:grid-cols-3" : "max-w-2xl"
+          }`}
+        >
+          {pageSections.length || showGetInTouch ? (
+            <div className="grid content-start gap-5 lg:col-span-2">
+              {showGetInTouch ? <ContactGetInTouch /> : null}
+              {pageSections.map((section) => (
+                <article
+                  key={section.title}
+                  className="rounded-md border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]"
+                >
+                  <h2 className="font-bebas text-4xl uppercase leading-none text-[#202020]">
+                    {section.title}
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-[#4a4a4a]">
+                    {section.body}
+                  </p>
+                  {section.points?.length ? (
+                    <div className="mt-5 grid gap-2">
+                      {section.points.map((point) => (
+                        <p
+                          key={point}
+                          className="rounded-md bg-[#f8f3e8] px-4 py-3 text-sm font-bold"
+                        >
+                          {point}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          ) : null}
 
           <aside className="grid content-start gap-5">
             {form ? (

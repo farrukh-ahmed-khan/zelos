@@ -17,12 +17,7 @@ export default function ContactPage() {
           { name: "companyWebsite", label: "Company website", type: "hidden", value: "" },
         ],
       }}
-      sections={[
-        {
-          title: "Public Form Endpoint",
-          body: "Contact submissions use server-side validation, a honeypot field, rate limiting, confirmation response, and an email outbox record.",
-        },
-      ]}
+      showGetInTouch
     />
   );
 }

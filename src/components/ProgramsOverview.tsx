@@ -5,15 +5,15 @@ const programs = [
     description:
       "Age-appropriate video lessons for children, teens, and young adults. Monthly content, drip-unlocked, with a downloadable Money Toolkit. Learn at home, at your own pace.",
     action: "Subscribe Now",
-    href: "#",
+    href: "/signup",
   },
   {
     title: "School Curriculum",
     video: "/assets/school-curriculum.mp4",
     description:
       "Structured classroom programs for schools and districts. Educator portal, lesson plans, teacher guides, and student worksheets - ready to use from day one.",
-    action: "Book a Demo",
-    href: "#",
+    action: "Contact Now",
+    href: "/contact",
   },
   {
     title: "Mentoring",
@@ -29,7 +29,7 @@ const programs = [
     description:
       "Zelos manages scholarships end-to-end - from fund setup to recipient selection. Create one, donate to one, or apply for one.",
     action: "Explore Scholarships",
-    href: "#",
+    href: "/scholarships",
   },
 ];
 

@@ -1,28 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { CART_KEY } from "@/lib/cart";
+import { useCartCount } from "@/lib/use-cart-count";
 
 export function CartButton() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    function read() {
-      try {
-        const raw = localStorage.getItem(CART_KEY);
-        const items: Array<{ quantity?: number }> = JSON.parse(raw ?? "[]");
-        setCount(
-          Array.isArray(items) ? items.reduce((s, i) => s + (i.quantity ?? 0), 0) : 0,
-        );
-      } catch {
-        setCount(0);
-      }
-    }
-    read();
-    window.addEventListener("storage", read);
-    return () => window.removeEventListener("storage", read);
-  }, []);
+  const count = useCartCount();
 
   return (
     <Link

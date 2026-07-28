@@ -31,12 +31,7 @@ export function MissionVideoIntro({
             <Link href="/signup" className={styles.primaryAction}>
               Sign Up Free
             </Link>
-            <Link
-              href="/financial-literacy"
-              className={styles.secondaryAction}
-            >
-              Explore Our Programs
-            </Link>
+            
           </div>
         </div>
 
