@@ -18,7 +18,7 @@ const navItems = [
   { label: "Mission", href: "/mission-video" },
   { label: "Programs", href: "/financial-literacy" },
   { label: "Events", href: "/events" },
-  { label: "Scholarships", href: "/scholarship-incubator" },
+  { label: "Scholarships", href: "/scholarship" },
   { label: "Forum", href: "/forum" },
   { label: "Store", href: "/store" },
   { label: "Contact", href: "/contact" },
