@@ -25,7 +25,7 @@ const navItems = [
 ];
 
 const programLinks = [
-  { label: "Financial Literacy", href: "/financial-literacy" },
+  // { label: "Financial Literacy", href: "/financial-literacy" },
   // { label: "Children", href: "/financial-literacy?track=child" },
   // { label: "Teens", href: "/financial-literacy?track=teen" },
   // { label: "Young Adults", href: "/financial-literacy?track=young-adult" },

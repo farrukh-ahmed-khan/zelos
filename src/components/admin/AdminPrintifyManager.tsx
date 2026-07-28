@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Input, Select, Table, Tabs, Tag, message as antMessage } from "antd";
+import {
+  Button,
+  Card,
+  Input,
+  Modal,
+  Select,
+  Table,
+  Tabs,
+  Tag,
+  message as antMessage,
+} from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { api, isApiSuccess } from "@/lib/api/client";
 
@@ -84,6 +95,10 @@ export function AdminPrintifyManager({
   const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [assigningCategoryId, setAssigningCategoryId] = useState<string | null>(null);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [providers, setProviders] = useState<PrintProvider[]>([]);
@@ -166,6 +181,121 @@ export function AdminPrintifyManager({
     } finally {
       setCreatingCategory(false);
     }
+  }
+
+  function startEditingCategory(category: StoreCategory) {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+  }
+
+  function cancelEditingCategory() {
+    setEditingCategoryId(null);
+    setEditingCategoryName("");
+  }
+
+  async function updateCategory(category: StoreCategory) {
+    const name = editingCategoryName.trim();
+
+    if (!name || name === category.name) {
+      cancelEditingCategory();
+      return;
+    }
+
+    setSavingCategoryId(category.id);
+    try {
+      const response = await api.patch(
+        `/api/admin/printify/categories/${encodeURIComponent(category.id)}`,
+        { name },
+      );
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to update store category.");
+        return;
+      }
+
+      const updatedCategory = result.data.category as StoreCategory;
+      setCategories((current) =>
+        current
+          .map((entry) => (entry.id === category.id ? updatedCategory : entry))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      setProducts((current) =>
+        current.map((product) =>
+          product.categorySlug === category.slug ||
+          product.category?.toLowerCase() === category.name.toLowerCase()
+            ? {
+                ...product,
+                category: updatedCategory.name,
+                categorySlug: updatedCategory.slug,
+                categorySource: "admin",
+              }
+            : product,
+        ),
+      );
+      cancelEditingCategory();
+      antMessage.success(
+        result.data.updatedProductCount
+          ? `Category updated on ${result.data.updatedProductCount} product(s).`
+          : "Store category updated.",
+      );
+    } finally {
+      setSavingCategoryId(null);
+    }
+  }
+
+  async function deleteCategory(category: StoreCategory) {
+    setDeletingCategoryId(category.id);
+    try {
+      const response = await api.delete(
+        `/api/admin/printify/categories/${encodeURIComponent(category.id)}`,
+      );
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to delete store category.");
+        return;
+      }
+
+      setCategories((current) => current.filter((entry) => entry.id !== category.id));
+      setProducts((current) =>
+        current.map((product) =>
+          product.categorySlug === category.slug ||
+          product.category?.toLowerCase() === category.name.toLowerCase()
+            ? {
+                ...product,
+                category: "",
+                categorySlug: "",
+                categorySource: "printify",
+              }
+            : product,
+        ),
+      );
+
+      if (editingCategoryId === category.id) {
+        cancelEditingCategory();
+      }
+
+      antMessage.success(
+        result.data.unassignedProductCount
+          ? `Category deleted and removed from ${result.data.unassignedProductCount} product(s).`
+          : "Store category deleted.",
+      );
+    } finally {
+      setDeletingCategoryId(null);
+    }
+  }
+
+  function confirmDeleteCategory(category: StoreCategory) {
+    Modal.confirm({
+      title: `Delete "${category.name}"?`,
+      content:
+        "This category will be permanently deleted. Products assigned to it will become uncategorized.",
+      okText: "Delete Category",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: () => deleteCategory(category),
+    });
   }
 
   async function assignCategory(productId: string, categoryId: string) {
@@ -492,11 +622,71 @@ export function AdminPrintifyManager({
                       </Button>
                     </div>
                     {categories.length ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                         {categories.map((category) => (
-                          <Tag key={category.id} color="blue">
-                            {category.name}
-                          </Tag>
+                          <div
+                            key={category.id}
+                            className="flex min-w-0 items-center gap-2 rounded-md border border-[#d9dde3] bg-[#fafafa] p-2"
+                          >
+                            {editingCategoryId === category.id ? (
+                              <>
+                                <Input
+                                  autoFocus
+                                  value={editingCategoryName}
+                                  maxLength={80}
+                                  disabled={savingCategoryId === category.id}
+                                  onChange={(event) => setEditingCategoryName(event.target.value)}
+                                  onPressEnter={() => void updateCategory(category)}
+                                />
+                                <Button
+                                  type="primary"
+                                  size="small"
+                                  loading={savingCategoryId === category.id}
+                                  disabled={!editingCategoryName.trim()}
+                                  onClick={() => void updateCategory(category)}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="small"
+                                  disabled={savingCategoryId === category.id}
+                                  onClick={cancelEditingCategory}
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                                  {category.name}
+                                </span>
+                                <Button
+                                  size="small"
+                                  icon={<EditOutlined />}
+                                  aria-label={`Edit ${category.name}`}
+                                  title={`Edit ${category.name}`}
+                                  disabled={Boolean(
+                                    savingCategoryId || deletingCategoryId,
+                                  )}
+                                  onClick={() => startEditingCategory(category)}
+                                />
+                                <Button
+                                  danger
+                                  size="small"
+                                  icon={<DeleteOutlined />}
+                                  aria-label={`Delete ${category.name}`}
+                                  title={`Delete ${category.name}`}
+                                  loading={deletingCategoryId === category.id}
+                                  disabled={Boolean(
+                                    savingCategoryId ||
+                                      (deletingCategoryId &&
+                                        deletingCategoryId !== category.id),
+                                  )}
+                                  onClick={() => confirmDeleteCategory(category)}
+                                />
+                              </>
+                            )}
+                          </div>
                         ))}
                       </div>
                     ) : null}
