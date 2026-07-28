@@ -86,16 +86,32 @@ export function Footer() {
               </p>
 
               <div className="mt-7 flex gap-2">
-                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#b22222] !text-white" aria-label="Facebook">
+                <a
+                  href="#"
+                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf] transition-colors hover:bg-[#b22222] hover:!text-white focus-visible:bg-[#b22222] focus-visible:!text-white"
+                  aria-label="Facebook"
+                >
                   <FacebookFilled />
                 </a>
-                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]" aria-label="Instagram">
+                <a
+                  href="#"
+                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf] transition-colors hover:bg-[#b22222] hover:!text-white focus-visible:bg-[#b22222] focus-visible:!text-white"
+                  aria-label="Instagram"
+                >
                   <InstagramOutlined />
                 </a>
-                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]" aria-label="X">
+                <a
+                  href="#"
+                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf] transition-colors hover:bg-[#b22222] hover:!text-white focus-visible:bg-[#b22222] focus-visible:!text-white"
+                  aria-label="X"
+                >
                   <XOutlined />
                 </a>
-                <a href="#" className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf]" aria-label="YouTube">
+                <a
+                  href="#"
+                  className="grid h-8 w-8 place-items-center rounded-sm bg-[#f4f4f4] !text-[#cfcfcf] transition-colors hover:bg-[#b22222] hover:!text-white focus-visible:bg-[#b22222] focus-visible:!text-white"
+                  aria-label="YouTube"
+                >
                   <YoutubeFilled />
                 </a>
               </div>

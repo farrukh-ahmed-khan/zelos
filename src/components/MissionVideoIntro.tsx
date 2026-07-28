@@ -18,6 +18,28 @@ export function MissionVideoIntro({
       <div className={styles.inner}>
         <h2 className={styles.title}>Mission Intro</h2>
 
+        <div
+          className={`${styles.footer} ${missionVideo?.url ? styles.footerWithVideo : ""
+            }`}
+        >
+          <p>
+            Watch the story below — why Zelos was created, how our programs
+            work, and the difference we&apos;re setting out to make in young
+            people&apos;s lives.
+          </p>
+          <div className={styles.actions}>
+            <Link href="/signup" className={styles.primaryAction}>
+              Sign Up Free
+            </Link>
+            <Link
+              href="/financial-literacy"
+              className={styles.secondaryAction}
+            >
+              Explore Our Programs
+            </Link>
+          </div>
+        </div>
+
         <Image
           src="/assets/mission-video-orb.gif"
           alt=""
@@ -59,28 +81,7 @@ export function MissionVideoIntro({
           )}
         </div>
 
-        <div
-          className={`${styles.footer} ${
-            missionVideo?.url ? styles.footerWithVideo : ""
-          }`}
-        >
-          <p>
-            Watch the story below — why Zelos was created, how our programs
-            work, and the difference we&apos;re setting out to make in young
-            people&apos;s lives.
-          </p>
-          <div className={styles.actions}>
-            <Link href="/signup" className={styles.primaryAction}>
-              Sign Up Free
-            </Link>
-            <Link
-              href="/financial-literacy"
-              className={styles.secondaryAction}
-            >
-              Explore Our Programs
-            </Link>
-          </div>
-        </div>
+
       </div>
     </section>
   );
