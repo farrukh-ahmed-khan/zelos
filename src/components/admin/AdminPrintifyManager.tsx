@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Select, Table, Tabs, Tag, message as antMessage } from "antd";
+import { Button, Card, Input, Select, Table, Tabs, Tag, message as antMessage } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { api, isApiSuccess } from "@/lib/api/client";
 
@@ -21,6 +21,8 @@ type PrintifyProduct = {
   id: string;
   title: string;
   category?: string;
+  categorySlug?: string;
+  categorySource?: "printify" | "admin";
   tags?: string[];
   visible?: boolean;
   imported?: boolean;
@@ -50,6 +52,13 @@ type PrintProvider = {
   title: string;
 };
 
+type StoreCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+};
+
 function money(cents: number) {
   return (cents / 100).toLocaleString(undefined, {
     style: "currency",
@@ -57,7 +66,11 @@ function money(cents: number) {
   });
 }
 
-export function AdminPrintifyManager() {
+export function AdminPrintifyManager({
+  canManageCategories,
+}: {
+  canManageCategories: boolean;
+}) {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [syncingProducts, setSyncingProducts] = useState(false);
   const [installingWebhooks, setInstallingWebhooks] = useState(false);
@@ -68,6 +81,10 @@ export function AdminPrintifyManager() {
   const [webhooks, setWebhooks] = useState<PrintifyWebhook[]>([]);
   const [products, setProducts] = useState<PrintifyProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [assigningCategoryId, setAssigningCategoryId] = useState<string | null>(null);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [providers, setProviders] = useState<PrintProvider[]>([]);
   const [catalogPayload, setCatalogPayload] = useState<unknown>(null);
@@ -115,6 +132,74 @@ export function AdminPrintifyManager() {
     }
   }
 
+  async function loadCategories() {
+    const response = await api.get("/api/admin/printify/categories");
+    const result = response.data;
+
+    if (!isApiSuccess(response.status)) {
+      antMessage.error(result?.error?.message ?? "Unable to load store categories.");
+      return;
+    }
+
+    setCategories(result.data.categories ?? []);
+  }
+
+  async function createCategory() {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    setCreatingCategory(true);
+    try {
+      const response = await api.post("/api/admin/printify/categories", { name });
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to create store category.");
+        return;
+      }
+
+      setCategories((current) =>
+        [...current, result.data.category].sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      setNewCategoryName("");
+      antMessage.success("Store category created.");
+    } finally {
+      setCreatingCategory(false);
+    }
+  }
+
+  async function assignCategory(productId: string, categoryId: string) {
+    setAssigningCategoryId(productId);
+    try {
+      const response = await api.patch(
+        `/api/admin/printify/products/${encodeURIComponent(productId)}/category`,
+        { categoryId },
+      );
+      const result = response.data;
+
+      if (!isApiSuccess(response.status)) {
+        antMessage.error(result?.error?.message ?? "Unable to assign product category.");
+        return;
+      }
+
+      setProducts((current) =>
+        current.map((product) =>
+          product.id === productId
+            ? {
+                ...product,
+                category: result.data.product.category,
+                categorySlug: result.data.product.categorySlug,
+                categorySource: "admin",
+              }
+            : product,
+        ),
+      );
+      antMessage.success("Product category updated.");
+    } finally {
+      setAssigningCategoryId(null);
+    }
+  }
+
   async function importProduct(productId: string) {
     setImportingId(productId);
     try {
@@ -134,6 +219,9 @@ export function AdminPrintifyManager() {
                 imported: true,
                 localProductId: result.data.product.id,
                 localIsActive: result.data.product.isActive,
+                category: result.data.product.category,
+                categorySlug: result.data.product.categorySlug,
+                categorySource: result.data.product.categorySource,
               }
             : product,
         ),
@@ -229,11 +317,15 @@ export function AdminPrintifyManager() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void Promise.all([loadStatus(), loadProducts()]);
+      void Promise.all([
+        loadStatus(),
+        loadProducts(),
+        ...(canManageCategories ? [loadCategories()] : []),
+      ]);
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [canManageCategories]);
 
   const productColumns: ColumnsType<PrintifyProduct> = [
     {
@@ -261,12 +353,38 @@ export function AdminPrintifyManager() {
       title: "Category",
       dataIndex: "category",
       key: "category",
-      width: 150,
-      render: (category: string | undefined, product) => (
-        <Tag color={category ? "blue" : "default"} title={(product.tags ?? []).join(", ")}>
-          {category || "Uncategorized"}
-        </Tag>
-      ),
+      width: canManageCategories ? 210 : 150,
+      render: (category: string | undefined, product) => {
+        if (!canManageCategories) {
+          return (
+            <Tag color={category ? "blue" : "default"} title={(product.tags ?? []).join(", ")}>
+              {category || "Uncategorized"}
+            </Tag>
+          );
+        }
+
+        const selectedCategory = categories.find(
+          (entry) =>
+            entry.slug === product.categorySlug ||
+            entry.name.toLowerCase() === product.category?.toLowerCase(),
+        );
+
+        return (
+          <Select
+            className="w-full"
+            size="small"
+            value={selectedCategory?.id}
+            placeholder={product.imported ? category || "Select category" : "Import first"}
+            disabled={!product.imported}
+            loading={assigningCategoryId === product.id}
+            onChange={(categoryId) => void assignCategory(product.id, categoryId)}
+            options={categories.map((entry) => ({
+              value: entry.id,
+              label: entry.name,
+            }))}
+          />
+        );
+      },
     },
     {
       title: "Price",
@@ -348,29 +466,66 @@ export function AdminPrintifyManager() {
             key: "products",
             label: "Products",
             children: (
-              <Card
-                className="rounded-md border-[#d9dde3]"
-                title="Printify Products"
-                extra={
-                  <div className="flex gap-2">
-                    <Button loading={loadingProducts} onClick={loadProducts}>
-                      Refresh
-                    </Button>
-                    <Button type="primary" loading={syncingProducts} onClick={importAllProducts}>
-                      Import All
-                    </Button>
-                  </div>
-                }
-              >
-                <Table
-                  rowKey="id"
-                  columns={productColumns}
-                  dataSource={products}
-                  loading={loadingProducts}
-                  scroll={{ x: 1050 }}
-                  pagination={{ pageSize: 10 }}
-                />
-              </Card>
+              <div className="grid gap-4">
+                {canManageCategories ? (
+                  <Card
+                    className="rounded-md border-[#d9dde3]"
+                    size="small"
+                    title="Store Categories"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Input
+                        className="max-w-xs"
+                        value={newCategoryName}
+                        maxLength={80}
+                        placeholder="New category name"
+                        onChange={(event) => setNewCategoryName(event.target.value)}
+                        onPressEnter={() => void createCategory()}
+                      />
+                      <Button
+                        type="primary"
+                        loading={creatingCategory}
+                        disabled={!newCategoryName.trim()}
+                        onClick={() => void createCategory()}
+                      >
+                        Create Category
+                      </Button>
+                    </div>
+                    {categories.length ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {categories.map((category) => (
+                          <Tag key={category.id} color="blue">
+                            {category.name}
+                          </Tag>
+                        ))}
+                      </div>
+                    ) : null}
+                  </Card>
+                ) : null}
+                <Card
+                  className="rounded-md border-[#d9dde3]"
+                  title="Printify Products"
+                  extra={
+                    <div className="flex gap-2">
+                      <Button loading={loadingProducts} onClick={loadProducts}>
+                        Refresh
+                      </Button>
+                      <Button type="primary" loading={syncingProducts} onClick={importAllProducts}>
+                        Import All
+                      </Button>
+                    </div>
+                  }
+                >
+                  <Table
+                    rowKey="id"
+                    columns={productColumns}
+                    dataSource={products}
+                    loading={loadingProducts}
+                    scroll={{ x: canManageCategories ? 1110 : 1050 }}
+                    pagination={{ pageSize: 10 }}
+                  />
+                </Card>
+              </div>
             ),
           },
           {

@@ -15,7 +15,7 @@ export default async function AdminPrintifyPage() {
       adminRole={user.role}
       adminPermissions={user.adminPermissions ?? []}
     >
-      <AdminPrintifyManager />
+      <AdminPrintifyManager canManageCategories={user.role === "super-admin"} />
     </AdminChrome>
   );
 }

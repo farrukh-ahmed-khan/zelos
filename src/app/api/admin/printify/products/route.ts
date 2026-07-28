@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const localProducts = await Product.find({
       "printify.productId": { $in: printifyProductIds },
     })
-      .select("_id isActive printify")
+      .select("_id isActive category categorySlug categorySource printify")
       .lean();
     const localProductsByPrintifyId = new Map(
       localProducts.map((product) => [product.printify?.productId, product]),
@@ -45,7 +45,9 @@ export async function GET(request: NextRequest) {
 
         return {
           ...product,
-          category: getPrintifyProductCategory(product),
+          category: localProduct?.category || getPrintifyProductCategory(product),
+          categorySlug: localProduct?.categorySlug ?? "",
+          categorySource: localProduct?.categorySource ?? "printify",
           tags: normalizePrintifyProductTags(product.tags),
           imported: Boolean(localProduct?.printify?.enabled),
           localProductId: localProduct?._id.toString() ?? null,

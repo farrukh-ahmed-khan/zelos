@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireAdminPermission } from "@/lib/auth/session";
-import { handleApiError, successResponse } from "@/lib/http";
+import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { createProductSchema } from "@/lib/validation/commerce";
 import { deleteProduct, serializeProduct, updateProduct } from "@/lib/store/service";
 
@@ -12,9 +12,17 @@ type RouteContext = {
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    await requireAdminPermission(request, "billing.read");
+    const actor = await requireAdminPermission(request, "billing.read");
     const { productId } = await context.params;
     const body = createProductSchema.partial().parse(await request.json());
+
+    if (
+      actor.role !== "super-admin" &&
+      ("category" in body || "categorySlug" in body || "tags" in body)
+    ) {
+      throw new ApiError(403, "Only super admins can manage product categories.");
+    }
+
     const product = await updateProduct(productId, body);
 
     return successResponse({

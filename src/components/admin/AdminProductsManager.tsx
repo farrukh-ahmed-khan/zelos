@@ -84,7 +84,13 @@ function toProductForm(product: Product): ProductForm {
   };
 }
 
-export function AdminProductsManager({ products }: { products: Product[] }) {
+export function AdminProductsManager({
+  products,
+  canManageCategories,
+}: {
+  products: Product[];
+  canManageCategories: boolean;
+}) {
   const [items, setItems] = useState(products);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -138,8 +144,12 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
-      category: form.category.trim(),
-      tags: form.tags.split(",").map((value) => value.trim()).filter(Boolean),
+      ...(canManageCategories
+        ? {
+            category: form.category.trim(),
+            tags: form.tags.split(",").map((value) => value.trim()).filter(Boolean),
+          }
+        : {}),
       priceCents: Number(form.priceCents),
       images: form.images.split(",").map((value) => value.trim()).filter(Boolean),
       sizes: form.sizes.split(",").map((value) => value.trim()).filter(Boolean),
@@ -380,26 +390,30 @@ export function AdminProductsManager({ products }: { products: Product[] }) {
                 />
               </label>
             ))}
-            <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
-              Category
-              <input
-                value={form.category}
-                onChange={(event) =>
-                  setForm((prev) => (prev ? { ...prev, category: event.target.value } : prev))
-                }
-                className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
-              Tags <span className="font-normal normal-case text-[#667085]">(comma-separated)</span>
-              <input
-                value={form.tags}
-                onChange={(event) =>
-                  setForm((prev) => (prev ? { ...prev, tags: event.target.value } : prev))
-                }
-                className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
-              />
-            </label>
+            {canManageCategories ? (
+              <>
+                <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                  Category
+                  <input
+                    value={form.category}
+                    onChange={(event) =>
+                      setForm((prev) => (prev ? { ...prev, category: event.target.value } : prev))
+                    }
+                    className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
+                  />
+                </label>
+                <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
+                  Tags <span className="font-normal normal-case text-[#667085]">(comma-separated)</span>
+                  <input
+                    value={form.tags}
+                    onChange={(event) =>
+                      setForm((prev) => (prev ? { ...prev, tags: event.target.value } : prev))
+                    }
+                    className="rounded-md border border-[#d9dde3] px-3 py-2 text-sm font-normal normal-case text-[#202020] outline-none focus:border-[#8c0504]"
+                  />
+                </label>
+              </>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1 text-xs font-black uppercase text-[#8c0504]">
                 Price (cents)

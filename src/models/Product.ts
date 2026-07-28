@@ -29,6 +29,12 @@ const ProductSchema = new Schema(
     slug: { type: String, required: true, unique: true, trim: true, index: true },
     description: { type: String, required: true, trim: true, maxlength: 3000 },
     category: { type: String, trim: true, maxlength: 80, default: "", index: true },
+    categorySlug: { type: String, trim: true, maxlength: 100, default: "", index: true },
+    categorySource: {
+      type: String,
+      enum: ["printify", "admin"],
+      default: "printify",
+    },
     tags: {
       type: [{ type: String, trim: true, maxlength: 80 }],
       default: [],

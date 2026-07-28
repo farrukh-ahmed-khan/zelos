@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireAdminPermission } from "@/lib/auth/session";
-import { handleApiError, successResponse } from "@/lib/http";
+import { ApiError, handleApiError, successResponse } from "@/lib/http";
 import { createProductSchema } from "@/lib/validation/commerce";
 import { createProduct, getProducts, serializeProduct } from "@/lib/store/service";
 
@@ -18,8 +18,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminPermission(request, "billing.read");
+    const actor = await requireAdminPermission(request, "billing.read");
     const body = createProductSchema.parse(await request.json());
+
+    if (
+      actor.role !== "super-admin" &&
+      (body.category !== undefined || body.categorySlug !== undefined || body.tags !== undefined)
+    ) {
+      throw new ApiError(403, "Only super admins can manage product categories.");
+    }
+
     const product = await createProduct(body);
     return successResponse(
       { message: "Product created successfully.", product: serializeProduct(product) },

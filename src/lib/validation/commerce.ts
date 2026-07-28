@@ -73,6 +73,7 @@ export const createProductSchema = z.object({
   slug: z.string().trim().min(2).max(180).regex(/^[a-z0-9-]+$/),
   description: z.string().trim().min(5).max(3000),
   category: z.string().trim().max(80).optional(),
+  categorySlug: z.string().trim().max(100).regex(/^[a-z0-9-]*$/).optional(),
   tags: z.array(z.string().trim().min(1).max(80)).max(30).optional(),
   priceCents: z.number().int().min(0),
   images: z.array(productImageSchema).max(12).optional(),

@@ -25,6 +25,8 @@ export function serializeProduct(product: ProductDocument) {
     slug: product.slug,
     description: product.description,
     category: product.category ?? "",
+    categorySlug: product.categorySlug || slugifyCategoryName(product.category ?? ""),
+    categorySource: product.categorySource ?? "printify",
     tags: product.tags ?? [],
     priceCents: product.priceCents,
     images: product.images ?? [],
@@ -66,13 +68,26 @@ export async function getProductBySlug(slug: string) {
 
 export async function createProduct(params: Record<string, unknown>) {
   await connectToDatabase();
-  return Product.create(params);
+  const productParams = { ...params };
+
+  if (typeof productParams.category === "string") {
+    productParams.categorySlug = slugifyCategoryName(productParams.category);
+    productParams.categorySource = "admin";
+  }
+
+  return Product.create(productParams);
 }
 
 export async function updateProduct(productId: string, params: Record<string, unknown>) {
   await connectToDatabase();
+  const productParams = { ...params };
 
-  const product = await Product.findByIdAndUpdate(productId, params, {
+  if (typeof productParams.category === "string") {
+    productParams.categorySlug = slugifyCategoryName(productParams.category);
+    productParams.categorySource = "admin";
+  }
+
+  const product = await Product.findByIdAndUpdate(productId, productParams, {
     new: true,
     runValidators: true,
   });
@@ -103,6 +118,15 @@ function slugifyProductName(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 160);
+}
+
+export function slugifyCategoryName(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
 }
 
 const PRINTIFY_CATEGORY_TITLE_RULES: Array<[RegExp, string]> = [
@@ -194,28 +218,47 @@ function getPrintifyOptionValue(product: PrintifyProduct, variant: PrintifyProdu
   return "";
 }
 
-async function uniqueProductSlug(title: string, printifyProductId: string) {
+async function getPrintifyImportContext(title: string, printifyProductId: string) {
   const baseSlug = slugifyProductName(title) || `printify-${printifyProductId.slice(-8)}`;
   const existingPrintifyProduct = await Product.findOne({
     "printify.productId": printifyProductId,
   });
 
   if (existingPrintifyProduct) {
-    return existingPrintifyProduct.slug;
+    return {
+      slug: existingPrintifyProduct.slug,
+      categoryOverride:
+        existingPrintifyProduct.categorySource === "admin" && existingPrintifyProduct.category
+          ? {
+              category: existingPrintifyProduct.category,
+              categorySlug:
+                existingPrintifyProduct.categorySlug ||
+                slugifyCategoryName(existingPrintifyProduct.category),
+            }
+          : null,
+    };
   }
 
   const existingSlug = await Product.findOne({ slug: baseSlug });
 
   if (!existingSlug) {
-    return baseSlug;
+    return { slug: baseSlug, categoryOverride: null };
   }
 
-  return `${baseSlug}-${printifyProductId.slice(-6).toLowerCase()}`;
+  return {
+    slug: `${baseSlug}-${printifyProductId.slice(-6).toLowerCase()}`,
+    categoryOverride: null,
+  };
 }
 
-function mapPrintifyProductToLocalPayload(product: PrintifyProduct, slug: string) {
+function mapPrintifyProductToLocalPayload(
+  product: PrintifyProduct,
+  slug: string,
+  categoryOverride?: { category: string; categorySlug: string } | null,
+) {
   const enabledVariants = (product.variants ?? []).filter((variant) => variant.is_enabled !== false);
   const tags = normalizePrintifyProductTags(product.tags);
+  const derivedCategory = getPrintifyProductCategory(product);
   const imageForVariant = new Map<number, string>();
 
   for (const image of product.images ?? []) {
@@ -259,7 +302,10 @@ function mapPrintifyProductToLocalPayload(product: PrintifyProduct, slug: string
     name: product.title,
     slug,
     description: product.description || product.title,
-    category: getPrintifyProductCategory(product),
+    category: categoryOverride?.category ?? derivedCategory,
+    categorySlug:
+      categoryOverride?.categorySlug ?? slugifyCategoryName(derivedCategory),
+    categorySource: categoryOverride ? "admin" : "printify",
     tags,
     priceCents,
     images,
@@ -282,8 +328,11 @@ export async function importPrintifyProduct(productId: string) {
   await connectToDatabase();
 
   const printifyProduct = await getPrintifyProduct(productId);
-  const slug = await uniqueProductSlug(printifyProduct.title, printifyProduct.id);
-  const payload = mapPrintifyProductToLocalPayload(printifyProduct, slug);
+  const { slug, categoryOverride } = await getPrintifyImportContext(
+    printifyProduct.title,
+    printifyProduct.id,
+  );
+  const payload = mapPrintifyProductToLocalPayload(printifyProduct, slug, categoryOverride);
   const product = await Product.findOneAndUpdate(
     { "printify.productId": printifyProduct.id },
     { $set: payload },
@@ -307,8 +356,15 @@ export async function importAllPrintifyProducts() {
 
     for (const printifyProduct of response.data ?? []) {
       importedPrintifyProductIds.push(printifyProduct.id);
-      const slug = await uniqueProductSlug(printifyProduct.title, printifyProduct.id);
-      const payload = mapPrintifyProductToLocalPayload(printifyProduct, slug);
+      const { slug, categoryOverride } = await getPrintifyImportContext(
+        printifyProduct.title,
+        printifyProduct.id,
+      );
+      const payload = mapPrintifyProductToLocalPayload(
+        printifyProduct,
+        slug,
+        categoryOverride,
+      );
       const product = await Product.findOneAndUpdate(
         { "printify.productId": printifyProduct.id },
         { $set: payload },

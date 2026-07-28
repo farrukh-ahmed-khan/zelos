@@ -11,7 +11,10 @@ export default async function AdminProductsPage() {
 
   return (
     <AdminChrome title="Store Products" eyebrow="Admin / Store" isSuperAdmin={user.role === "super-admin"} adminRole={user.role} adminPermissions={user.adminPermissions ?? []}>
-      <AdminProductsManager products={JSON.parse(JSON.stringify(products))} />
+      <AdminProductsManager
+        products={JSON.parse(JSON.stringify(products))}
+        canManageCategories={user.role === "super-admin"}
+      />
     </AdminChrome>
   );
 }

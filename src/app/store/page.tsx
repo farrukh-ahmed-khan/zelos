@@ -43,9 +43,10 @@ function getPageSize(value: string) {
   return PRODUCT_PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : DEFAULT_PRODUCTS_PER_PAGE;
 }
 
-function storePageHref(query: string, page: number, pageSize: number) {
+function storePageHref(query: string, category: string, page: number, pageSize: number) {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
+  if (category) params.set("category", category);
   if (pageSize !== DEFAULT_PRODUCTS_PER_PAGE) params.set("pageSize", String(pageSize));
   if (page > 1) params.set("page", String(page));
   const search = params.toString();
@@ -61,11 +62,27 @@ export default async function StorePage({
   const resolvedSearchParams = await searchParams;
   const checkout = getSearchParam(resolvedSearchParams, "checkout");
   const query = getSearchParam(resolvedSearchParams, "q").trim();
+  const category = getSearchParam(resolvedSearchParams, "category").trim();
   const requestedPage = Number(getSearchParam(resolvedSearchParams, "page"));
   const pageSize = getPageSize(getSearchParam(resolvedSearchParams, "pageSize"));
   const activeProducts = products.filter((p) => p.isActive && !p.isGiftCard);
   const giftCards = products.filter((p) => p.isActive && p.isGiftCard);
-  const matchingProducts = activeProducts.filter((product) => productMatchesQuery(product, query));
+  const activeCategories = Array.from(
+    new Map(
+      activeProducts
+        .filter((product) => product.category && product.categorySlug)
+        .map((product) => [
+          product.categorySlug,
+          { name: product.category, slug: product.categorySlug },
+        ]),
+    ).values(),
+  ).sort((a, b) => a.name.localeCompare(b.name));
+  const selectedCategory = activeCategories.find((entry) => entry.slug === category);
+  const matchingProducts = activeProducts.filter(
+    (product) =>
+      (!category || product.categorySlug === category) &&
+      productMatchesQuery(product, query),
+  );
   const totalPages = Math.max(1, Math.ceil(matchingProducts.length / pageSize));
   const currentPage = Math.min(
     Math.max(Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1, 1),
@@ -143,19 +160,41 @@ export default async function StorePage({
                     {matchingProducts.length}
                   </span>
                 </div>
-                {query ? (
+                {query || selectedCategory ? (
                   <p className="mt-1 text-sm text-[#777]">
-                    Showing results for <span className="font-bold text-[#202020]">{query}</span>
+                    Showing
+                    {query ? (
+                      <>
+                        {" "}results for <span className="font-bold text-[#202020]">{query}</span>
+                      </>
+                    ) : null}
+                    {query && selectedCategory ? " in " : selectedCategory ? " products in " : null}
+                    {selectedCategory ? (
+                      <span className="font-bold text-[#202020]">{selectedCategory.name}</span>
+                    ) : null}
                   </p>
                 ) : null}
               </div>
-              <form action="/store" className="grid w-full gap-2 sm:w-auto sm:grid-cols-[minmax(220px,1fr)_140px_auto_auto]">
+              <form action="/store" className="grid w-full gap-2 sm:w-auto sm:grid-cols-[minmax(200px,1fr)_170px_130px_auto_auto]">
                 <input
                   name="q"
                   defaultValue={query}
                   placeholder="Search products"
                   className="min-w-0 flex-1 rounded-md border-2 border-[#d8d2c5] bg-white px-4 py-3 text-sm transition focus:border-[#8c0504] focus:outline-none"
                 />
+                <select
+                  name="category"
+                  defaultValue={category}
+                  aria-label="Product category"
+                  className="rounded-md border-2 border-[#d8d2c5] bg-white px-3 py-3 text-sm font-bold transition focus:border-[#8c0504] focus:outline-none"
+                >
+                  <option value="">All categories</option>
+                  {activeCategories.map((entry) => (
+                    <option key={entry.slug} value={entry.slug}>
+                      {entry.name}
+                    </option>
+                  ))}
+                </select>
                 <select
                   name="pageSize"
                   defaultValue={pageSize}
@@ -171,7 +210,7 @@ export default async function StorePage({
                 <button className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-5 py-3 text-sm font-black text-[#212121]! shadow-[0_3px_0_#111] transition hover:bg-[#fff176]">
                   Search
                 </button>
-                {query || pageSize !== DEFAULT_PRODUCTS_PER_PAGE ? (
+                {query || category || pageSize !== DEFAULT_PRODUCTS_PER_PAGE ? (
                   <Link
                     href="/store"
                     className="rounded-md border-2 border-[#d8d2c5] bg-white px-4 py-3 text-sm font-black text-[#555]! transition hover:border-[#8c0504] hover:text-[#8c0504]!"
@@ -200,7 +239,7 @@ export default async function StorePage({
                   {totalPages > 1 ? (
                     <>
                     <Link
-                      href={storePageHref(query, currentPage - 1, pageSize)}
+                      href={storePageHref(query, category, currentPage - 1, pageSize)}
                       aria-disabled={currentPage === 1}
                       className={`rounded-md border-2 px-4 py-2 text-sm font-black shadow-[0_2px_0_#111] ${
                         currentPage === 1
@@ -213,7 +252,7 @@ export default async function StorePage({
                     {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
                       <Link
                         key={page}
-                        href={storePageHref(query, page, pageSize)}
+                        href={storePageHref(query, category, page, pageSize)}
                         aria-current={page === currentPage ? "page" : undefined}
                         className={`rounded-md border-2 px-4 py-2 text-sm font-black shadow-[0_2px_0_#111] ${
                           page === currentPage
@@ -225,7 +264,7 @@ export default async function StorePage({
                       </Link>
                     ))}
                     <Link
-                      href={storePageHref(query, currentPage + 1, pageSize)}
+                      href={storePageHref(query, category, currentPage + 1, pageSize)}
                       aria-disabled={currentPage === totalPages}
                       className={`rounded-md border-2 px-4 py-2 text-sm font-black shadow-[0_2px_0_#111] ${
                         currentPage === totalPages
