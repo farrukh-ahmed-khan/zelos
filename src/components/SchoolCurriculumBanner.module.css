@@ -43,13 +43,29 @@
 
 .content {
   position: relative;
-  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  align-items: center;
 }
 
 .copy {
-  width: min(55%, 760px);
+  width: min(100%, 760px);
   padding-top: clamp(98px, 10vw, 192px);
   padding-bottom: 72px;
+}
+
+.visual {
+  width: min(110%, 900px);
+  margin-top: clamp(72px, 8vw, 150px);
+  justify-self: end;
+  pointer-events: none;
+}
+
+.visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  mix-blend-mode: screen;
 }
 
 .eyebrow {
@@ -94,6 +110,21 @@
   color: #fff;
 }
 
+@media (max-width: 899px) {
+  .content {
+    display: block;
+  }
+
+  .copy {
+    width: 100%;
+  }
+
+  .visual {
+    width: min(100%, 700px);
+    margin: 20px auto 0;
+  }
+}
+
 @media (max-width: 767px) {
   .banner {
     min-height: 700px;
@@ -106,7 +137,7 @@
   .copy {
     width: 100%;
     padding-top: 72px;
-    padding-bottom: 120px;
+    padding-bottom: 0;
   }
 
   .outline {

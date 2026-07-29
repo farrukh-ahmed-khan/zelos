@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Header } from "@/components/Header";
 import styles from "./SchoolCurriculumBanner.module.css";
 
@@ -39,6 +40,17 @@ export function SchoolCurriculumBanner({
             )}
           </h1>
           <p className={styles.intro}>{intro}</p>
+        </div>
+
+        <div className={styles.visual} aria-hidden="true">
+          <Image
+            src="/assets/school-curriculum-hero-illustration.gif"
+            alt=""
+            width={1280}
+            height={720}
+            loading="eager"
+            unoptimized
+          />
         </div>
       </div>
     </section>
