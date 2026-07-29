@@ -7,6 +7,7 @@ import {
   XOutlined,
   YoutubeFilled,
 } from "@ant-design/icons";
+import { legalDocumentLinks } from "@/content/legal-documents";
 
 const footerGroups = [
   {
@@ -35,13 +36,17 @@ const footerGroups = [
       { label: "Mission", href: "/mission" },
     ],
   },
+  {
+    title: "Legal",
+    links: legalDocumentLinks.map((link) => ({ ...link })),
+  },
 ];
 
 export function Footer() {
   return (
     <footer className="bg-white px-4 py-10 text-[#202020] sm:px-6 sm:py-12 lg:px-10">
       <div className="mx-auto w-full max-w-[1600px]">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {footerGroups.map((group) => (
             <div
               className="h-full min-w-0 rounded-md border border-[#dedede] px-5 py-7 sm:px-7 sm:py-8"
@@ -69,11 +74,11 @@ export function Footer() {
                 Get In Touch
               </h2>
               <a
-                href="mailto:support@zelos.com"
+                href="mailto:support@zelos.org"
                 className="mt-6 inline-flex max-w-full items-center gap-2 break-all text-sm uppercase !text-[#969696]"
               >
                 <MailOutlined />
-                support@zelos.com
+                support@zelos.org
               </a>
               <a
                 href="tel:+14065550120"

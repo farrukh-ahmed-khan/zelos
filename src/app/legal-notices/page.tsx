@@ -3,10 +3,10 @@ import { LegalDocumentPage } from "@/components/LegalDocumentPage";
 import { legalDocuments } from "@/content/legal-documents";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | Zelos",
-  description: legalDocuments.terms.description,
+  title: "Legal Notices | Zelos",
+  description: legalDocuments.notices.description,
 };
 
-export default function TermsPage() {
-  return <LegalDocumentPage document={legalDocuments.terms} />;
+export default function LegalNoticesPage() {
+  return <LegalDocumentPage document={legalDocuments.notices} />;
 }
