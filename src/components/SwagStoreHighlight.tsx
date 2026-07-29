@@ -2,41 +2,52 @@
 
 import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { type StoreProduct } from "@/components/StoreCart";
 
 type SlimProduct = Pick<
   StoreProduct,
-  "id" | "name" | "slug" | "description" | "priceCents" | "images" | "limitedEdition"
+  | "id"
+  | "name"
+  | "slug"
+  | "description"
+  | "priceCents"
+  | "images"
+  | "colors"
+  | "variants"
+  | "limitedEdition"
 >;
 
 const FALLBACK_PRODUCTS: SlimProduct[] = [
   {
     id: "fallback-1",
-    name: "Zelos Signature Hoodie",
+    name: "Zelos Hat",
     slug: "",
-    description: "Available in Navy, Teal, and Black",
-    priceCents: 4500,
-    images: ["/assets/swag-hoodie.png"],
-    limitedEdition: false,
+    description: "A classic Zelos cap for everyday wear.",
+    priceCents: 2800,
+    images: ["/assets/swag-cap.png"],
+    colors: ["Zelos Red"],
+    limitedEdition: true,
   },
   {
     id: "fallback-2",
-    name: "Money Minds Tee (Youth)",
+    name: "Zelos Shirt",
     slug: "",
-    description: "Sizes S–XL · Youth Cut",
+    description: "A comfortable Zelos shirt with a bold signature design.",
     priceCents: 2200,
     images: ["/assets/swag-tee.png"],
+    colors: ["White", "Black", "Red"],
     limitedEdition: false,
   },
   {
     id: "fallback-3",
-    name: "Zelos Cap — Limited Edition",
+    name: "Zelos Hoodie",
     slug: "",
-    description: "Limited Run · While Stocks Last",
-    priceCents: 2800,
-    images: ["/assets/swag-cap.png"],
-    limitedEdition: true,
+    description: "A soft Zelos hoodie made for comfortable layering.",
+    priceCents: 4500,
+    images: ["/assets/swag-hoodie.png"],
+    colors: ["Navy", "Teal", "Black"],
+    limitedEdition: false,
   },
 ];
 
@@ -55,31 +66,78 @@ function toPlainText(value: string) {
     .trim();
 }
 
+function getAvailableColors(product: SlimProduct) {
+  const activeVariantColors = (product.variants ?? [])
+    .filter(
+      (variant) =>
+        variant.isActive !== false &&
+        variant.inventoryCount > 0 &&
+        Boolean(variant.color),
+    )
+    .map((variant) => variant.color as string);
+
+  return Array.from(
+    new Set(activeVariantColors.length > 0 ? activeVariantColors : product.colors),
+  );
+}
+
+function getSwatchColor(color: string) {
+  const normalized = color.toLowerCase();
+
+  if (normalized.includes("black")) return "#171717";
+  if (normalized.includes("white")) return "#ffffff";
+  if (normalized.includes("red")) return "#b22222";
+  if (normalized.includes("navy")) return "#202b46";
+  if (normalized.includes("teal")) return "#168c8c";
+  if (normalized.includes("cream")) return "#eadfc8";
+  if (normalized.includes("gray") || normalized.includes("grey")) return "#8b8b8b";
+  if (normalized.includes("blue")) return "#315f9b";
+  if (normalized.includes("green")) return "#3d7d4a";
+
+  return "#d8d2c5";
+}
+
 export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
   const display = products && products.length > 0 ? products : FALLBACK_PRODUCTS;
 
   const sliderRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const hasMountedRef = useRef(false);
-
-  useEffect(() => {
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true;
-      return;
-    }
-    const activeSlide = sliderRef.current?.children[activeIndex];
-    activeSlide?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  }, [activeIndex]);
 
   function scrollProducts(direction: "left" | "right") {
-    setActiveIndex((current) => {
-      if (direction === "left") return Math.max(current - 1, 0);
-      return Math.min(current + 1, display.length - 1);
-    });
+    const slider = sliderRef.current;
+    const firstSlide = slider?.firstElementChild;
+
+    if (!slider || !(firstSlide instanceof HTMLElement)) {
+      return;
+    }
+
+    const styles = window.getComputedStyle(slider);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0");
+    const step = firstSlide.offsetWidth + gap;
+    const maxScroll = Math.max(slider.scrollWidth - slider.clientWidth, 0);
+
+    if (maxScroll <= 1) {
+      return;
+    }
+
+    const atStart = slider.scrollLeft <= 1;
+    const atEnd = slider.scrollLeft >= maxScroll - 1;
+    const nextPosition =
+      direction === "left"
+        ? atStart
+          ? maxScroll
+          : Math.max(0, slider.scrollLeft - step)
+        : atEnd
+          ? 0
+          : Math.min(maxScroll, slider.scrollLeft + step);
+
+    slider.scrollTo({ left: nextPosition, behavior: "smooth" });
   }
 
   return (
-    <section className="overflow-hidden bg-white px-4 py-16 text-[#202020] sm:px-6 lg:py-20">
+    <section
+      id="swag-store-highlight"
+      className="overflow-hidden bg-white px-4 py-16 text-[#202020] sm:px-6 lg:py-20"
+    >
       <div className="container">
         <div className="mx-auto max-w-300">
           <div className="mb-9 flex items-end justify-between gap-5">
@@ -92,7 +150,7 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
 
             <div className="hidden items-center gap-2 sm:flex">
               <button
-                className="grid h-9 w-9 place-items-center rounded-full border border-[#e6e6e6] bg-white text-[#d3d3d3] transition hover:text-[#202020]"
+                className="grid h-9 w-9 place-items-center rounded-full bg-black text-white transition hover:bg-[#b22222] focus-visible:bg-[#b22222] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b22222]"
                 type="button"
                 aria-label="Previous products"
                 onClick={() => scrollProducts("left")}
@@ -100,7 +158,7 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
                 <ArrowLeftOutlined />
               </button>
               <button
-                className="grid h-9 w-9 place-items-center rounded-full bg-black text-white transition hover:bg-[#b22222]"
+                className="grid h-9 w-9 place-items-center rounded-full bg-black text-white transition hover:bg-[#b22222] focus-visible:bg-[#b22222] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b22222]"
                 type="button"
                 aria-label="Next products"
                 onClick={() => scrollProducts("right")}
@@ -114,11 +172,14 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
             ref={sliderRef}
             className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-3 lg:gap-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {display.map((product) => (
-              <article
-                key={product.id}
-                className="w-[88%] shrink-0 snap-start rounded-md bg-white p-4 transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.14)] focus-within:-translate-y-1 focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.14)] sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-5rem)/3)]"
-              >
+            {display.map((product) => {
+              const availableColors = getAvailableColors(product);
+
+              return (
+                <article
+                  key={product.id}
+                  className="flex w-[88%] shrink-0 snap-start flex-col rounded-md bg-white p-4 transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.14)] focus-within:-translate-y-1 focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.14)] sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-5rem)/3)]"
+                >
                 <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#f1f1f1]">
                   {product.images[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -153,23 +214,45 @@ export function SwagStoreHighlight({ products }: { products?: SlimProduct[] }) {
                   </p>
                 </div>
 
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-black uppercase tracking-wide text-[#666]">
+                    Available colors
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map((color) => (
+                      <span
+                        key={color}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#ded8cc] bg-white px-2.5 py-1 text-xs font-semibold text-[#444]"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5 rounded-full border border-black/20"
+                          style={{ backgroundColor: getSwatchColor(color) }}
+                        />
+                        {color}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
                 {product.slug ? (
                   <Link
                     href={`/store/${product.slug}`}
-                    className="mt-2 inline-flex font-bebas text-sm uppercase leading-none text-[#202020]! transition hover:text-[#b22222]!"
+                    className="mt-4 inline-flex font-bebas text-sm uppercase leading-none text-[#202020]! transition hover:text-[#b22222]!"
                   >
                     Shop Now →
                   </Link>
                 ) : (
                   <Link
                     href="/store"
-                    className="mt-2 inline-flex font-bebas text-sm uppercase leading-none text-[#202020]! transition hover:text-[#b22222]!"
+                    className="mt-4 inline-flex font-bebas text-sm uppercase leading-none text-[#202020]! transition hover:text-[#b22222]!"
                   >
                     View Store →
                   </Link>
                 )}
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
 
           <div className="mt-8 text-center">
