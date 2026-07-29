@@ -10,6 +10,7 @@ export const mentorApplicationSchema = z.object({
   profession: z.string().trim().min(2).max(120),
   organization: z.string().trim().max(120).optional(),
   expertise: z.array(expertiseItemSchema).min(1).max(8),
+  mentoringPreference: z.string().trim().min(2).max(120),
   experienceYears: z.number().int().min(0).max(80),
   linkedInUrl: z.url().trim().max(300).optional().or(z.literal("")),
   availability: z.string().trim().min(3).max(160),

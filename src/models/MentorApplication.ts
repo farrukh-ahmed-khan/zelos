@@ -53,6 +53,13 @@ const MentorApplicationSchema = new Schema(
         message: "Choose between 1 and 8 areas of expertise.",
       },
     },
+    mentoringPreference: {
+      type: String,
+      trim: true,
+      minlength: 2,
+      maxlength: 120,
+      default: null,
+    },
     experienceYears: {
       type: Number,
       required: true,

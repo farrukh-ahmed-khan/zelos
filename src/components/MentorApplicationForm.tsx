@@ -7,19 +7,46 @@ type SubmitState = "idle" | "submitting" | "success" | "error";
 
 const expertiseOptions = [
   "Finance",
-  "Entrepreneurship",
-  "Technology",
   "Medicine",
   "Law",
+  "Government",
+  "Public Safety",
+  "Skilled Trades",
   "Engineering",
-  "Creative Careers",
-  "College Readiness",
+  "Science",
+  "Entrepreneurship",
+  "Small Business",
+  "Education",
+  "Technology",
+  "Creative Arts & Media",
+  "Communications",
+  "Sports & Fitness",
+  "Hospitality",
+  "Transportation",
+  "Agriculture",
+  "Real Estate",
+  "Luxury and Lifestyle",
+  "Other",
+];
+
+const MAX_EXPERTISE_SELECTIONS = 8;
+
+const mentoringPreferenceOptions = [
+  "One-on-one mentoring",
+  "Small group mentoring",
+  "Large group mentoring",
+  "Internship mentor",
+  "Networking events",
+  "Our forum",
+  "Video/podcast",
+  "Other",
 ];
 
 export function MentorApplicationForm() {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
   const [expertise, setExpertise] = useState<string[]>(["Finance"]);
+  const [mentoringPreference, setMentoringPreference] = useState("");
 
   function toggleExpertise(value: string) {
     setExpertise((current) =>
@@ -36,6 +63,19 @@ export function MentorApplicationForm() {
     setMessage("");
 
     const formData = new FormData(form);
+    const otherExpertise = String(
+      formData.get("otherExpertise") ?? "",
+    ).trim();
+    const submittedExpertise = expertise.map((option) =>
+      option === "Other" ? `Other: ${otherExpertise}` : option,
+    );
+    const otherMentoringPreference = String(
+      formData.get("otherMentoringPreference") ?? "",
+    ).trim();
+    const submittedMentoringPreference =
+      mentoringPreference === "Other"
+        ? `Other: ${otherMentoringPreference}`
+        : mentoringPreference;
 
     const payload = {
       name: String(formData.get("name") ?? ""),
@@ -43,7 +83,8 @@ export function MentorApplicationForm() {
       phone: String(formData.get("phone") ?? ""),
       profession: String(formData.get("profession") ?? ""),
       organization: String(formData.get("organization") ?? ""),
-      expertise,
+      expertise: submittedExpertise,
+      mentoringPreference: submittedMentoringPreference,
       experienceYears: Number(formData.get("experienceYears") ?? 0),
       linkedInUrl: String(formData.get("linkedInUrl") ?? ""),
       availability: String(formData.get("availability") ?? ""),
@@ -68,6 +109,7 @@ export function MentorApplicationForm() {
 
       form.reset();
       setExpertise(["Finance"]);
+      setMentoringPreference("");
       setSubmitState("success");
       setMessage("Thanks. Your mentor application has been sent to the admin team.");
     } catch (error) {
@@ -157,24 +199,88 @@ export function MentorApplicationForm() {
       </div>
 
       <fieldset className="grid gap-3">
-        <legend className="text-sm font-bold">Areas of expertise</legend>
+        <legend className="text-sm font-bold">
+          Areas of expertise
+          <span className="ml-2 font-normal text-[#666]">
+            Choose up to {MAX_EXPERTISE_SELECTIONS}
+          </span>
+        </legend>
         <div className="flex flex-wrap gap-2">
-          {expertiseOptions.map((option) => (
-            <label
-              key={option}
-              className="flex items-center gap-2 rounded-md border border-[#d8d2c5] px-3 py-2 text-sm"
-            >
-              <input
-                type="checkbox"
-                checked={expertise.includes(option)}
-                onChange={() => toggleExpertise(option)}
-                className="accent-[#b22222]"
-              />
-              {option}
-            </label>
-          ))}
+          {expertiseOptions.map((option) => {
+            const isChecked = expertise.includes(option);
+            const isDisabled =
+              !isChecked && expertise.length >= MAX_EXPERTISE_SELECTIONS;
+
+            return (
+              <label
+                key={option}
+                className={`flex items-center gap-2 rounded-md border border-[#d8d2c5] px-3 py-2 text-sm ${
+                  isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  disabled={isDisabled}
+                  onChange={() => toggleExpertise(option)}
+                  className="accent-[#b22222]"
+                />
+                {option}
+              </label>
+            );
+          })}
         </div>
+
+        {expertise.includes("Other") ? (
+          <label className="grid max-w-xl gap-2 text-sm font-bold">
+            Please specify your other area of expertise
+            <input
+              name="otherExpertise"
+              required
+              minLength={2}
+              maxLength={70}
+              autoFocus
+              placeholder="Enter your area of expertise"
+              className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
+            />
+          </label>
+        ) : null}
       </fieldset>
+
+      <label className="grid gap-2 text-sm font-bold">
+        How would you like to mentor?
+        <select
+          name="mentoringPreference"
+          required
+          value={mentoringPreference}
+          onChange={(event) => setMentoringPreference(event.target.value)}
+          className="rounded-md border border-[#d8d2c5] bg-white px-3 py-3 font-normal outline-none focus:border-[#b22222]"
+        >
+          <option value="" disabled>
+            Select one
+          </option>
+          {mentoringPreferenceOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {mentoringPreference === "Other" ? (
+        <label className="grid max-w-xl gap-2 text-sm font-bold">
+          Please specify how you would like to mentor
+          <input
+            name="otherMentoringPreference"
+            required
+            minLength={2}
+            maxLength={110}
+            autoFocus
+            placeholder="Enter your preferred mentoring format"
+            className="rounded-md border border-[#d8d2c5] px-3 py-3 font-normal outline-none focus:border-[#b22222]"
+          />
+        </label>
+      ) : null}
 
       <label className="grid gap-2 text-sm font-bold">
         LinkedIn or website

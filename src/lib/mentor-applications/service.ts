@@ -13,6 +13,7 @@ export function serializeMentorApplication(application: MentorApplicationDocumen
     profession: application.profession,
     organization: application.organization ?? null,
     expertise: application.expertise ?? [],
+    mentoringPreference: application.mentoringPreference ?? null,
     experienceYears: application.experienceYears,
     linkedInUrl: application.linkedInUrl ?? null,
     availability: application.availability,
@@ -36,6 +37,7 @@ export async function createMentorApplication(params: {
   profession: string;
   organization?: string;
   expertise: string[];
+  mentoringPreference: string;
   experienceYears: number;
   linkedInUrl?: string;
   availability: string;

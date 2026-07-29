@@ -14,6 +14,7 @@ type MentorApplication = {
   profession: string;
   organization: string | null;
   expertise: string[];
+  mentoringPreference: string | null;
   experienceYears: number;
   linkedInUrl: string | null;
   availability: string;
@@ -199,6 +200,7 @@ export function AdminMentorApplicationsClient({
               <p><strong>Experience:</strong> {selected.experienceYears} years</p>
               {selected.linkedInUrl ? <p><strong>LinkedIn:</strong> <a href={selected.linkedInUrl} target="_blank" rel="noreferrer" className="text-[#175cd3] underline">{selected.linkedInUrl}</a></p> : null}
               <p><strong>Expertise:</strong> {selected.expertise.join(", ") || "-"}</p>
+              <p><strong>Mentoring preference:</strong> {selected.mentoringPreference || "-"}</p>
               <p><strong>Availability:</strong> {selected.availability}</p>
               <p><strong>Communication pref:</strong> {selected.communicationPreferences}</p>
               <p><strong>How heard:</strong> {selected.howHeard}</p>
