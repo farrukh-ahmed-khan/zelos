@@ -41,7 +41,7 @@ export const legalDocuments = {
     shortTitle: "Terms & Conditions",
     description:
       "The terms that apply when you use the Zelos website, purchase products, participate in programs, or use Zelos services.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "1. Introduction",
@@ -211,7 +211,7 @@ export const legalDocuments = {
     shortTitle: "Privacy Policy",
     description:
       "How Zelos collects, uses, shares, and protects information from website visitors, customers, donors, members, and program participants.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "1. Introduction",
@@ -365,8 +365,8 @@ export const legalDocuments = {
     shortTitle: "Subscription Terms",
     description:
       "Terms governing Zelos subscriptions, youth accounts, billing, educational content, mentorship, and parent or guardian consent.",
-    effectiveDate: "[Insert]",
-    lastUpdated: "[Insert]",
+    effectiveDate: "July 30, 2026",
+    lastUpdated: "July 30, 2026",
     sections: [
       {
         title: "1. Overview",
@@ -719,7 +719,7 @@ export const legalDocuments = {
     shortTitle: "Returns & Exchanges",
     description:
       "The policy for made-to-order Zelos products, damaged or incorrect orders, cancellations, refunds, and customer support.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "Our Commitment",
@@ -911,7 +911,7 @@ export const legalDocuments = {
     shortTitle: "Shipping Policy",
     description:
       "Production, shipping, tracking, address, international delivery, and delivery-issue information for Zelos orders.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "Overview",
@@ -1021,7 +1021,7 @@ export const legalDocuments = {
     shortTitle: "Copyright & Trademark",
     description:
       "Ownership and permitted use of Zelos content, curriculum, branding, designs, media, trademarks, and other intellectual property.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "Intellectual Property Rights",
@@ -1121,7 +1121,7 @@ export const legalDocuments = {
     shortTitle: "Disclaimer",
     description:
       "Important limitations concerning Zelos educational information, third-party services, merchandise, outcomes, and liability.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "General Information",
@@ -1204,7 +1204,7 @@ export const legalDocuments = {
     shortTitle: "Legal Notices",
     description:
       "A convenient overview of the principal legal policies governing the Zelos website, merchandise, programs, and services.",
-    effectiveDate: "___________________",
+    effectiveDate: "July 30, 2026",
     sections: [
       {
         title: "1. Overview",
