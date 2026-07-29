@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
       shippingAddress: body.shippingAddress,
       billingAddress: body.billingAddress ?? body.shippingAddress,
     });
+    const isGiftCardOnly = order.items.every((item) => item.productId === "__gift_card__");
+    const successPath = isGiftCardOnly ? "/gift-cards?purchase=success" : "/store?checkout=success";
 
     if (order.totalCents === 0) {
       await markOrderPaid({ orderId: order._id.toString(), providerPaymentId: "gift-card" });
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
           clientSecret: null,
           paid: true,
           totalCents: 0,
+          successPath,
         },
         { status: 201 },
       );
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
       amountCents: order.totalCents,
       customerEmail: order.email,
       orderId: order._id.toString(),
-      returnUrl: `${baseUrl}/store?checkout=success`,
+      returnUrl: `${baseUrl}${successPath}&orderId=${order._id.toString()}`,
       orderDescription: order.items.map((item) => `${item.quantity}x ${item.name}`).join(", "),
     });
 
@@ -68,6 +71,7 @@ export async function POST(request: NextRequest) {
         clientSecret: checkout.client_secret,
         paid: false,
         totalCents: order.totalCents,
+        successPath,
       },
       { status: 201 },
     );

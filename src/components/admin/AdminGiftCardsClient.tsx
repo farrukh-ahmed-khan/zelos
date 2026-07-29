@@ -11,8 +11,12 @@ type GiftCard = {
   code: string;
   initialAmountCents: number;
   remainingAmountCents: number;
+  recipientName: string | null;
   recipientEmail: string | null;
+  purchaserName: string | null;
   purchaserEmail: string | null;
+  personalMessage: string | null;
+  deliveredAt: string | null;
   status: string;
   createdAt: string;
 };
@@ -36,6 +40,7 @@ export function AdminGiftCardsClient({
   const [recipientEmail, setRecipientEmail] = useState("");
   const [purchaserEmail, setPurchaserEmail] = useState("");
   const [creating, setCreating] = useState(false);
+  const [updatingId, setUpdatingId] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
   async function load() {
@@ -88,6 +93,28 @@ export function AdminGiftCardsClient({
       }
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function updateStatus(giftCard: GiftCard) {
+    const nextStatus = giftCard.status === "disabled" ? "active" : "disabled";
+    setUpdatingId(giftCard.id);
+    try {
+      const res = await api.patch(`/api/admin/gift-cards/${giftCard.id}`, {
+        status: nextStatus,
+      });
+      if (isApiSuccess(res.status)) {
+        setGiftCards((current) =>
+          current.map((item) =>
+            item.id === giftCard.id ? { ...item, status: nextStatus } : item,
+          ),
+        );
+        antMessage.success(res.data.data.message);
+      } else {
+        antMessage.error(res.data?.error?.message ?? "Unable to update gift card.");
+      }
+    } finally {
+      setUpdatingId("");
     }
   }
 
@@ -176,18 +203,32 @@ export function AdminGiftCardsClient({
               {filtered.map((gc) => (
                 <div
                   key={gc.id}
-                  className="grid gap-2 border-b border-[#edf0f3] px-4 py-3 last:border-b-0 sm:grid-cols-[auto_1fr_100px_120px]"
+                  className="grid gap-2 border-b border-[#edf0f3] px-4 py-3 last:border-b-0 sm:grid-cols-[auto_1fr_100px_120px_auto]"
                 >
                   <code className="self-center rounded bg-[#f4f4f4] px-2 py-1 text-xs font-black tracking-widest text-[#202020]">
                     {gc.code}
                   </code>
                   <div className="min-w-0 self-center">
                     <p className="text-xs text-[#667085]">
-                      {gc.recipientEmail ? `to ${gc.recipientEmail}` : "No recipient"}
-                      {gc.purchaserEmail ? ` / from ${gc.purchaserEmail}` : ""}
+                      {gc.recipientEmail
+                        ? `to ${gc.recipientName ? `${gc.recipientName} · ` : ""}${gc.recipientEmail}`
+                        : "No recipient"}
+                      {gc.purchaserEmail
+                        ? ` / from ${gc.purchaserName ? `${gc.purchaserName} · ` : ""}${gc.purchaserEmail}`
+                        : ""}
                     </p>
+                    {gc.personalMessage ? (
+                      <p className="truncate text-xs italic text-[#667085]">
+                        “{gc.personalMessage}”
+                      </p>
+                    ) : null}
                     <p className="text-xs text-[#667085]">
                       {new Date(gc.createdAt).toLocaleDateString()}
+                      {gc.recipientEmail
+                        ? gc.deliveredAt
+                          ? " · email delivered"
+                          : " · email pending"
+                        : ""}
                     </p>
                   </div>
                   <div className="self-center text-sm font-bold text-[#202020]">
@@ -201,6 +242,20 @@ export function AdminGiftCardsClient({
                       {gc.status}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    disabled={gc.status === "redeemed" || updatingId === gc.id}
+                    onClick={() => void updateStatus(gc)}
+                    className="self-center rounded border border-[#d9dde3] bg-white px-2.5 py-1.5 text-xs font-bold text-[#202020] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {updatingId === gc.id
+                      ? "Saving..."
+                      : gc.status === "disabled"
+                        ? "Reactivate"
+                        : gc.status === "redeemed"
+                          ? "Redeemed"
+                          : "Disable"}
+                  </button>
                 </div>
               ))}
             </div>

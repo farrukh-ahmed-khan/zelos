@@ -34,8 +34,9 @@ type PaymentSession = {
   totalCents: number;
   firstName: string;
   lastName: string;
-  shippingAddress: Address;
+  shippingAddress?: Address;
   billingAddress: Address;
+  successPath: string;
 };
 
 declare global {
@@ -173,7 +174,9 @@ function PaymentForm({ session }: { session: PaymentSession }) {
       const fullName = `${session.firstName} ${session.lastName}`.trim();
       const result = await checkoutState.checkout.confirm({
         redirect: "if_required",
-        shippingAddress: stripeContact(fullName, session.shippingAddress),
+        ...(session.shippingAddress
+          ? { shippingAddress: stripeContact(fullName, session.shippingAddress) }
+          : {}),
         billingAddress: stripeContact(fullName, session.billingAddress),
       });
 
@@ -183,7 +186,8 @@ function PaymentForm({ session }: { session: PaymentSession }) {
       }
 
       saveCart([]);
-      window.location.assign(`/store?checkout=success&orderId=${session.orderId}`);
+      const separator = session.successPath.includes("?") ? "&" : "?";
+      window.location.assign(`${session.successPath}${separator}orderId=${session.orderId}`);
     } catch (error) {
       setPaymentError(
         error instanceof Error && error.message
@@ -259,10 +263,14 @@ function PaymentStep({ session }: { session: PaymentSession }) {
     () => ({
       clientSecret: session.clientSecret,
       defaultValues: {
-        shippingAddress: stripeContact(
-          `${session.firstName} ${session.lastName}`.trim(),
-          session.shippingAddress,
-        ),
+        ...(session.shippingAddress
+          ? {
+              shippingAddress: stripeContact(
+                `${session.firstName} ${session.lastName}`.trim(),
+                session.shippingAddress,
+              ),
+            }
+          : {}),
         billingAddress: stripeContact(
           `${session.firstName} ${session.lastName}`.trim(),
           session.billingAddress,
@@ -312,6 +320,13 @@ export function CheckoutView({
 
   const subtotal = cartSubtotalCents(cart);
   const itemCount = cart.reduce((n, i) => n + i.quantity, 0);
+  const hasGiftCardItems = cart.some((item) => item.productId === "__gift_card__");
+  const isGiftCardOnly =
+    hasGiftCardItems && cart.every((item) => item.productId === "__gift_card__");
+  const firstGiftCard = cart.find((item) => item.productId === "__gift_card__");
+  const giftSenderParts = (firstGiftCard?.giftCardSenderName ?? "").trim().split(/\s+/);
+  const giftSenderFirstName = giftSenderParts[0] ?? "";
+  const giftSenderLastName = giftSenderParts.slice(1).join(" ");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -331,10 +346,13 @@ export function CheckoutView({
 
     try {
       const formData = new FormData(event.currentTarget);
-      const shippingAddress = extractAddress(formData, "shipping");
-      const billingAddress = billingSameAsShipping
-        ? shippingAddress
-        : extractAddress(formData, "billing");
+      const shippingAddress = isGiftCardOnly
+        ? undefined
+        : extractAddress(formData, "shipping");
+      const billingAddress =
+        !isGiftCardOnly && billingSameAsShipping && shippingAddress
+          ? shippingAddress
+          : extractAddress(formData, "billing");
       const firstName = String(formData.get("firstName") ?? "");
       const lastName = String(formData.get("lastName") ?? "");
       const email = String(formData.get("email") ?? "");
@@ -352,6 +370,10 @@ export function CheckoutView({
           size: item.size,
           color: item.color,
           giftCardAmountCents: item.giftCardAmountCents,
+          giftCardRecipientName: item.giftCardRecipientName,
+          giftCardRecipientEmail: item.giftCardRecipientEmail,
+          giftCardSenderName: item.giftCardSenderName,
+          giftCardMessage: item.giftCardMessage,
         })),
       });
 
@@ -364,7 +386,9 @@ export function CheckoutView({
 
       if (result.data.paid) {
         saveCart([]);
-        window.location.assign(`/store?checkout=success&orderId=${result.data.orderId}`);
+        const successPath = result.data.successPath ?? "/store?checkout=success";
+        const separator = successPath.includes("?") ? "&" : "?";
+        window.location.assign(`${successPath}${separator}orderId=${result.data.orderId}`);
         return;
       }
 
@@ -381,6 +405,7 @@ export function CheckoutView({
         lastName,
         shippingAddress,
         billingAddress,
+        successPath: result.data.successPath ?? "/store?checkout=success",
       });
     } catch {
       setError("Something went wrong. Please try again.");
@@ -453,28 +478,41 @@ export function CheckoutView({
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className={labelClass}>First Name *</label>
-                      <input name="firstName" required placeholder="Jordan" defaultValue={contact?.firstName ?? ""} className={inputClass} />
+                      <input name="firstName" required placeholder="Jordan" defaultValue={contact?.firstName || giftSenderFirstName} className={inputClass} />
                     </div>
                     <div>
                       <label className={labelClass}>Last Name *</label>
-                      <input name="lastName" required placeholder="Smith" defaultValue={contact?.lastName ?? ""} className={inputClass} />
+                      <input name="lastName" required placeholder="Smith" defaultValue={contact?.lastName || giftSenderLastName} className={inputClass} />
                     </div>
                   </div>
                   <div className="mt-4">
                     <label className={labelClass}>Email Address *</label>
-                    <input name="email" type="email" required placeholder="you@example.com" defaultValue={contact?.email ?? ""} className={inputClass} />
+                    <input name="email" type="email" required placeholder="you@example.com" defaultValue={contact?.email || firstGiftCard?.giftCardPurchaserEmail || ""} className={inputClass} />
                     <p className="mt-1.5 text-xs text-[#aaa]">Order confirmation &amp; tracking updates sent here.</p>
                   </div>
                 </div>
 
                 {/* 2 — Shipping address */}
-                <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
-                  <h2 className="mb-5 font-bebas text-2xl uppercase">
-                    <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#8c0504] text-sm text-white">2</span>
-                    Shipping Address
-                  </h2>
-                  <AddressFields prefix="shipping" />
-                </div>
+                {isGiftCardOnly ? (
+                  <div className="rounded-2xl border-2 border-[#212121] bg-[#790606] p-6 text-white shadow-[0_4px_0_#111]">
+                    <h2 className="font-bebas text-2xl uppercase">
+                      <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#faff8d] text-sm text-[#212121]">2</span>
+                      Digital Delivery
+                    </h2>
+                    <p className="mt-3 text-sm leading-relaxed text-white/80">
+                      No shipping address is needed. Each gift-card code will be emailed to its
+                      recipient after Stripe confirms payment.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
+                    <h2 className="mb-5 font-bebas text-2xl uppercase">
+                      <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#8c0504] text-sm text-white">2</span>
+                      Shipping Address
+                    </h2>
+                    <AddressFields prefix="shipping" />
+                  </div>
+                )}
 
                 {/* 3 — Billing address */}
                 <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
@@ -482,16 +520,18 @@ export function CheckoutView({
                     <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#8c0504] text-sm text-white">3</span>
                     Billing Address
                   </h2>
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={billingSameAsShipping}
-                      onChange={(e) => setBillingSameAsShipping(e.target.checked)}
-                      className="h-4 w-4 rounded border-[#d8d2c5] accent-[#8c0504]"
-                    />
-                    <span className="text-sm font-bold text-[#555]">Same as shipping address</span>
-                  </label>
-                  {!billingSameAsShipping && (
+                  {!isGiftCardOnly ? (
+                    <label className="flex cursor-pointer items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={billingSameAsShipping}
+                        onChange={(e) => setBillingSameAsShipping(e.target.checked)}
+                        className="h-4 w-4 rounded border-[#d8d2c5] accent-[#8c0504]"
+                      />
+                      <span className="text-sm font-bold text-[#555]">Same as shipping address</span>
+                    </label>
+                  ) : null}
+                  {(isGiftCardOnly || !billingSameAsShipping) && (
                     <div className="mt-4">
                       <AddressFields prefix="billing" />
                     </div>
@@ -499,10 +539,11 @@ export function CheckoutView({
                 </div>
 
                 {/* 4 — Gift card */}
-                <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
-                  <button
-                    type="button"
-                    onClick={() => setGiftCodeOpen((o) => !o)}
+                {!hasGiftCardItems ? (
+                  <div className="rounded-2xl border-2 border-[#212121] bg-white p-6 shadow-[0_4px_0_#111]">
+                    <button
+                      type="button"
+                      onClick={() => setGiftCodeOpen((o) => !o)}
                     className="flex w-full items-center justify-between font-bebas text-xl uppercase text-[#202020] transition hover:text-[#8c0504]"
                   >
                     <span>Have a Gift Card Code?</span>
@@ -518,7 +559,8 @@ export function CheckoutView({
                       <p className="mt-1.5 text-xs text-[#aaa]">Discount applied automatically at checkout.</p>
                     </div>
                   )}
-                </div>
+                  </div>
+                ) : null}
 
                   {/* Submit contact and delivery details before mounting secure payment fields. */}
                   {paymentSession ? (
@@ -573,7 +615,10 @@ export function CheckoutView({
                         <div className="flex-1 min-w-0">
                           <p className="truncate text-sm font-bold">{item.name}</p>
                           <p className="text-xs text-[#999]">
-                            {[item.size, item.color].filter(Boolean).join(" / ") || "Standard"} · Qty {item.quantity}
+                            {item.productId === "__gift_card__"
+                              ? `To ${item.giftCardRecipientName || item.giftCardRecipientEmail}`
+                              : [item.size, item.color].filter(Boolean).join(" / ") || "Standard"}{" "}
+                            · Qty {item.quantity}
                           </p>
                         </div>
                         <p className="shrink-0 text-sm font-black">{money(item.priceCents * item.quantity)}</p>
@@ -608,7 +653,7 @@ export function CheckoutView({
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-[#f5a623]" />
-                  Ships in 5–7 days
+                  {isGiftCardOnly ? "Digital delivery" : "Ships in 5–7 days"}
                 </span>
               </div>
 

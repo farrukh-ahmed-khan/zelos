@@ -26,6 +26,10 @@ type OrderItem = {
   unitPriceCents: number;
   size?: string | null;
   color?: string | null;
+  giftCardRecipientName?: string | null;
+  giftCardRecipientEmail?: string | null;
+  giftCardSenderName?: string | null;
+  giftCardMessage?: string | null;
   printifyProductId?: string | null;
   printifyVariantId?: number | null;
   printifySku?: string | null;
@@ -527,6 +531,7 @@ export function AdminOrdersManager({
               {item.quantity}x {item.name}
               {item.size ? ` / ${item.size}` : ""}
               {item.color ? ` / ${item.color}` : ""}
+              {item.giftCardRecipientEmail ? ` / to ${item.giftCardRecipientEmail}` : ""}
             </p>
           ))}
         </div>
@@ -1011,6 +1016,15 @@ export function AdminOrdersManager({
                       <p className="font-bold text-[#202020]">{item.quantity}x {item.name}</p>
                       {[item.size, item.color].filter(Boolean).length ? (
                         <p className="text-xs text-[#667085]">{[item.size, item.color].filter(Boolean).join(" / ")}</p>
+                      ) : null}
+                      {item.giftCardRecipientEmail ? (
+                        <div className="mt-1 text-xs text-[#667085]">
+                          <p>
+                            To {item.giftCardRecipientName || "recipient"} · {item.giftCardRecipientEmail}
+                          </p>
+                          {item.giftCardSenderName ? <p>From {item.giftCardSenderName}</p> : null}
+                          {item.giftCardMessage ? <p className="italic">“{item.giftCardMessage}”</p> : null}
+                        </div>
                       ) : null}
                     </div>
                     <p className="font-bold">{money(item.unitPriceCents * item.quantity)}</p>

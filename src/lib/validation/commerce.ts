@@ -134,6 +134,10 @@ export const checkoutSchema = z.object({
         size: z.string().trim().max(30).optional(),
         color: z.string().trim().max(40).optional(),
         giftCardAmountCents: z.number().int().min(100).max(100000).optional(),
+        giftCardRecipientName: z.string().trim().min(1).max(120).optional(),
+        giftCardRecipientEmail: z.email().trim().toLowerCase().optional(),
+        giftCardSenderName: z.string().trim().min(1).max(120).optional(),
+        giftCardMessage: z.string().trim().max(500).optional(),
       }),
     )
     .min(1)

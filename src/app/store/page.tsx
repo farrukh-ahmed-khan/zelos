@@ -161,6 +161,12 @@ export default async function StorePage({
           </div>
           <div className="mt-3 flex shrink-0 items-center gap-3">
             <Link
+              href="/gift-cards"
+              className="rounded-md border-2 border-[#212121] bg-[#faff8d] px-4 py-2.5 text-sm font-black text-[#212121]! shadow-[0_3px_0_#111] transition hover:bg-[#fff176]"
+            >
+              Gift Cards
+            </Link>
+            <Link
               href="/store/orders"
               className="text-sm font-black text-[#8c0504]! underline underline-offset-2 hover:text-[#7a0505]!"
             >

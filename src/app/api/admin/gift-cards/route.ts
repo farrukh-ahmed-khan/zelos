@@ -19,8 +19,12 @@ export async function GET(request: NextRequest) {
         code: g.code,
         initialAmountCents: g.initialAmountCents,
         remainingAmountCents: g.remainingAmountCents,
+        recipientName: g.recipientName ?? null,
         recipientEmail: g.recipientEmail ?? null,
+        purchaserName: g.purchaserName ?? null,
         purchaserEmail: g.purchaserEmail ?? null,
+        personalMessage: g.personalMessage ?? null,
+        deliveredAt: g.deliveredAt ?? null,
         status: g.status,
         createdAt: g.createdAt,
       })),
@@ -32,8 +36,11 @@ export async function GET(request: NextRequest) {
 
 const createGiftCardSchema = z.object({
   amountCents: z.number().int().min(100),
+  recipientName: z.string().trim().min(1).max(120).optional(),
   recipientEmail: z.email().trim().toLowerCase().optional(),
+  purchaserName: z.string().trim().min(1).max(120).optional(),
   purchaserEmail: z.email().trim().toLowerCase().optional(),
+  personalMessage: z.string().trim().max(500).optional(),
 });
 
 export async function POST(request: NextRequest) {

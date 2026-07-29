@@ -224,11 +224,11 @@ const GENERIC_TEMPLATE_COPY: Record<string, Omit<TemplateCopy, "action"> & { act
     eyebrow: "Gift card delivery",
     heading: "Your gift card is ready",
     body: [
-      "Your Zelos gift card is ready to use.",
-      "Keep the code below somewhere safe.",
+      "A Zelos gift card has been sent to you and is ready to use.",
+      "Keep the code below somewhere safe and enter it during store or subscription checkout.",
     ],
     actionPath: "/store",
-    actionLabel: "Visit store",
+    actionLabel: "Shop with your gift card",
   },
   "mentor-application-acknowledgment": {
     subject: "We received your mentor application",

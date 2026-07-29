@@ -8,6 +8,11 @@ export type CartItem = {
   size?: string;
   color?: string;
   giftCardAmountCents?: number;
+  giftCardRecipientName?: string;
+  giftCardRecipientEmail?: string;
+  giftCardSenderName?: string;
+  giftCardPurchaserEmail?: string;
+  giftCardMessage?: string;
 };
 
 export function loadCart(): CartItem[] {

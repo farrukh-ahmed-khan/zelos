@@ -23,6 +23,7 @@ const footerGroups = [
       { label: "Events", href: "/events" },
       { label: "Community Forum", href: "/forum" },
       { label: "Swag Store", href: "/store" },
+      { label: "Gift Cards", href: "/gift-cards" },
     ],
   },
   {

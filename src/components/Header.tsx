@@ -40,6 +40,11 @@ const programLinks = [
   { label: "Scholarship Incubator", href: "/scholarship-incubator" },
 ];
 
+const storeLinks = [
+  { label: "Swag Store", href: "/store" },
+  { label: "Gift Cards", href: "/gift-cards" },
+];
+
 function subscribeToHydration(callback: () => void) {
   const frame = window.requestAnimationFrame(callback);
   return () => window.cancelAnimationFrame(frame);
@@ -63,7 +68,7 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMobileDropdown, setOpenMobileDropdown] = useState<
-    "About" | "Programs" | null
+    "About" | "Programs" | "Store" | null
   >(null);
   const navLinkClass =
     "inline-flex items-center justify-center gap-1 whitespace-nowrap px-1 py-3 font-[Inter] text-[14px] font-medium leading-none tracking-normal text-[#191919] transition hover:text-[#ed2631] 2xl:gap-1.5 2xl:text-[17px]";
@@ -151,10 +156,16 @@ export function Header() {
                     pathname.startsWith(`${item.href}/`) ||
                     (item.label === "About" && pathname === "/mission") ||
                     (item.label === "Programs" && pathname === "/school-curriculum") ||
+                    (item.label === "Store" && pathname === "/gift-cards") ||
                     (item.label === "Scholarships" && pathname === "/scholarships");
 
-              if (item.label === "About" || item.label === "Programs") {
-                const dropdownLinks = item.label === "About" ? aboutLinks : programLinks;
+              if (item.label === "About" || item.label === "Programs" || item.label === "Store") {
+                const dropdownLinks =
+                  item.label === "About"
+                    ? aboutLinks
+                    : item.label === "Programs"
+                      ? programLinks
+                      : storeLinks;
 
                 return (
                   <div key={item.href} className="group relative">
@@ -291,16 +302,24 @@ export function Header() {
                           (program) =>
                             pathname === program.href ||
                             pathname.startsWith(`${program.href}/`),
+                        )) ||
+                      (item.label === "Store" &&
+                        storeLinks.some(
+                          (storeLink) =>
+                            pathname === storeLink.href ||
+                            pathname.startsWith(`${storeLink.href}/`),
                         ));
                 const dropdownLinks =
                   item.label === "About"
                     ? aboutLinks
                     : item.label === "Programs"
                       ? programLinks
-                      : [];
+                      : item.label === "Store"
+                        ? storeLinks
+                        : [];
 
                 if (dropdownLinks.length) {
-                  const dropdownLabel = item.label as "About" | "Programs";
+                  const dropdownLabel = item.label as "About" | "Programs" | "Store";
                   const isExpanded = openMobileDropdown === dropdownLabel;
                   const menuId = `mobile-${dropdownLabel.toLowerCase()}-menu`;
 

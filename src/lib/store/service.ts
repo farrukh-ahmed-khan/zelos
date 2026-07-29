@@ -430,6 +430,10 @@ export async function createOrder(params: {
     size?: string;
     color?: string;
     giftCardAmountCents?: number;
+    giftCardRecipientName?: string;
+    giftCardRecipientEmail?: string;
+    giftCardSenderName?: string;
+    giftCardMessage?: string;
   }>;
 }) {
   await connectToDatabase();
@@ -448,6 +452,9 @@ export async function createOrder(params: {
       if (!item.giftCardAmountCents || item.giftCardAmountCents < 100) {
         throw new ApiError(422, "Gift card amount is invalid.");
       }
+      if (!item.giftCardRecipientEmail) {
+        throw new ApiError(422, "A recipient email is required for every gift card.");
+      }
 
       return {
         productId: item.productId,
@@ -456,6 +463,10 @@ export async function createOrder(params: {
         unitPriceCents: item.giftCardAmountCents,
         size: null,
         color: null,
+        giftCardRecipientName: item.giftCardRecipientName?.trim() || null,
+        giftCardRecipientEmail: item.giftCardRecipientEmail.trim().toLowerCase(),
+        giftCardSenderName: item.giftCardSenderName?.trim() || null,
+        giftCardMessage: item.giftCardMessage?.trim() || null,
       };
     }
 
@@ -506,6 +517,10 @@ export async function createOrder(params: {
   let giftCardCode: string | null = null;
 
   if (params.giftCardCode) {
+    if (orderItems.some((item) => item.productId === "__gift_card__")) {
+      throw new ApiError(422, "A gift card cannot be used to purchase another gift card.");
+    }
+
     const giftCard = await GiftCard.findOne({
       code: params.giftCardCode.trim().toUpperCase(),
       status: "active",
@@ -632,14 +647,21 @@ export async function markOrderPaid(params: {
     }
   }
 
-  const giftCardItems = order.items.filter((item) => item.name.toLowerCase().includes("gift card"));
+  const giftCardItems = order.items
+    .map((item, itemIndex) => ({ item, itemIndex }))
+    .filter(({ item }) => item.productId === "__gift_card__");
 
-  for (const item of giftCardItems) {
+  for (const { item, itemIndex } of giftCardItems) {
     for (let index = 0; index < item.quantity; index += 1) {
       await createGiftCard({
         amountCents: item.unitPriceCents,
-        recipientEmail: order.email,
+        recipientName: item.giftCardRecipientName ?? undefined,
+        recipientEmail: item.giftCardRecipientEmail ?? order.email,
+        purchaserName: item.giftCardSenderName ?? `${order.firstName} ${order.lastName}`,
         purchaserEmail: order.email,
+        personalMessage: item.giftCardMessage ?? undefined,
+        orderId: order._id.toString(),
+        sourceKey: `${order._id.toString()}:${itemIndex}:${index}`,
       });
     }
   }
@@ -1131,24 +1153,54 @@ export async function applyPrintifyWebhookEvent(event: {
 
 export async function createGiftCard(params: {
   amountCents: number;
+  recipientName?: string;
   recipientEmail?: string;
+  purchaserName?: string;
   purchaserEmail?: string;
+  personalMessage?: string;
+  orderId?: string;
+  sourceKey?: string;
 }) {
   await connectToDatabase();
-  const code = `ZELOS-${randomBytes(4).toString("hex").toUpperCase()}`;
-  const giftCard = await GiftCard.create({
-    code,
-    initialAmountCents: params.amountCents,
-    remainingAmountCents: params.amountCents,
-    recipientEmail: params.recipientEmail || null,
-    purchaserEmail: params.purchaserEmail || null,
-  });
-  if (params.recipientEmail) {
-    await queueEmail({
-      template: "gift-card-delivery",
-      recipient: params.recipientEmail,
-      payload: { code, amountCents: params.amountCents },
+  let giftCard = params.sourceKey
+    ? await GiftCard.findOne({ sourceKey: params.sourceKey })
+    : null;
+
+  if (!giftCard) {
+    const code = `ZELOS-${randomBytes(6).toString("hex").toUpperCase()}`;
+    giftCard = await GiftCard.create({
+      code,
+      initialAmountCents: params.amountCents,
+      remainingAmountCents: params.amountCents,
+      recipientName: params.recipientName || null,
+      recipientEmail: params.recipientEmail || null,
+      purchaserName: params.purchaserName || null,
+      purchaserEmail: params.purchaserEmail || null,
+      personalMessage: params.personalMessage || null,
+      ...(params.sourceKey ? { sourceKey: params.sourceKey } : {}),
+      orderId: params.orderId || null,
     });
   }
+
+  if (params.recipientEmail && !giftCard.deliveredAt) {
+    try {
+      await queueEmail({
+        template: "gift-card-delivery",
+        recipient: params.recipientEmail,
+        payload: {
+          name: params.recipientName,
+          code: giftCard.code,
+          amountCents: params.amountCents,
+          from: params.purchaserName,
+          personalMessage: params.personalMessage,
+        },
+      });
+      giftCard.deliveredAt = new Date();
+      await giftCard.save();
+    } catch (error) {
+      console.error("Gift card delivery email failed:", error);
+    }
+  }
+
   return giftCard;
 }

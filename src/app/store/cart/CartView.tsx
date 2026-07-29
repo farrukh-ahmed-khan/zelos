@@ -23,6 +23,7 @@ export function CartView({ imageMap }: { imageMap: Record<string, string> }) {
 
   const subtotal = cartSubtotalCents(cart);
   const itemCount = cart.reduce((n, i) => n + i.quantity, 0);
+  const hasPhysicalItems = cart.some((item) => item.productId !== "__gift_card__");
 
   function updateQty(index: number, qty: number) {
     if (qty <= 0) {
@@ -128,6 +129,17 @@ export function CartView({ imageMap }: { imageMap: Record<string, string> }) {
                               {[item.size, item.color].filter(Boolean).join(" / ")}
                             </p>
                           )}
+                          {item.productId === "__gift_card__" ? (
+                            <p className="mt-1 text-xs leading-relaxed text-[#777]">
+                              Digital delivery to{" "}
+                              <span className="font-bold">
+                                {item.giftCardRecipientName || item.giftCardRecipientEmail}
+                              </span>
+                              {item.giftCardRecipientEmail
+                                ? ` (${item.giftCardRecipientEmail})`
+                                : ""}
+                            </p>
+                          ) : null}
                         </div>
                         <button
                           type="button"
@@ -170,6 +182,12 @@ export function CartView({ imageMap }: { imageMap: Record<string, string> }) {
                 className="block text-center text-sm font-medium text-[#8c0504]! underline underline-offset-2 hover:text-[#7a0505]! transition"
               >
                 ← Continue Shopping
+              </Link>
+              <Link
+                href="/gift-cards"
+                className="block text-center text-sm font-medium text-[#8c0504]! underline underline-offset-2 hover:text-[#7a0505]! transition"
+              >
+                Add Another Gift Card
               </Link>
             </div>
 
@@ -226,7 +244,7 @@ export function CartView({ imageMap }: { imageMap: Record<string, string> }) {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-[#2d93cf]" />
-                  Ships in 5–7 days
+                  {hasPhysicalItems ? "Ships in 5–7 days" : "Digital email delivery"}
                 </span>
               </div>
             </aside>
