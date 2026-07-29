@@ -105,8 +105,8 @@ export default async function OrderHistoryPage() {
     <main className="min-h-screen bg-[#eee6d6] text-[#202020]">
       {/* Branded red header */}
       <div className="px-4 pt-4 sm:px-6 sm:pt-5">
-        <div className="relative overflow-hidden rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_60px_rgba(0,0,0,0.35)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_35%,rgba(194,0,0,0.7),rgba(70,0,0,0.96)_72%)]" />
+        <div className="relative overflow-visible rounded-[1.25rem] bg-[#7a0505] px-3 py-4 shadow-[inset_0_0_60px_rgba(0,0,0,0.35)] sm:rounded-[2rem] sm:px-9 sm:py-5 lg:px-24">
+          <div className="pointer-events-none absolute inset-0 rounded-[1.25rem] bg-[radial-gradient(circle_at_55%_35%,rgba(194,0,0,0.7),rgba(70,0,0,0.96)_72%)] sm:rounded-[2rem]" />
           <div className="relative z-10">
             <Header />
           </div>
