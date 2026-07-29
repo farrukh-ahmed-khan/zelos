@@ -5,6 +5,7 @@ import { queueEmail } from "@/lib/notifications/service";
 import Product, { type ProductDocument } from "@/models/Product";
 import Order, { type OrderDocument } from "@/models/Order";
 import GiftCard from "@/models/GiftCard";
+import StoreCategory from "@/models/StoreCategory";
 import {
   getPrintifyShopId,
   getPrintifyProduct,
@@ -59,6 +60,20 @@ export function serializeProduct(product: ProductDocument) {
 export async function getProducts(includeInactive = false) {
   await connectToDatabase();
   return Product.find(includeInactive ? {} : { isActive: true }).sort({ createdAt: -1 });
+}
+
+export async function getActiveStoreCategories() {
+  await connectToDatabase();
+  const categories = await StoreCategory.find({ isActive: true })
+    .sort({ name: 1 })
+    .select({ _id: 0, name: 1, slug: 1 })
+    .lean()
+    .exec();
+
+  return categories.map((category) => ({
+    name: category.name,
+    slug: category.slug,
+  }));
 }
 
 export async function getProductBySlug(slug: string) {

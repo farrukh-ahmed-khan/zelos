@@ -3,7 +3,11 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { CartButton } from "@/components/CartButton";
 import { CheckoutSuccessCleanup } from "@/components/CheckoutSuccessCleanup";
-import { getProducts, serializeProduct } from "@/lib/store/service";
+import {
+  getActiveStoreCategories,
+  getProducts,
+  serializeProduct,
+} from "@/lib/store/service";
 import { formatProductDescription } from "@/lib/store/format-product-description";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +16,19 @@ type SerializedProduct = ReturnType<typeof serializeProduct>;
 
 const DEFAULT_PRODUCTS_PER_PAGE = 9;
 const PRODUCT_PAGE_SIZE_OPTIONS = [6, 9, 12, 24];
+const STORE_CATEGORY_ORDER = [
+  "men-s-essentials",
+  "executive-collection",
+  "women-s-essentials",
+  "youth-collection-ages-10-12",
+  "golf-collection",
+  "accessories",
+];
+
+function getCategoryOrder(categorySlug: string) {
+  const index = STORE_CATEGORY_ORDER.indexOf(categorySlug);
+  return index === -1 ? STORE_CATEGORY_ORDER.length : index;
+}
 
 function getSearchParam(
   params: { [key: string]: string | string[] | undefined },
@@ -58,25 +75,29 @@ export default async function StorePage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const products = (await getProducts()).map(serializeProduct);
+  const [productDocuments, activeCategories] = await Promise.all([
+    getProducts(),
+    getActiveStoreCategories(),
+  ]);
+  activeCategories.sort(
+    (a, b) =>
+      getCategoryOrder(a.slug) - getCategoryOrder(b.slug) ||
+      a.name.localeCompare(b.name),
+  );
+  const products = productDocuments.map(serializeProduct);
   const resolvedSearchParams = await searchParams;
   const checkout = getSearchParam(resolvedSearchParams, "checkout");
   const query = getSearchParam(resolvedSearchParams, "q").trim();
   const category = getSearchParam(resolvedSearchParams, "category").trim();
   const requestedPage = Number(getSearchParam(resolvedSearchParams, "page"));
   const pageSize = getPageSize(getSearchParam(resolvedSearchParams, "pageSize"));
-  const activeProducts = products.filter((p) => p.isActive && !p.isGiftCard);
+  const activeProducts = products
+    .filter((p) => p.isActive && !p.isGiftCard)
+    .sort(
+      (a, b) =>
+        getCategoryOrder(a.categorySlug) - getCategoryOrder(b.categorySlug),
+    );
   const giftCards = products.filter((p) => p.isActive && p.isGiftCard);
-  const activeCategories = Array.from(
-    new Map(
-      activeProducts
-        .filter((product) => product.category && product.categorySlug)
-        .map((product) => [
-          product.categorySlug,
-          { name: product.category, slug: product.categorySlug },
-        ]),
-    ).values(),
-  ).sort((a, b) => a.name.localeCompare(b.name));
   const selectedCategory = activeCategories.find((entry) => entry.slug === category);
   const matchingProducts = activeProducts.filter(
     (product) =>
